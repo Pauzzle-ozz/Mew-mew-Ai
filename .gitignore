@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+frontend-v2/node_modules/
+backend/node_modules/
+
+# Environment variables
+.env
+backend/src/.env
+frontend-v2/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Next.js
+.next/
+out/
+.vercel
+
+# Build
+dist/
+build/
