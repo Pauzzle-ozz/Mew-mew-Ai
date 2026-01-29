@@ -146,6 +146,45 @@ router.post('/analyse-cv-pdf-complete', upload.single('cv'), async (req, res) =>
 });
 
 // Route pour générer un CV (PDF/DOCX)
+
+// Route pour extraire les données d'un CV PDF
+router.post('/extraire-cv', upload.single('cv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Aucun fichier PDF fourni'
+      });
+    }
+
+    console.log('📄 Extraction du CV PDF...');
+
+    // Extraction du texte du PDF
+    const pdfData = await pdf(req.file.buffer);
+    const cvText = pdfData.text;
+
+    console.log('✅ Texte extrait, longueur:', cvText.length);
+    console.log('📄 Aperçu:', cvText.substring(0, 200));
+
+    // Pour l'instant, on retourne juste le texte brut
+    // Plus tard, on ajoutera le parsing intelligent
+    res.json({
+      success: true,
+      data: {
+        texte_brut: cvText,
+        nombre_pages: pdfData.numpages
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'extraction du CV:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Impossible d\'extraire les données du CV'
+    });
+  }
+});
+
+// Route pour générer un CV (PDF/DOCX)
 router.post('/generer-cv', async (req, res) => {
   try {
     const { cvData, template, formats } = req.body;
@@ -227,6 +266,98 @@ await browser.close();
 });
 
 // Fonction pour générer le HTML selon le template
+
+// Route pour optimiser un CV avec l'IA n8n
+router.post('/optimiser-cv', async (req, res) => {
+  try {
+    const { cvData } = req.body;
+
+    // Validation des données
+    if (!cvData) {
+      return res.status(400).json({
+        success: false,
+        error: 'Données du CV requises'
+      });
+    }
+
+    // Validation des champs essentiels
+    if (!cvData.prenom || !cvData.nom || !cvData.titre_poste) {
+      return res.status(400).json({
+        success: false,
+        error: 'Prénom, nom et titre du poste sont obligatoires'
+      });
+    }
+
+    console.log('🤖 [OPTIMISEUR] Début de l\'optimisation du CV...');
+    console.log('📋 [OPTIMISEUR] Données reçues:', {
+      nom: cvData.nom,
+      prenom: cvData.prenom,
+      titre: cvData.titre_poste,
+      nb_experiences: cvData.experiences ? cvData.experiences.length : 0,
+      nb_formations: cvData.formations ? cvData.formations.length : 0
+    });
+
+    // Appel vers n8n pour optimisation
+    console.log('🚀 [OPTIMISEUR] Envoi vers n8n:', process.env.N8N_WEBHOOK_OPTIMISER_URL);
+    
+    const n8nResponse = await axios.post(
+      process.env.N8N_WEBHOOK_OPTIMISER_URL,
+      { cvData },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.N8N_SECRET_KEY}`
+        },
+        timeout: 60000 // 60 secondes de timeout (l'IA peut prendre du temps)
+      }
+    );
+
+    console.log('✅ [OPTIMISEUR] Réponse reçue de n8n');
+    console.log('📦 [OPTIMISEUR] Données optimisées:', {
+      success: n8nResponse.data.success,
+      message: n8nResponse.data.message,
+      nb_experiences_optimisees: n8nResponse.data.nb_experiences,
+      nb_formations_optimisees: n8nResponse.data.nb_formations
+    });
+
+    // Vérification de la réponse
+    if (!n8nResponse.data.success || !n8nResponse.data.cvData_optimise) {
+      throw new Error('n8n n\'a pas retourné de données optimisées valides');
+    }
+
+    // Retour des données optimisées au frontend
+    res.json({
+      success: true,
+      data: n8nResponse.data
+    });
+
+    console.log('✅ [OPTIMISEUR] CV optimisé envoyé au frontend');
+
+  } catch (error) {
+    console.error('❌ [OPTIMISEUR] Erreur lors de l\'optimisation du CV:', error.message);
+    
+    // Gestion des erreurs spécifiques
+    if (error.code === 'ECONNREFUSED') {
+      return res.status(503).json({
+        success: false,
+        error: 'Service d\'optimisation indisponible (n8n non accessible)'
+      });
+    }
+    
+    if (error.code === 'ETIMEDOUT') {
+      return res.status(504).json({
+        success: false,
+        error: 'L\'optimisation a pris trop de temps (timeout)'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible d\'optimiser le CV',
+      details: error.message
+    });
+  }
+});
 function generateHTMLTemplate(cvData, template) {
   // Template de base
   const baseStyles = `
