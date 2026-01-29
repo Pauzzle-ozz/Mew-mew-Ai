@@ -337,37 +337,34 @@ const base64ToBlob = (base64, type) => {
                 </div>
               </button>
 
-              {/* Import CV */}
+{/* Import CV */}
               <button
                 onClick={() => {
                   setMode('import')
-                  alert('⚠️ Fonctionnalité "Import CV" en développement. Utilisez "Créer un nouveau CV" pour l\'instant.')
+                  setStep(2)
                 }}
-                className="group bg-white rounded-xl p-8 border-2 border-gray-200 hover:border-purple-400 hover:shadow-xl transition-all text-left opacity-60"
+                className="group bg-white rounded-xl p-8 border-2 border-gray-200 hover:border-purple-400 hover:shadow-xl transition-all text-left"
               >
                 <div className="text-5xl mb-4">📤</div>
-                <h3 className="text-2xl font-bold text-gray-700 mb-3">
+                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
                   Importer un CV existant
                 </h3>
-                <p className="text-gray-500 mb-4">
-                  Uploadez votre CV actuel et améliorez-le avec nos templates
+                <p className="text-gray-600 mb-4">
+                  Uploadez votre CV actuel et l'IA l'améliorera automatiquement
                 </p>
-                <div className="space-y-2 text-sm text-gray-500">
+                <div className="space-y-2 text-sm text-gray-700">
                   <div className="flex items-center">
-                    <span className="text-gray-400 mr-2">○</span>
-                    Upload PDF/DOCX
+                    <span className="text-green-500 mr-2">✓</span>
+                    Upload PDF
                   </div>
                   <div className="flex items-center">
-                    <span className="text-gray-400 mr-2">○</span>
+                    <span className="text-green-500 mr-2">✓</span>
                     Extraction automatique
                   </div>
                   <div className="flex items-center">
-                    <span className="text-gray-400 mr-2">○</span>
+                    <span className="text-green-500 mr-2">✓</span>
                     Optimisation IA
                   </div>
-                </div>
-                <div className="mt-4 inline-block px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold">
-                  Bientôt disponible
                 </div>
               </button>
 
@@ -385,8 +382,34 @@ const base64ToBlob = (base64, type) => {
               Remplissez vos informations professionnelles
             </p>
 
-            <div className="bg-white rounded-xl shadow p-8 space-y-8">
               
+              <div className="bg-white rounded-xl shadow p-8 space-y-8">
+              
+              {/* AJOUTE CE BLOC ICI ↓↓↓ */}
+              {mode === 'import' && (
+                <div className="mb-8 p-6 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                  <h3 className="text-xl font-bold text-purple-900 mb-4">📤 Importer votre CV</h3>
+                  <p className="text-sm text-purple-700 mb-4">
+                    Uploadez votre CV au format PDF et l'IA extraira automatiquement vos informations
+                  </p>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      // TODO: Gérer l'upload
+                      console.log('Fichier sélectionné:', e.target.files[0])
+                    }}
+                    className="block w-full text-sm text-gray-900 border border-purple-300 rounded-lg cursor-pointer bg-white focus:outline-none p-3"
+                  />
+                  <p className="text-xs text-purple-600 mt-2">
+                    Format accepté : PDF (max 2 Mo)
+                  </p>
+                </div>
+              )}
+              {/* JUSQU'ICI ↑↑↑ */}
+              
+              {/* Identité */}
+
               {/* Identité */}
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Identité</h3>
