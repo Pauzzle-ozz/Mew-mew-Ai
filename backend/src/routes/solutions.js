@@ -185,33 +185,35 @@ router.post('/generer-cv', async (req, res) => {
 await browser.close();
 
     // Vérifier le type de pdfBuffer
-    console.log('Type de pdfBuffer:', typeof pdfBuffer, 'isBuffer:', Buffer.isBuffer(pdfBuffer))
-
-    // Convertir en Buffer si nécessaire, puis en base64
-    let pdfBase64;
-    if (Buffer.isBuffer(pdfBuffer)) {
-      pdfBase64 = pdfBuffer.toString('base64');
-    } else if (typeof pdfBuffer === 'object' && pdfBuffer.data) {
-      pdfBase64 = Buffer.from(pdfBuffer.data || pdfBuffer).toString('base64');
-    } else if (Array.isArray(pdfBuffer)) {
-      pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
-    } else {
-      pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+    console.log('🔍 Type pdfBuffer:', typeof pdfBuffer, 'isBuffer:', Buffer.isBuffer(pdfBuffer))
+    
+    // Forcer la conversion en Buffer si nécessaire
+    let finalPdfBuffer = pdfBuffer;
+    if (!Buffer.isBuffer(pdfBuffer)) {
+      console.log('⚠️ pdfBuffer n\'est pas un Buffer, conversion...')
+      finalPdfBuffer = Buffer.from(pdfBuffer);
     }
 
-    // Vérifier que c'est bien une string base64
-    if (typeof pdfBase64 !== 'string') {
-      throw new Error('La conversion en base64 a échoué');
-    }
+    // Générer le DOCX
+    console.log('🔄 Génération du DOCX...')
+    const docxBuffer = await generateDOCXTemplate(cvData, template);
+    console.log('✅ DOCX généré, taille:', docxBuffer.length)
 
-    console.log('✅ Base64 créé, type:', typeof pdfBase64, 'longueur:', pdfBase64.length)
-    console.log('📝 Premiers caractères (string):', pdfBase64.substring(0, 50))
+    // Convertir PDF en base64
+    const pdfBase64 = finalPdfBuffer.toString('base64');
+    console.log('✅ PDF base64 créé, longueur:', pdfBase64.length)
+    console.log('✅ Premiers caractères PDF:', pdfBase64.substring(0, 50))
+
+    // Convertir DOCX en base64
+    const docxBase64 = docxBuffer.toString('base64');
+    console.log('✅ DOCX base64 créé, longueur:', docxBase64.length)
 
     res.json({
       success: true,
       data: {
         pdf: pdfBase64,
-        filename: `CV_${cvData.prenom}_${cvData.nom}.pdf`
+        docx: docxBase64,
+        filename: `CV_${cvData.prenom}_${cvData.nom}`
       }
     });
 
@@ -495,5 +497,179 @@ function generateHTMLTemplate(cvData, template) {
   // Fallback
   return '<html><body><h1>Template non trouvé</h1></body></html>';
 }
+// Fonction pour générer un DOCX
+async function generateDOCXTemplate(cvData, template) {
+  const docx = require('docx');
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = docx;
 
+  // Créer le document
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        // Header avec nom et titre
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: `${cvData.prenom} ${cvData.nom}`,
+              bold: true,
+              size: 32,
+              color: template === 'moderne' ? '667eea' : template === 'creatif' ? 'f5576c' : '2c3e50'
+            }),
+          ],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new TextRun({
+              text: cvData.titre_poste || '',
+              size: 24,
+              color: '666666'
+            }),
+          ],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 300 },
+          children: [
+            new TextRun({
+              text: `${cvData.email || ''} ${cvData.telephone ? '• ' + cvData.telephone : ''} ${cvData.adresse ? '• ' + cvData.adresse : ''}`,
+              size: 20,
+              color: '666666'
+            }),
+          ],
+        }),
+
+        // Résumé
+        ...(cvData.resume ? [
+          new Paragraph({
+            text: 'Profil',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          new Paragraph({
+            text: cvData.resume,
+            spacing: { after: 300 },
+          })
+        ] : []),
+
+        // Expériences
+        ...(cvData.experiences && cvData.experiences.length > 0 ? [
+          new Paragraph({
+            text: 'Expérience Professionnelle',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          ...cvData.experiences.flatMap(exp => [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: exp.poste,
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              spacing: { before: 200 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: exp.entreprise,
+                  bold: true,
+                }),
+                new TextRun({
+                  text: exp.periode ? ` • ${exp.periode}` : '',
+                  italics: true,
+                  color: '666666'
+                }),
+              ],
+            }),
+            ...(exp.description ? [
+              new Paragraph({
+                text: exp.description,
+                spacing: { after: 200 },
+              })
+            ] : []),
+          ])
+        ] : []),
+
+        // Formations
+        ...(cvData.formations && cvData.formations.length > 0 ? [
+          new Paragraph({
+            text: 'Formation',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          ...cvData.formations.flatMap(form => [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: form.diplome,
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              spacing: { before: 200 },
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: form.etablissement,
+                  bold: true,
+                }),
+                new TextRun({
+                  text: form.annee ? ` • ${form.annee}` : '',
+                  italics: true,
+                  color: '666666'
+                }),
+              ],
+              spacing: { after: 200 },
+            }),
+          ])
+        ] : []),
+
+        // Compétences
+        ...(cvData.competences_techniques ? [
+          new Paragraph({
+            text: 'Compétences Techniques',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          new Paragraph({
+            text: cvData.competences_techniques,
+            spacing: { after: 200 },
+          })
+        ] : []),
+
+        ...(cvData.competences_soft ? [
+          new Paragraph({
+            text: 'Compétences Personnelles',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          new Paragraph({
+            text: cvData.competences_soft,
+            spacing: { after: 200 },
+          })
+        ] : []),
+
+        ...(cvData.langues ? [
+          new Paragraph({
+            text: 'Langues',
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 300, after: 200 },
+          }),
+          new Paragraph({
+            text: cvData.langues,
+          })
+        ] : []),
+      ],
+    }],
+  });
+
+  // Générer le buffer
+  const buffer = await Packer.toBuffer(doc);
+  return buffer;
+}
 module.exports = router;

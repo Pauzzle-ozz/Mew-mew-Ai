@@ -133,6 +133,8 @@ const handleGenerateCV = async () => {
       return
     }
 
+    console.log('🚀 Début de la requête...')
+
     // Appel au backend
     const response = await fetch('http://localhost:5000/api/solutions/generer-cv', {
       method: 'POST',
@@ -142,47 +144,60 @@ const handleGenerateCV = async () => {
       body: JSON.stringify({
         cvData,
         template: selectedTemplate,
-        formats: ['pdf'] // Pour l'instant, juste PDF
+        formats: ['pdf', 'docx']
       })
     })
 
-const result = await response.json()
+    console.log('📥 Réponse reçue, status:', response.status)
 
-console.log('Réponse backend:', result) // Debug
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`)
+    }
 
-if (result.success) {
-  // Vérifier que le PDF est bien présent
-  if (!result.data || !result.data.pdf) {
-    setError('Le backend n\'a pas retourné de PDF')
-    setProcessing(false)
-    return
-  }
+  const result = await response.json()
+    console.log('📦 Données parsées:', result)
 
-  console.log('Taille base64:', result.data.pdf.length) // Debug
-  console.log('Début base64:', result.data.pdf.substring(0, 50)) // Debug
+    if (result.success && result.data && result.data.pdf && result.data.docx) {
+      console.log('✅ PDF et DOCX trouvés')
+      
+      // DEBUG
+      console.log('Type PDF:', typeof result.data.pdf)
+      console.log('Type DOCX:', typeof result.data.docx)
+      console.log('PDF commence par:', result.data.pdf.substring(0, 50))
+      console.log('DOCX commence par:', result.data.docx.substring(0, 50))
+      
+      // Télécharger le PDF
+      const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf')
+      downloadFile(pdfBlob, `${result.data.filename}.pdf`)
 
-  // Télécharger le PDF
-  const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf')
-      const url = window.URL.createObjectURL(pdfBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = result.data.filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      // Télécharger le DOCX
+      const docxBlob = base64ToBlob(result.data.docx, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+      downloadFile(docxBlob, `${result.data.filename}.docx`)
 
-      alert('✅ CV généré avec succès !')
+      alert('✅ CV généré avec succès ! (PDF + DOCX téléchargés)')
     } else {
-      setError(result.error || 'Erreur lors de la génération')
+      console.error('❌ Données manquantes:', result)
+      setError('Le backend n\'a pas retourné les fichiers')
     }
     
   } catch (err) {
-    console.error('Erreur:', err)
-    setError('Erreur lors de la génération du CV')
+    console.error('❌ ERREUR COMPLÈTE:', err)
+    setError(`Erreur: ${err.message}`)
   } finally {
     setProcessing(false)
   }
+}
+
+// Fonction helper pour télécharger un fichier
+const downloadFile = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 
 // Fonction helper pour convertir base64 en Blob
