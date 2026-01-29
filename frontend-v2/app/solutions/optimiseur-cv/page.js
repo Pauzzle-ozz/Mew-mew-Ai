@@ -13,6 +13,11 @@ export default function OptimiseurCVPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(null)
+  const [selectedFormats, setSelectedFormats] = useState({
+    pdf: true,
+    docx: true,
+    portfolio: false
+  })
 
   // Données du CV
   const [cvData, setCvData] = useState({
@@ -132,7 +137,11 @@ const handleGenerateCV = async () => {
       setProcessing(false)
       return
     }
-
+    if (!selectedFormats.pdf && !selectedFormats.docx) {
+      setError('Veuillez sélectionner au moins un format de sortie (PDF ou DOCX)')
+      setProcessing(false)
+      return
+    }
     console.log('🚀 Début de la requête...')
 
     // Appel au backend
@@ -157,24 +166,30 @@ const handleGenerateCV = async () => {
   const result = await response.json()
     console.log('📦 Données parsées:', result)
 
-    if (result.success && result.data && result.data.pdf && result.data.docx) {
-      console.log('✅ PDF et DOCX trouvés')
+if (result.success && result.data) {
+      console.log('✅ Fichiers reçus')
       
-      // DEBUG
-      console.log('Type PDF:', typeof result.data.pdf)
-      console.log('Type DOCX:', typeof result.data.docx)
-      console.log('PDF commence par:', result.data.pdf.substring(0, 50))
-      console.log('DOCX commence par:', result.data.docx.substring(0, 50))
+      let downloadedFormats = []
       
-      // Télécharger le PDF
-      const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf')
-      downloadFile(pdfBlob, `${result.data.filename}.pdf`)
+      // Télécharger le PDF si demandé et présent
+      if (selectedFormats.pdf && result.data.pdf) {
+        const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf')
+        downloadFile(pdfBlob, `${result.data.filename}.pdf`)
+        downloadedFormats.push('PDF')
+      }
 
-      // Télécharger le DOCX
-      const docxBlob = base64ToBlob(result.data.docx, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-      downloadFile(docxBlob, `${result.data.filename}.docx`)
+      // Télécharger le DOCX si demandé et présent
+      if (selectedFormats.docx && result.data.docx) {
+        const docxBlob = base64ToBlob(result.data.docx, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        downloadFile(docxBlob, `${result.data.filename}.docx`)
+        downloadedFormats.push('DOCX')
+      }
 
-      alert('✅ CV généré avec succès ! (PDF + DOCX téléchargés)')
+      if (downloadedFormats.length > 0) {
+        alert(`✅ CV généré avec succès ! (${downloadedFormats.join(' + ')} téléchargés)`)
+      } else {
+        setError('Aucun format sélectionné')
+      }
     } else {
       console.error('❌ Données manquantes:', result)
       setError('Le backend n\'a pas retourné les fichiers')
@@ -697,8 +712,13 @@ const base64ToBlob = (base64, type) => {
               <div className="space-y-4 mb-8">
                 <h3 className="font-bold text-gray-900 mb-4">Formats de sortie</h3>
                 
-                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-5 h-5 text-blue-600" />
+<label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedFormats.pdf}
+                    onChange={(e) => setSelectedFormats({...selectedFormats, pdf: e.target.checked})}
+                    className="w-5 h-5 text-blue-600" 
+                  />
                   <div className="ml-3">
                     <div className="font-medium text-gray-900">Export PDF</div>
                     <div className="text-sm text-gray-600">Format universel, parfait pour l'envoi</div>
@@ -706,18 +726,32 @@ const base64ToBlob = (base64, type) => {
                 </label>
 
                 <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-5 h-5 text-blue-600" />
+                  <input 
+                    type="checkbox" 
+                    checked={selectedFormats.docx}
+                    onChange={(e) => setSelectedFormats({...selectedFormats, docx: e.target.checked})}
+                    className="w-5 h-5 text-blue-600" 
+                  />
                   <div className="ml-3">
                     <div className="font-medium text-gray-900">Export DOCX</div>
                     <div className="text-sm text-gray-600">Format éditable pour modifications ultérieures</div>
                   </div>
                 </label>
 
-                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input type="checkbox" className="w-5 h-5 text-blue-600" />
+                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer opacity-60">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedFormats.portfolio}
+                    onChange={(e) => setSelectedFormats({...selectedFormats, portfolio: e.target.checked})}
+                    disabled
+                    className="w-5 h-5 text-blue-600" 
+                  />
                   <div className="ml-3">
                     <div className="font-medium text-gray-900">Portfolio en ligne</div>
                     <div className="text-sm text-gray-600">Créer une page web avec votre CV (ex: mew.fr/p/prenom-nom)</div>
+                  </div>
+                  <div className="ml-auto px-3 py-1 bg-gray-200 text-gray-600 rounded text-xs font-semibold">
+                    Bientôt
                   </div>
                 </label>
               </div>
