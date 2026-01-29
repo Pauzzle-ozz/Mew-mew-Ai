@@ -738,22 +738,7 @@ const base64ToBlob = (base64, type) => {
                   </div>
                 </label>
 
-                <label className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer opacity-60">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedFormats.portfolio}
-                    onChange={(e) => setSelectedFormats({...selectedFormats, portfolio: e.target.checked})}
-                    disabled
-                    className="w-5 h-5 text-blue-600" 
-                  />
-                  <div className="ml-3">
-                    <div className="font-medium text-gray-900">Portfolio en ligne</div>
-                    <div className="text-sm text-gray-600">Créer une page web avec votre CV (ex: mew.fr/p/prenom-nom)</div>
-                  </div>
-                  <div className="ml-auto px-3 py-1 bg-gray-200 text-gray-600 rounded text-xs font-semibold">
-                    Bientôt
-                  </div>
-                </label>
+
               </div>
 
               {/* Erreur */}
