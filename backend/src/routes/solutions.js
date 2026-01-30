@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const pdf = require('pdf-parse');
+const axios = require('axios');
 const router = express.Router();
 
 // Import des services
@@ -123,73 +124,44 @@ router.post('/analyse-cv-pdf-complete', upload.single('cv'), async (req, res) =>
 // ========================================
 
 /**
- * Extraire un CV pour l'optimiseur (sans analyse)
+ * Optimiser un CV via formulaire structuré
  */
-router.post('/extraire-cv', upload.single('cv'), async (req, res) => {
+router.post('/optimiser-cv-formulaire', async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        error: 'Aucun fichier PDF fourni'
-      });
-    }
+    const { cvData, userId } = req.body;
 
-    console.log('📄 Extraction du CV PDF...');
+    console.log('🤖 [OPTIMISEUR-FORM] Début optimisation formulaire...');
 
-    const pdfData = await pdf(req.file.buffer);
+    // Validation
+    cvService.validateCVData(cvData);
 
-    console.log('✅ Texte extrait, longueur:', pdfData.text.length);
-
-    res.json({
-      success: true,
-      data: {
-        texte_brut: pdfData.text,
-        nombre_pages: pdfData.numpages
+    // Appel au workflow n8n formulaire
+    const response = await axios.post(
+      process.env.N8N_WEBHOOK_OPTIMISER_FORM_URL,
+      { cvData, userId },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.N8N_SECRET_KEY}`
+        },
+        timeout: 60000
       }
-    });
+    );
 
-  } catch (error) {
-    console.error('❌ Erreur extraction CV:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Impossible d\'extraire les données du CV'
-    });
-  }
-});
-
-/**
- * Optimiser un CV avec l'IA
- */
-router.post('/optimiser-cv', async (req, res) => {
-  try {
-    const { cvData } = req.body;
-
-    console.log('🤖 [OPTIMISEUR] Début de l\'optimisation...');
-
-    // Appel au service
-    const result = await cvService.optimizeCV(cvData);
-
-    console.log('✅ [OPTIMISEUR] CV optimisé avec succès');
+    console.log('✅ [OPTIMISEUR-FORM] CV optimisé avec succès');
 
     res.json({
       success: true,
-      data: result
+      data: response.data
     });
 
   } catch (error) {
-    console.error('❌ [OPTIMISEUR] Erreur:', error.message);
-
-    // Gestion des erreurs spécifiques
+    console.error('❌ [OPTIMISEUR-FORM] Erreur:', error.message);
+    
     if (error.code === 'ECONNREFUSED') {
       return res.status(503).json({
         success: false,
         error: 'Service d\'optimisation indisponible (n8n non accessible)'
-      });
-    }
-
-    if (error.code === 'ETIMEDOUT') {
-      return res.status(504).json({
-        success: false,
-        error: 'L\'optimisation a pris trop de temps (timeout)'
       });
     }
 
@@ -202,11 +174,73 @@ router.post('/optimiser-cv', async (req, res) => {
 });
 
 /**
- * Générer un CV (PDF/DOCX)
+ * Optimiser un CV via upload PDF
+ */
+router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Aucun fichier PDF fourni'
+      });
+    }
+
+    const { userId } = req.body;
+
+    console.log('📄 [OPTIMISEUR-PDF] Début optimisation PDF...');
+
+    // Extraction du texte du PDF
+    const pdfData = await pdf(req.file.buffer);
+
+    console.log('📝 [OPTIMISEUR-PDF] Texte extrait, longueur:', pdfData.text.length);
+
+    // Appel au workflow n8n PDF
+    const response = await axios.post(
+      process.env.N8N_WEBHOOK_OPTIMISER_PDF_URL,
+      {
+        userId,
+        cv_texte_complet: pdfData.text,
+        nombre_pages: pdfData.numpages
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.N8N_SECRET_KEY}`
+        },
+        timeout: 60000
+      }
+    );
+
+    console.log('✅ [OPTIMISEUR-PDF] CV optimisé avec succès');
+
+    res.json({
+      success: true,
+      data: response.data
+    });
+
+  } catch (error) {
+    console.error('❌ [OPTIMISEUR-PDF] Erreur:', error.message);
+
+    if (error.code === 'ECONNREFUSED') {
+      return res.status(503).json({
+        success: false,
+        error: 'Service d\'optimisation indisponible (n8n non accessible)'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible d\'optimiser le CV PDF',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Générer un CV (PDF uniquement)
  */
 router.post('/generer-cv', async (req, res) => {
   try {
-    const { cvData, template, formats } = req.body;
+    const { cvData, template } = req.body;
 
     // Validation
     cvService.validateCVData(cvData);
@@ -217,26 +251,21 @@ router.post('/generer-cv', async (req, res) => {
       });
     }
 
-    console.log('🚀 [GENERATION] Début génération CV...');
+    console.log('🚀 [GENERATION] Début génération CV (PDF uniquement)...');
 
     // Génération du HTML
     const html = templateFactory.getTemplate(template, cvData);
 
-    // Génération PDF
+    // Génération PDF uniquement
     const pdfBuffer = await pdfService.generatePDF(html);
     const pdfBase64 = pdfBuffer.toString('base64');
 
-    // Génération DOCX
-    const docxBuffer = await pdfService.generateDOCX(cvData, template);
-    const docxBase64 = docxBuffer.toString('base64');
-
-    console.log('✅ [GENERATION] CV généré avec succès');
+    console.log('✅ [GENERATION] CV généré avec succès (PDF)');
 
     res.json({
       success: true,
       data: {
         pdf: pdfBase64,
-        docx: docxBase64,
         filename: `CV_${cvData.prenom}_${cvData.nom}`
       }
     });

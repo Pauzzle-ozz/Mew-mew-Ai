@@ -54,27 +54,15 @@ export function downloadFile(blob, filename) {
 }
 
 /**
- * Télécharger un CV généré (PDF et/ou DOCX)
+ * Télécharger un CV généré (PDF uniquement)
  */
-export function downloadGeneratedCV(result, selectedFormats) {
-  const downloadedFormats = [];
-
-  // Télécharger PDF si demandé
-  if (selectedFormats.pdf && result.data.pdf) {
-    const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf');
-    downloadFile(pdfBlob, `${result.data.filename}.pdf`);
-    downloadedFormats.push('PDF');
+export function downloadGeneratedCV(result) {
+  if (!result.data.pdf) {
+    throw new Error('Aucun PDF disponible');
   }
 
-  // Télécharger DOCX si demandé
-  if (selectedFormats.docx && result.data.docx) {
-    const docxBlob = base64ToBlob(
-      result.data.docx,
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    );
-    downloadFile(docxBlob, `${result.data.filename}.docx`);
-    downloadedFormats.push('DOCX');
-  }
-
-  return downloadedFormats;
+  const pdfBlob = base64ToBlob(result.data.pdf, 'application/pdf');
+  downloadFile(pdfBlob, `${result.data.filename}.pdf`);
+  
+  return 'PDF';
 }

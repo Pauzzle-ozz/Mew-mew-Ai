@@ -81,18 +81,56 @@ export const cvApi = {
     return response.json();
   },
 
-  /**
-   * Générer un CV (PDF/DOCX)
+/**
+   * Générer un CV (PDF uniquement)
    */
-  async generateCV(cvData, template, formats) {
+  async generateCV(cvData, template) {
     const response = await fetch(`${API_BASE_URL}/generer-cv`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cvData, template, formats })
+      body: JSON.stringify({ cvData, template })
     });
 
     if (!response.ok) {
       throw new Error('Erreur lors de la génération du CV');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Optimiser un CV via formulaire structuré
+   */
+  async optimizeCVForm(cvData, userId) {
+    const response = await fetch(`${API_BASE_URL}/optimiser-cv-formulaire`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cvData, userId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de l\'optimisation');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Optimiser un CV via upload PDF
+   */
+  async optimizeCVPDF(file, userId) {
+    const formData = new FormData();
+    formData.append('cv', file);
+    formData.append('userId', userId);
+
+    const response = await fetch(`${API_BASE_URL}/optimiser-cv-pdf`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'optimisation du PDF');
     }
 
     return response.json();
