@@ -1,38 +1,62 @@
 /**
- * Constantes des templates de CV
- * Définition centralisée des templates disponibles
+ * Configuration des templates CV
+ * Définit les templates disponibles avec leurs métadonnées
  */
 
-export const templates = [
+export const CV_TEMPLATES = [
   {
     id: 'moderne',
     nom: 'Moderne',
-    description: 'Design épuré et contemporain',
-    couleur: 'from-blue-500 to-blue-600',
-    icone: '🚀',
-    secteurs: 'Tech, Startup, Digital'
+    description: 'Design épuré et coloré, idéal pour les startups et métiers créatifs',
+    couleur: '#667eea',
+    icone: '🎨',
+    secteurs: ['Tech', 'Marketing', 'Design', 'Startup']
   },
   {
     id: 'classique',
     nom: 'Classique',
-    description: 'Professionnel et intemporel',
-    couleur: 'from-gray-700 to-gray-900',
-    icone: '💼',
-    secteurs: 'Corporate, Banque, Juridique'
+    description: 'Format traditionnel et sobre, parfait pour les secteurs corporate',
+    couleur: '#2c3e50',
+    icone: '📄',
+    secteurs: ['Finance', 'Juridique', 'Consulting', 'Corporate']
   },
   {
     id: 'creatif',
     nom: 'Créatif',
-    description: 'Original et coloré',
-    couleur: 'from-purple-500 to-pink-500',
-    icone: '🎨',
-    secteurs: 'Design, Marketing, Com'
+    description: 'Template audacieux avec touches de couleur, pour se démarquer',
+    couleur: '#ec4899',
+    icone: '✨',
+    secteurs: ['Communication', 'Publicité', 'Art', 'Média']
+  },
+  {
+    id: 'tech',
+    nom: 'Tech',
+    description: 'Style code/terminal pour développeurs et professionnels IT',
+    couleur: '#10b981',
+    icone: '💻',
+    secteurs: ['Développement', 'DevOps', 'Data', 'Cybersécurité']
+  },
+  {
+    id: 'executive',
+    nom: 'Executive',
+    description: 'Design élégant et professionnel pour managers et cadres supérieurs',
+    couleur: '#1c1c1c',
+    icone: '👔',
+    secteurs: ['Management', 'Direction', 'C-Level', 'Conseil']
+  },
+  {
+    id: 'minimal',
+    nom: 'Minimal',
+    description: 'Ultra épuré et moderne, focus sur le contenu sans distraction',
+    couleur: '#64748b',
+    icone: '⚡',
+    secteurs: ['Architecture', 'Design', 'UX/UI', 'Product']
   }
 ];
 
 /**
- * Obtenir un template par son ID
+ * Récupérer un template par son ID
  */
 export function getTemplateById(id) {
-  return templates.find(t => t.id === id);
+  return CV_TEMPLATES.find(template => template.id === id);
 }

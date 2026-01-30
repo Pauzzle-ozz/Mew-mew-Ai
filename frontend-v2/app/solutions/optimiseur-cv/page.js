@@ -9,6 +9,7 @@ import { downloadGeneratedCV } from '@/lib/utils/fileHelpers'
 import { cvApi } from '@/lib/api/cvApi'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import CVTemplateSelector from '@/components/cv/CVTemplateSelector'
+import TemplatePreview from '@/components/cv/TemplatePreview'
 
 export default function OptimiseurCVPage() {
   const { user, loading } = useAuth()
@@ -427,26 +428,33 @@ export default function OptimiseurCVPage() {
           </>
         )}
 
-        {/* ÉTAPE 2 : Template */}
-        {step === 2 && cvDataOptimized && (
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold mb-2">Choisissez votre template</h2>
-            <p className="text-gray-600 mb-8">Votre CV a été optimisé ! Sélectionnez maintenant le design.</p>
+       {/* ÉTAPE 2 : Template */}
+{step === 2 && cvDataOptimized && (
+  <div className="max-w-6xl mx-auto">
+    <h2 className="text-3xl font-bold mb-2">Choisissez votre template</h2>
+    <p className="text-gray-600 mb-8">Votre CV a été optimisé ! Sélectionnez maintenant le design.</p>
 
-            <CVTemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
+    <CVTemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
 
-            <div className="flex justify-between mt-8">
-              <button onClick={() => setStep(1)} className="px-6 py-3 border-2 rounded-lg">← Retour</button>
-              <button
-                onClick={() => setStep(3)}
-                disabled={!selectedTemplate}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg disabled:opacity-50"
-              >
-                Continuer →
-              </button>
-            </div>
-          </div>
-        )}
+    {/* NOUVELLE PARTIE : Preview */}
+    {selectedTemplate && (
+      <div className="mt-8">
+        <TemplatePreview template={selectedTemplate} cvData={cvDataOptimized} />
+      </div>
+    )}
+
+    <div className="flex justify-between mt-8">
+      <button onClick={() => setStep(1)} className="px-6 py-3 border-2 rounded-lg">← Retour</button>
+      <button
+        onClick={() => setStep(3)}
+        disabled={!selectedTemplate}
+        className="px-6 py-3 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+      >
+        Continuer →
+      </button>
+    </div>
+  </div>
+)}
 
         {/* ÉTAPE 3 : Génération */}
         {step === 3 && cvDataOptimized && (
