@@ -31,6 +31,10 @@ export default function PortfolioEditorPage() {
   const [error, setError] = useState(null)
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [editingBlock, setEditingBlock] = useState(null)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importCVData, setImportCVData] = useState('')
+  const [importError, setImportError] = useState(null)
+  const [importing, setImporting] = useState(false)
 
   // Charger le portfolio
   useEffect(() => {
@@ -74,14 +78,14 @@ export default function PortfolioEditorPage() {
   const getDefaultContent = (type) => {
     switch (type) {
       case 'hero':
-  return { 
-    title: 'Bienvenue', 
-    subtitle: '', 
-    backgroundImage: '', 
-    buttonText: '', 
-    buttonLink: '',
-    overlay: true 
-  }
+        return { 
+          title: 'Bienvenue', 
+          subtitle: '', 
+          backgroundImage: '', 
+          buttonText: '', 
+          buttonLink: '',
+          overlay: true 
+        }
       case 'text':
         return { title: '', text: '', style: 'paragraph' }
       case 'image':
@@ -153,21 +157,148 @@ export default function PortfolioEditorPage() {
     }
   }
 
-  // Publier / Dépublier
-// Changer le template
+  // Importer les données du CV
+  const handleImportCV = async () => {
+    try {
+      setImporting(true)
+      setImportError(null)
 
-const handleChangeTemplate = async (newTemplate) => {
-  try {
-    setSaving(true)
-    await portfolioApi.updatePortfolio(portfolioId, user.id, { template: newTemplate })
-    setPortfolio({ ...portfolio, template: newTemplate })
-  } catch (err) {
-    console.error('Erreur changement template:', err)
-    setError('Impossible de changer le template')
-  } finally {
-    setSaving(false)
+      // Parser le JSON
+      let cvData
+      try {
+        cvData = JSON.parse(importCVData)
+      } catch (e) {
+        throw new Error('JSON invalide. Vérifie le format.')
+      }
+
+      // Créer les blocs à partir du CV
+      const blocksToCreate = []
+
+      // 1. Bloc Hero avec nom et titre
+      if (cvData.prenom || cvData.nom || cvData.titre_poste) {
+        blocksToCreate.push({
+          type: 'hero',
+          content: {
+            title: `${cvData.prenom || ''} ${cvData.nom || ''}`.trim(),
+            subtitle: cvData.titre_poste || '',
+            backgroundImage: '',
+            overlay: true
+          }
+        })
+      }
+
+      // 2. Bloc Texte avec le résumé
+      if (cvData.resume) {
+        blocksToCreate.push({
+          type: 'text',
+          content: {
+            title: 'À propos',
+            text: cvData.resume,
+            style: 'paragraph'
+          }
+        })
+      }
+
+      // 3. Bloc Texte pour les expériences
+      if (cvData.experiences && cvData.experiences.length > 0) {
+        const expText = cvData.experiences.map(exp => 
+          `**${exp.poste || 'Poste'}** - ${exp.entreprise || 'Entreprise'}\n${exp.periode || exp.date_debut || ''} ${exp.date_fin ? '- ' + exp.date_fin : ''}\n${exp.description || ''}`
+        ).join('\n\n')
+
+        blocksToCreate.push({
+          type: 'text',
+          content: {
+            title: 'Expériences professionnelles',
+            text: expText,
+            style: 'paragraph'
+          }
+        })
+      }
+
+      // 4. Bloc Texte pour les formations
+      if (cvData.formations && cvData.formations.length > 0) {
+        const formText = cvData.formations.map(form => 
+          `**${form.diplome || 'Diplôme'}** - ${form.etablissement || 'Établissement'}\n${form.annee || form.date_fin || ''}`
+        ).join('\n\n')
+
+        blocksToCreate.push({
+          type: 'text',
+          content: {
+            title: 'Formation',
+            text: formText,
+            style: 'paragraph'
+          }
+        })
+      }
+
+      // 5. Bloc Texte pour les compétences
+      if (cvData.competences_techniques || cvData.competences_soft) {
+        let compText = ''
+        if (cvData.competences_techniques) {
+          compText += `**Compétences techniques :**\n${cvData.competences_techniques}\n\n`
+        }
+        if (cvData.competences_soft) {
+          compText += `**Soft skills :**\n${cvData.competences_soft}\n\n`
+        }
+        if (cvData.langues) {
+          compText += `**Langues :**\n${cvData.langues}`
+        }
+
+        blocksToCreate.push({
+          type: 'text',
+          content: {
+            title: 'Compétences',
+            text: compText.trim(),
+            style: 'paragraph'
+          }
+        })
+      }
+
+      // 6. Bloc Contact
+      if (cvData.email || cvData.telephone || cvData.linkedin) {
+        blocksToCreate.push({
+          type: 'contact',
+          content: {
+            email: cvData.email || '',
+            phone: cvData.telephone || '',
+            linkedin: cvData.linkedin || '',
+            github: ''
+          }
+        })
+      }
+
+      // Créer tous les blocs
+      for (const blockData of blocksToCreate) {
+        const result = await portfolioApi.addBlock(portfolioId, user.id, blockData.type, blockData.content)
+        setBlocks(prev => [...prev, result.data])
+      }
+
+      // Fermer le modal
+      setShowImportModal(false)
+      setImportCVData('')
+      alert(`✅ ${blocksToCreate.length} blocs importés avec succès !`)
+
+    } catch (err) {
+      console.error('Erreur import CV:', err)
+      setImportError(err.message)
+    } finally {
+      setImporting(false)
+    }
   }
-}
+
+  // Changer le template
+  const handleChangeTemplate = async (newTemplate) => {
+    try {
+      setSaving(true)
+      await portfolioApi.updatePortfolio(portfolioId, user.id, { template: newTemplate })
+      setPortfolio({ ...portfolio, template: newTemplate })
+    } catch (err) {
+      console.error('Erreur changement template:', err)
+      setError('Impossible de changer le template')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleTogglePublish = async () => {
     try {
@@ -265,108 +396,207 @@ const handleChangeTemplate = async (newTemplate) => {
       {/* Zone d'édition */}
       <main className="max-w-4xl mx-auto py-8 px-4">
 
-{/* Sélecteur de template */}
-<div className="mb-6 p-4 bg-white rounded-xl shadow">
-  <h3 className="font-bold text-gray-900 mb-3">🎨 Design du portfolio</h3>
-  <div className="grid grid-cols-3 gap-3">
-    {[
-      { id: 'moderne', name: 'Moderne', icon: '🎨', color: 'from-blue-600 to-purple-600' },
-      { id: 'minimal', name: 'Minimal', icon: '⚪', color: 'from-gray-200 to-gray-300' },
-      { id: 'sombre', name: 'Sombre', icon: '🌙', color: 'from-gray-800 to-gray-900' }
-    ].map((tpl) => (
-      <button
-        key={tpl.id}
-        onClick={() => handleChangeTemplate(tpl.id)}
-        className={`p-4 rounded-lg border-2 transition-all ${
-          portfolio.template === tpl.id
-            ? 'border-blue-500 ring-2 ring-blue-200'
-            : 'border-gray-200 hover:border-gray-300'
-        }`}
-      >
-        <div className={`h-16 rounded-md bg-gradient-to-br ${tpl.color} mb-2 flex items-center justify-center`}>
-          <span className="text-2xl">{tpl.icon}</span>
+        {/* Sélecteur de template */}
+        <div className="mb-6 p-4 bg-white rounded-xl shadow">
+          <h3 className="font-bold text-gray-900 mb-3">🎨 Design du portfolio</h3>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { id: 'moderne', name: 'Moderne', icon: '🎨', color: 'from-blue-600 to-purple-600' },
+              { id: 'minimal', name: 'Minimal', icon: '⚪', color: 'from-gray-200 to-gray-300' },
+              { id: 'sombre', name: 'Sombre', icon: '🌙', color: 'from-gray-800 to-gray-900' }
+            ].map((tpl) => (
+              <button
+                key={tpl.id}
+                onClick={() => handleChangeTemplate(tpl.id)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  portfolio.template === tpl.id
+                    ? 'border-blue-500 ring-2 ring-blue-200'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className={`h-16 rounded-md bg-gradient-to-br ${tpl.color} mb-2 flex items-center justify-center`}>
+                  <span className="text-2xl">{tpl.icon}</span>
+                </div>
+                <p className={`text-sm font-medium ${
+                  portfolio.template === tpl.id ? 'text-blue-600' : 'text-gray-700'
+                }`}>
+                  {tpl.name}
+                </p>
+              </button>
+            ))}
+          </div>
         </div>
-        <p className={`text-sm font-medium ${
-          portfolio.template === tpl.id ? 'text-blue-600' : 'text-gray-700'
-        }`}>
-          {tpl.name}
-        </p>
-      </button>
-    ))}
-  </div>
-</div>
 
-{/* QR Code & Partage */}
-<div className="mb-6 p-4 bg-white rounded-xl shadow">
-  <h3 className="font-bold text-gray-900 mb-3">📱 Partager le portfolio</h3>
-  
-  <div className="flex items-center gap-6">
-    {/* QR Code */}
-    <div className="bg-white p-3 rounded-lg border">
-      <QRCodeSVG 
-  id="qr-code-svg"
-  value={`${window.location.origin}/p/${portfolio.slug}`}
-        size={120}
-        level="M"
-        includeMargin={true}
-      />
-    </div>
+        {/* QR Code & Partage */}
+        <div className="mb-6 p-4 bg-white rounded-xl shadow">
+          <h3 className="font-bold text-gray-900 mb-3">📱 Partager le portfolio</h3>
+          
+          <div className="flex items-center gap-6">
+            {/* QR Code */}
+            <div className="bg-white p-3 rounded-lg border">
+              <QRCodeSVG 
+                id="qr-code-svg"
+                value={`${window.location.origin}/p/${portfolio.slug}`}
+                size={120}
+                level="M"
+                includeMargin={true}
+              />
+            </div>
 
-    {/* Infos et boutons */}
-    <div className="flex-1 space-y-3">
-      {/* URL */}
-      <div>
-        <p className="text-sm text-gray-500 mb-1">Lien du portfolio :</p>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 px-3 py-2 bg-gray-100 rounded text-sm truncate">
-            {window.location.origin}/p/{portfolio.slug}
-          </code>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/p/${portfolio.slug}`)
-              alert('✅ Lien copié !')
-            }}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-          >
-            📋 Copier
-          </button>
+            {/* Infos et boutons */}
+            <div className="flex-1 space-y-3">
+              {/* URL */}
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Lien du portfolio :</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-gray-100 rounded text-sm truncate">
+                    {window.location.origin}/p/{portfolio.slug}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/p/${portfolio.slug}`)
+                      alert('✅ Lien copié !')
+                    }}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                  >
+                    📋 Copier
+                  </button>
+                </div>
+              </div>
+
+              {/* Télécharger QR Code */}
+              <button
+                onClick={() => {
+                  const svg = document.getElementById('qr-code-svg')
+                  const svgData = new XMLSerializer().serializeToString(svg)
+                  const canvas = document.createElement('canvas')
+                  const ctx = canvas.getContext('2d')
+                  const img = new Image()
+                  img.onload = () => {
+                    canvas.width = img.width
+                    canvas.height = img.height
+                    ctx.drawImage(img, 0, 0)
+                    const pngFile = canvas.toDataURL('image/png')
+                    const downloadLink = document.createElement('a')
+                    downloadLink.download = `qrcode-${portfolio.slug}.png`
+                    downloadLink.href = pngFile
+                    downloadLink.click()
+                  }
+                  img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+              >
+                📥 Télécharger le QR Code
+              </button>
+
+              {/* Statut */}
+              {!portfolio.published && (
+                <p className="text-sm text-orange-600">
+                  ⚠️ Publie ton portfolio pour que le lien fonctionne
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Télécharger QR Code */}
-      <button
-        onClick={() => {
-          const svg = document.getElementById('qr-code-svg')
-          const svgData = new XMLSerializer().serializeToString(svg)
-          const canvas = document.createElement('canvas')
-          const ctx = canvas.getContext('2d')
-          const img = new Image()
-          img.onload = () => {
-            canvas.width = img.width
-            canvas.height = img.height
-            ctx.drawImage(img, 0, 0)
-            const pngFile = canvas.toDataURL('image/png')
-            const downloadLink = document.createElement('a')
-            downloadLink.download = `qrcode-${portfolio.slug}.png`
-            downloadLink.href = pngFile
-            downloadLink.click()
-          }
-          img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
-        }}
-        className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
-      >
-        📥 Télécharger le QR Code
-      </button>
+        {/* Import CV */}
+        <div className="mb-6 p-4 bg-white rounded-xl shadow">
+          <h3 className="font-bold text-gray-900 mb-3">📄 Importer depuis mon CV</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Tu as déjà optimisé ton CV ? Importe tes informations en un clic !
+          </p>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-teal-700"
+            >
+              📥 Importer mon CV
+            </button>
+            
+            <Link
+              href="/solutions/optimiseur-cv"
+              target="_blank"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+            >
+              ✨ Créer un CV optimisé
+            </Link>
+          </div>
+        </div>
 
-      {/* Statut */}
-      {!portfolio.published && (
-        <p className="text-sm text-orange-600">
-          ⚠️ Publie ton portfolio pour que le lien fonctionne
-        </p>
-      )}
-    </div>
-  </div>
-</div>
+        {/* Modal Import CV */}
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">📄 Importer mon CV</h2>
+              
+              <p className="text-gray-600 mb-4">
+                Colle ici les données JSON de ton CV optimisé, ou upload le fichier JSON.
+              </p>
+
+              {/* Zone de texte pour coller le JSON */}
+              <textarea
+                placeholder='{"prenom": "Jean", "nom": "Dupont", ...}'
+                value={importCVData}
+                onChange={(e) => setImportCVData(e.target.value)}
+                rows={8}
+                className="w-full px-3 py-2 border rounded-lg font-mono text-sm mb-4"
+              />
+
+              {/* Ou upload fichier */}
+              <div className="mb-4">
+                <label className="block cursor-pointer">
+                  <div className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-600 hover:border-blue-400 hover:text-blue-600">
+                    📁 Ou uploader un fichier JSON
+                  </div>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => {
+                      const file = e.target.files[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (event) => {
+                          setImportCVData(event.target.result)
+                        }
+                        reader.readAsText(file)
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Erreur */}
+              {importError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  {importError}
+                </div>
+              )}
+
+              {/* Boutons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowImportModal(false)
+                    setImportCVData('')
+                    setImportError(null)
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleImportCV}
+                  disabled={!importCVData || importing}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50"
+                >
+                  {importing ? '⏳ Import...' : '📥 Importer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* URL du portfolio */}
         {portfolio.published && (
@@ -376,6 +606,7 @@ const handleChangeTemplate = async (newTemplate) => {
               <a 
                 href={`/p/${portfolio.slug}`} 
                 target="_blank"
+                rel="noopener noreferrer"
                 className="font-medium underline"
               >
                 mew.app/p/{portfolio.slug}
@@ -507,6 +738,7 @@ function BlockEditor({
   // Icône du bloc
   const getBlockIcon = () => {
     const icons = {
+      hero: '🦸',
       text: '📝',
       image: '🖼️',
       video: '🎬',
@@ -580,106 +812,106 @@ function BlockEditor({
         {isEditing ? (
           // Mode édition
           <div className="space-y-4">
-           {block.type === 'hero' && (
-  <>
-    {/* Aperçu Hero */}
-    <div 
-      className="relative h-48 rounded-lg overflow-hidden mb-4 flex items-center justify-center"
-      style={{
-        backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: content.backgroundImage ? 'transparent' : '#4F46E5'
-      }}
-    >
-      {content.overlay && content.backgroundImage && (
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-      )}
-      <div className="relative z-10 text-center text-white p-4">
-        <h2 className="text-2xl font-bold">{content.title || 'Titre'}</h2>
-        {content.subtitle && <p className="mt-2">{content.subtitle}</p>}
-        {content.buttonText && (
-          <span className="inline-block mt-3 px-4 py-2 bg-white text-gray-900 rounded-lg text-sm">
-            {content.buttonText}
-          </span>
-        )}
-      </div>
-    </div>
+            {block.type === 'hero' && (
+              <>
+                {/* Aperçu Hero */}
+                <div 
+                  className="relative h-48 rounded-lg overflow-hidden mb-4 flex items-center justify-center"
+                  style={{
+                    backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundColor: content.backgroundImage ? 'transparent' : '#4F46E5'
+                  }}
+                >
+                  {content.overlay && content.backgroundImage && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+                  )}
+                  <div className="relative z-10 text-center text-white p-4">
+                    <h2 className="text-2xl font-bold">{content.title || 'Titre'}</h2>
+                    {content.subtitle && <p className="mt-2">{content.subtitle}</p>}
+                    {content.buttonText && (
+                      <span className="inline-block mt-3 px-4 py-2 bg-white text-gray-900 rounded-lg text-sm">
+                        {content.buttonText}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-    {/* Titre */}
-    <input
-      type="text"
-      placeholder="Titre principal"
-      value={content.title || ''}
-      onChange={(e) => handleChange('title', e.target.value)}
-      className="w-full px-3 py-2 border rounded-lg text-lg font-bold"
-    />
+                {/* Titre */}
+                <input
+                  type="text"
+                  placeholder="Titre principal"
+                  value={content.title || ''}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg text-lg font-bold"
+                />
 
-    {/* Sous-titre */}
-    <input
-      type="text"
-      placeholder="Sous-titre (optionnel)"
-      value={content.subtitle || ''}
-      onChange={(e) => handleChange('subtitle', e.target.value)}
-      className="w-full px-3 py-2 border rounded-lg"
-    />
+                {/* Sous-titre */}
+                <input
+                  type="text"
+                  placeholder="Sous-titre (optionnel)"
+                  value={content.subtitle || ''}
+                  onChange={(e) => handleChange('subtitle', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
 
-    {/* Image de fond */}
-    <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-      <p className="text-sm font-medium text-gray-700">Image de fond :</p>
-      <label className="block cursor-pointer">
-        <div className="px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium text-sm">
-          {uploading ? '⏳ Upload...' : '📤 Choisir une image de fond'}
-        </div>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          onChange={(e) => handleFileUpload(e, 'backgroundImage')}
-          className="hidden"
-          disabled={uploading}
-        />
-      </label>
-      {content.backgroundImage && (
-        <button
-          type="button"
-          onClick={() => handleChange('backgroundImage', '')}
-          className="text-red-500 text-sm hover:underline"
-        >
-          🗑️ Supprimer l'image
-        </button>
-      )}
-    </div>
+                {/* Image de fond */}
+                <div className="p-3 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Image de fond :</p>
+                  <label className="block cursor-pointer">
+                    <div className="px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium text-sm">
+                      {uploading ? '⏳ Upload...' : '📤 Choisir une image de fond'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'backgroundImage')}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                  {content.backgroundImage && (
+                    <button
+                      type="button"
+                      onClick={() => handleChange('backgroundImage', '')}
+                      className="text-red-500 text-sm hover:underline"
+                    >
+                      🗑️ Supprimer l'image
+                    </button>
+                  )}
+                </div>
 
-    {/* Overlay */}
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={content.overlay !== false}
-        onChange={(e) => handleChange('overlay', e.target.checked)}
-        className="w-4 h-4"
-      />
-      <span className="text-sm text-gray-700">Assombrir l'image (meilleure lisibilité)</span>
-    </label>
+                {/* Overlay */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={content.overlay !== false}
+                    onChange={(e) => handleChange('overlay', e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm text-gray-700">Assombrir l'image (meilleure lisibilité)</span>
+                </label>
 
-    {/* Bouton d'action */}
-    <div className="grid grid-cols-2 gap-3">
-      <input
-        type="text"
-        placeholder="Texte du bouton (optionnel)"
-        value={content.buttonText || ''}
-        onChange={(e) => handleChange('buttonText', e.target.value)}
-        className="px-3 py-2 border rounded-lg"
-      />
-      <input
-        type="text"
-        placeholder="Lien du bouton"
-        value={content.buttonLink || ''}
-        onChange={(e) => handleChange('buttonLink', e.target.value)}
-        className="px-3 py-2 border rounded-lg"
-      />
-    </div>
-  </>
-)}
+                {/* Bouton d'action */}
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Texte du bouton (optionnel)"
+                    value={content.buttonText || ''}
+                    onChange={(e) => handleChange('buttonText', e.target.value)}
+                    className="px-3 py-2 border rounded-lg"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Lien du bouton"
+                    value={content.buttonLink || ''}
+                    onChange={(e) => handleChange('buttonLink', e.target.value)}
+                    className="px-3 py-2 border rounded-lg"
+                  />
+                </div>
+              </>
+            )}
            
             {block.type === 'text' && (
               <>
@@ -709,205 +941,207 @@ function BlockEditor({
               </>
             )}
 
-{block.type === 'image' && (
-  <>
-    {/* Aperçu image */}
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-      {content.url ? (
-        <div>
-          <img src={content.url} alt="" className="max-h-64 mx-auto rounded mb-4" />
-          <button
-            type="button"
-            onClick={() => handleChange('url', '')}
-            className="text-red-500 text-sm hover:underline"
-          >
-            🗑️ Supprimer l'image
-          </button>
-        </div>
-      ) : (
-        <div className="py-8">
-          <span className="text-4xl mb-2 block">🖼️</span>
-          <p className="text-gray-500 mb-4">Aucune image sélectionnée</p>
-        </div>
-      )}
-    </div>
+            {block.type === 'image' && (
+              <>
+                {/* Aperçu image */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  {content.url ? (
+                    <div>
+                      <img src={content.url} alt="" className="max-h-64 mx-auto rounded mb-4" />
+                      <button
+                        type="button"
+                        onClick={() => handleChange('url', '')}
+                        className="text-red-500 text-sm hover:underline"
+                      >
+                        🗑️ Supprimer l'image
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="py-8">
+                      <span className="text-4xl mb-2 block">🖼️</span>
+                      <p className="text-gray-500 mb-4">Aucune image sélectionnée</p>
+                    </div>
+                  )}
+                </div>
 
-    {/* Bouton Upload */}
-    <div className="flex items-center gap-4">
-      <label className="flex-1 cursor-pointer">
-        <div className="px-4 py-3 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium">
-          {uploading ? '⏳ Upload en cours...' : '📤 Choisir une image'}
-        </div>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          onChange={(e) => handleFileUpload(e)}
-          className="hidden"
-          disabled={uploading}
-        />
-      </label>
-    </div>
+                {/* Bouton Upload */}
+                <div className="flex items-center gap-4">
+                  <label className="flex-1 cursor-pointer">
+                    <div className="px-4 py-3 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium">
+                      {uploading ? '⏳ Upload en cours...' : '📤 Choisir une image'}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={(e) => handleFileUpload(e)}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
 
-    {/* Ou URL externe */}
-    <div className="text-center text-gray-400 text-sm">— ou —</div>
-    <input
-      type="text"
-      placeholder="Coller une URL d'image"
-      value={content.url || ''}
-      onChange={(e) => handleChange('url', e.target.value)}
-      className="w-full px-3 py-2 border rounded-lg"
-    />
+                {/* Ou URL externe */}
+                <div className="text-center text-gray-400 text-sm">— ou —</div>
+                <input
+                  type="text"
+                  placeholder="Coller une URL d'image"
+                  value={content.url || ''}
+                  onChange={(e) => handleChange('url', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
 
-    {/* Légende */}
-    <input
-      type="text"
-      placeholder="Légende (optionnel)"
-      value={content.caption || ''}
-      onChange={(e) => handleChange('caption', e.target.value)}
-      className="w-full px-3 py-2 border rounded-lg"
-    />
-  </>
-)}
+                {/* Légende */}
+                <input
+                  type="text"
+                  placeholder="Légende (optionnel)"
+                  value={content.caption || ''}
+                  onChange={(e) => handleChange('caption', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </>
+            )}
 
-{block.type === 'video' && (
-  <>
-    {/* Type de vidéo */}
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        Type de vidéo
-      </label>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => handleChange('type', 'upload')}
-          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
-            content.type === 'upload' || !content.type
-              ? 'border-blue-500 bg-blue-50 text-blue-700'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          📤 Depuis mon PC
-        </button>
-        <button
-          type="button"
-          onClick={() => handleChange('type', 'youtube')}
-          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
-            content.type === 'youtube'
-              ? 'border-red-500 bg-red-50 text-red-700'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          ▶️ YouTube
-        </button>
-        <button
-          type="button"
-          onClick={() => handleChange('type', 'vimeo')}
-          className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
-            content.type === 'vimeo'
-              ? 'border-blue-500 bg-blue-50 text-blue-700'
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          🎬 Vimeo
-        </button>
-      </div>
-    </div>
+            {block.type === 'video' && (
+              <>
+                {/* Type de vidéo */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Type de vidéo
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleChange('type', 'upload')}
+                      className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
+                        content.type === 'upload' || !content.type
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      📤 Depuis mon PC
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChange('type', 'youtube')}
+                      className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
+                        content.type === 'youtube'
+                          ? 'border-red-500 bg-red-50 text-red-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      ▶️ YouTube
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChange('type', 'vimeo')}
+                      className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
+                        content.type === 'vimeo'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      🎬 Vimeo
+                    </button>
+                  </div>
+                </div>
 
-    {/* Upload MP4/WEBM */}
-    {(content.type === 'upload' || !content.type) && (
-      <>
-        {/* Aperçu vidéo */}
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          {content.url ? (
-            <div>
-              <video src={content.url} controls className="max-h-64 mx-auto rounded mb-4" />
-              <button
-                type="button"
-                onClick={() => handleChange('url', '')}
-                className="text-red-500 text-sm hover:underline"
-              >
-                🗑️ Supprimer la vidéo
-              </button>
-            </div>
-          ) : (
-            <div className="py-8">
-              <span className="text-4xl mb-2 block">🎬</span>
-              <p className="text-gray-500 mb-2">Aucune vidéo sélectionnée</p>
-              <p className="text-gray-400 text-sm">Formats acceptés : MP4, WEBM (max 50MB)</p>
-            </div>
-          )}
-        </div>
+                {/* Upload MP4/WEBM */}
+                {(content.type === 'upload' || !content.type) && (
+                  <>
+                    {/* Aperçu vidéo */}
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      {content.url ? (
+                        <div>
+                          <video src={content.url} controls className="max-h-64 mx-auto rounded mb-4" />
+                          <button
+                            type="button"
+                            onClick={() => handleChange('url', '')}
+                            className="text-red-500 text-sm hover:underline"
+                          >
+                            🗑️ Supprimer la vidéo
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="py-8">
+                          <span className="text-4xl mb-2 block">🎬</span>
+                          <p className="text-gray-500 mb-2">Aucune vidéo sélectionnée</p>
+                          <p className="text-gray-400 text-sm">Formats acceptés : MP4, WEBM (max 50MB)</p>
+                        </div>
+                      )}
+                    </div>
 
-        {/* Bouton Upload */}
-        <label className="block cursor-pointer">
-          <div className="px-4 py-3 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 font-medium">
-            {uploading ? '⏳ Upload en cours...' : '📤 Choisir une vidéo (MP4, WEBM)'}
-          </div>
-          <input
-            type="file"
-            accept="video/mp4,video/webm"
-            onChange={(e) => handleFileUpload(e)}
-            className="hidden"
-            disabled={uploading}
-          />
-        </label>
-      </>
-    )}
+                    {/* Bouton Upload */}
+                    <label className="block cursor-pointer">
+                      <div className="px-4 py-3 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 font-medium">
+                        {uploading ? '⏳ Upload en cours...' : '📤 Choisir une vidéo (MP4, WEBM)'}
+                      </div>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm"
+                        onChange={(e) => handleFileUpload(e)}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </>
+                )}
 
-    {/* YouTube URL */}
-    {content.type === 'youtube' && (
-      <>
-        <input
-          type="text"
-          placeholder="Coller l'URL YouTube (ex: https://www.youtube.com/watch?v=...)"
-          value={content.url || ''}
-          onChange={(e) => handleChange('url', e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-        {content.url && (
-          <div className="aspect-video">
-            <iframe
-              src={`https://www.youtube.com/embed/${content.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1] || ''}`}
-              className="w-full h-full rounded-lg"
-              allowFullScreen
-            />
-          </div>
-        )}
-      </>
-    )}
+                {/* YouTube URL */}
+                {content.type === 'youtube' && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Coller l'URL YouTube (ex: https://www.youtube.com/watch?v=...)"
+                      value={content.url || ''}
+                      onChange={(e) => handleChange('url', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    {content.url && (
+                      <div className="aspect-video">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${content.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1] || ''}`}
+                          className="w-full h-full rounded-lg"
+                          allowFullScreen
+                          title="YouTube video"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
 
-    {/* Vimeo URL */}
-    {content.type === 'vimeo' && (
-      <>
-        <input
-          type="text"
-          placeholder="Coller l'URL Vimeo (ex: https://vimeo.com/123456789)"
-          value={content.url || ''}
-          onChange={(e) => handleChange('url', e.target.value)}
-          className="w-full px-3 py-2 border rounded-lg"
-        />
-        {content.url && (
-          <div className="aspect-video">
-            <iframe
-              src={`https://player.vimeo.com/video/${content.url.match(/vimeo\.com\/(\d+)/)?.[1] || ''}`}
-              className="w-full h-full rounded-lg"
-              allowFullScreen
-            />
-          </div>
-        )}
-      </>
-    )}
+                {/* Vimeo URL */}
+                {content.type === 'vimeo' && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Coller l'URL Vimeo (ex: https://vimeo.com/123456789)"
+                      value={content.url || ''}
+                      onChange={(e) => handleChange('url', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg"
+                    />
+                    {content.url && (
+                      <div className="aspect-video">
+                        <iframe
+                          src={`https://player.vimeo.com/video/${content.url.match(/vimeo\.com\/(\d+)/)?.[1] || ''}`}
+                          className="w-full h-full rounded-lg"
+                          allowFullScreen
+                          title="Vimeo video"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
 
-    {/* Légende */}
-    <input
-      type="text"
-      placeholder="Légende (optionnel)"
-      value={content.caption || ''}
-      onChange={(e) => handleChange('caption', e.target.value)}
-      className="w-full px-3 py-2 border rounded-lg"
-    />
-  </>
-)}
+                {/* Légende */}
+                <input
+                  type="text"
+                  placeholder="Légende (optionnel)"
+                  value={content.caption || ''}
+                  onChange={(e) => handleChange('caption', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+              </>
+            )}
 
             {block.type === 'project' && (
               <>
@@ -945,66 +1179,66 @@ function BlockEditor({
               </>
             )}
              
-             {block.type === 'gallery' && (
-  <>
-    {/* Aperçu galerie */}
-    <div className="grid grid-cols-3 gap-2 mb-4">
-      {(content.images || []).map((img, index) => (
-        <div key={index} className="relative">
-          <img 
-            src={typeof img === 'string' ? img : img.url} 
-            alt="" 
-            className="w-full h-24 object-cover rounded"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const newImages = [...(content.images || [])]
-              newImages.splice(index, 1)
-              handleChange('images', newImages)
-            }}
-            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-    </div>
+            {block.type === 'gallery' && (
+              <>
+                {/* Aperçu galerie */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {Array.isArray(content.images) && content.images.map((img, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={typeof img === 'string' ? img : img.url} 
+                        alt="" 
+                        className="w-full h-24 object-cover rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newImages = [...(content.images || [])]
+                          newImages.splice(index, 1)
+                          handleChange('images', newImages)
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
 
-    {/* Bouton ajouter images */}
-    <label className="block cursor-pointer">
-      <div className="px-4 py-3 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 font-medium">
-        {uploading ? '⏳ Upload en cours...' : '📤 Ajouter des images à la galerie'}
-      </div>
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        multiple
-        onChange={async (e) => {
-          const files = Array.from(e.target.files)
-          for (const file of files) {
-            try {
-              setUploading(true)
-              const result = await portfolioApi.uploadMedia(portfolioId, userId, file)
-              const newImages = [...(content.images || []), result.data.url]
-              handleChange('images', newImages)
-            } catch (err) {
-              console.error('Erreur upload:', err)
-              alert('Erreur lors de l\'upload: ' + err.message)
-            }
-          }
-          setUploading(false)
-        }}
-        className="hidden"
-        disabled={uploading}
-      />
-    </label>
+                {/* Bouton ajouter images */}
+                <label className="block cursor-pointer">
+                  <div className="px-4 py-3 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 font-medium">
+                    {uploading ? '⏳ Upload en cours...' : '📤 Ajouter des images à la galerie'}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    multiple
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files)
+                      for (const file of files) {
+                        try {
+                          setUploading(true)
+                          const result = await portfolioApi.uploadMedia(portfolioId, userId, file)
+                          const newImages = [...(content.images || []), result.data.url]
+                          handleChange('images', newImages)
+                        } catch (err) {
+                          console.error('Erreur upload:', err)
+                          alert('Erreur lors de l\'upload: ' + err.message)
+                        }
+                      }
+                      setUploading(false)
+                    }}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
 
-    <p className="text-sm text-gray-500 text-center">
-      {(content.images || []).length} image(s) dans la galerie
-    </p>
-  </>
-)}
+                <p className="text-sm text-gray-500 text-center">
+                  {Array.isArray(content.images) ? content.images.length : 0} image(s) dans la galerie
+                </p>
+              </>
+            )}
 
             {block.type === 'contact' && (
               <>
@@ -1070,25 +1304,25 @@ function BlockPreview({ block }) {
   switch (block.type) {
     
     case 'hero':
-  return (
-    <div 
-      className="relative h-32 rounded-lg overflow-hidden flex items-center justify-center"
-      style={{
-        backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundColor: content.backgroundImage ? 'transparent' : '#4F46E5'
-      }}
-    >
-      {content.overlay && content.backgroundImage && (
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-      )}
-      <div className="relative z-10 text-center text-white">
-        <h2 className="text-xl font-bold">{content.title || 'Hero'}</h2>
-        {content.subtitle && <p className="text-sm opacity-90">{content.subtitle}</p>}
-      </div>
-    </div>
-  )
+      return (
+        <div 
+          className="relative h-32 rounded-lg overflow-hidden flex items-center justify-center"
+          style={{
+            backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundColor: content.backgroundImage ? 'transparent' : '#4F46E5'
+          }}
+        >
+          {content.overlay && content.backgroundImage && (
+            <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+          )}
+          <div className="relative z-10 text-center text-white">
+            <h2 className="text-xl font-bold">{content.title || 'Hero'}</h2>
+            {content.subtitle && <p className="text-sm opacity-90">{content.subtitle}</p>}
+          </div>
+        </div>
+      )
 
     case 'text':
       return (
@@ -1122,12 +1356,27 @@ function BlockPreview({ block }) {
             src={`https://www.youtube.com/embed/${videoId}`}
             className="w-full aspect-video rounded-lg"
             allowFullScreen
+            title="YouTube preview"
           />
         ) : <p className="text-red-500">URL YouTube invalide</p>
       }
       
       return (
         <video src={content.url} controls className="w-full rounded-lg" />
+      )
+
+    case 'gallery':
+      return (
+        <div className="grid grid-cols-3 gap-2">
+          {Array.isArray(content.images) && content.images.map((img, index) => (
+            <img 
+              key={index}
+              src={typeof img === 'string' ? img : img.url} 
+              alt="" 
+              className="w-full h-24 object-cover rounded"
+            />
+          ))}
+        </div>
       )
 
     case 'project':
@@ -1140,7 +1389,7 @@ function BlockPreview({ block }) {
             <h4 className="font-bold">{content.title || 'Sans titre'}</h4>
             <p className="text-sm text-gray-600">{content.description}</p>
             {content.link && (
-              <a href={content.link} target="_blank" className="text-blue-600 text-sm hover:underline">
+              <a href={content.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm hover:underline">
                 Voir le projet →
               </a>
             )}
@@ -1153,8 +1402,8 @@ function BlockPreview({ block }) {
         <div className="flex flex-wrap gap-4">
           {content.email && <span>📧 {content.email}</span>}
           {content.phone && <span>📱 {content.phone}</span>}
-          {content.linkedin && <a href={content.linkedin} className="text-blue-600">LinkedIn</a>}
-          {content.github && <a href={content.github} className="text-gray-800">GitHub</a>}
+          {content.linkedin && <a href={content.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600">LinkedIn</a>}
+          {content.github && <a href={content.github} target="_blank" rel="noopener noreferrer" className="text-gray-800">GitHub</a>}
         </div>
       )
 
