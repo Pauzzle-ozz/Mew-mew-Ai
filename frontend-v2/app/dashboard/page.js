@@ -155,37 +155,40 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* Solution 3 : Portfolio Professionnel */}
-          <div className="group opacity-60 cursor-not-allowed">
-            <div className="bg-white rounded-xl shadow-md p-6 border-2 border-gray-200 h-full">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-3xl">🌐</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">
-                Portfolio Pro
-              </h3>
-              <p className="text-gray-500 mb-4 text-sm">
-                Site web professionnel avec CV, projets et réalisations
-              </p>
-              <div className="space-y-2 text-sm text-gray-500 mb-4">
-                <div className="flex items-center">
-                  <span className="text-gray-400 mr-2">○</span>
-                  URL unique
-                </div>
-                <div className="flex items-center">
-                  <span className="text-gray-400 mr-2">○</span>
-                  Templates
-                </div>
-                <div className="flex items-center">
-                  <span className="text-gray-400 mr-2">○</span>
-                  QR Code
-                </div>
-              </div>
-              <div className="inline-block px-4 py-2 bg-gray-200 text-gray-600 rounded-lg text-sm font-semibold">
-                Bientôt disponible
-              </div>
-            </div>
-          </div>
+{/* Solution 3 : Portfolio Pro - ACTIF */}
+<Link href="/solutions/portfolio" className="group">
+  <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-purple-400 h-full">
+    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <span className="text-3xl">🌐</span>
+    </div>
+    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+      Portfolio Pro
+    </h3>
+    <p className="text-gray-600 mb-4 text-sm">
+      Crée ton site web personnel avec vidéos, images et textes
+    </p>
+    <div className="space-y-2 text-sm text-gray-700 mb-4">
+      <div className="flex items-center">
+        <span className="text-green-500 mr-2">✔</span>
+        URL unique
+      </div>
+      <div className="flex items-center">
+        <span className="text-green-500 mr-2">✔</span>
+        Blocs personnalisables
+      </div>
+      <div className="flex items-center">
+        <span className="text-green-500 mr-2">✔</span>
+        Images & Vidéos
+      </div>
+    </div>
+    <div className="text-purple-600 font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
+      Utiliser
+      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </div>
+  </div>
+</Link>
 
           {/* Solution 4 : Matcher Offre */}
           <div className="group opacity-60 cursor-not-allowed">

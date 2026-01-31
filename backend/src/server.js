@@ -6,6 +6,8 @@ const dotenv = require('dotenv');
 // Chargement des variables d'environnement
 dotenv.config({ path: './src/.env' });
 const solutionsRoutes = require('./routes/solutions');
+const portfolioRoutes = require('./routes/portfolio');
+
 // Création de l'application Express
 const app = express();
 
@@ -18,6 +20,7 @@ app.use(express.json()); // Permet de lire les données JSON
 
 // Routes des solutions IA
 app.use('/api/solutions', solutionsRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {

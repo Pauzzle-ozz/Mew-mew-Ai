@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@supabase/supabase-js": "^2.93.3",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "docx": "^9.5.1",
