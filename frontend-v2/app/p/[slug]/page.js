@@ -24,12 +24,21 @@ export default function PublicPortfolioPage() {
   const [portfolio, setPortfolio] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [darkMode, setDarkMode] = useState(false)
 
   useEffect(() => {
     if (slug) {
       loadPortfolio()
     }
-  }, [slug])
+}, [slug])
+
+// ✅ NOUVEAU : Charger la préférence de mode sombre
+useEffect(() => {
+  const savedMode = localStorage.getItem('portfolioDarkMode')
+  if (savedMode === 'true') {
+    setDarkMode(true)
+  }
+}, [])
 
   const loadPortfolio = async () => {
     try {
@@ -43,6 +52,13 @@ export default function PublicPortfolioPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // ✅ NOUVEAU : Toggle mode sombre
+  const toggleDarkMode = () => {
+    const newMode = !darkMode
+    setDarkMode(newMode)
+    localStorage.setItem('portfolioDarkMode', newMode.toString())
   }
 
   if (loading) {
@@ -100,7 +116,7 @@ export default function PublicPortfolioPage() {
   }
 
   // Appliquer le template
-  const templateStyles = getTemplateStyles(portfolio.template)
+const templateStyles = getTemplateStyles(portfolio.template, darkMode)
 
 return (
   <>
@@ -109,28 +125,41 @@ return (
       <div dangerouslySetInnerHTML={{ __html: customStyles }} />
     )}
     
-    <div className={`min-h-screen ${templateStyles.background}`}>
+    <div className={`min-h-screen ${templateStyles.background} transition-colors duration-500`}>
       
-      {/* Header du portfolio */}
-      <header className={`${templateStyles.header} py-16 px-4`}>
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 
-  className="text-4xl md:text-5xl font-bold mb-4"
-  style={{ 
-    color: templateStyles.titleColor.includes('white') 
-      ? 'white' 
-      : (portfolio?.primary_color || '#1f2937') 
-  }}
->
-  {portfolio.title}
-</h1>
-          {portfolio.description && (
-            <p className={`text-xl ${templateStyles.subtitleColor}`}>
-              {portfolio.description}
-            </p>
-          )}
-        </div>
-      </header>
+{/* Header du portfolio */}
+<header className={`${templateStyles.header} py-16 px-4 relative transition-colors duration-300`}>
+  
+  {/* ✅ NOUVEAU : Bouton mode sombre en haut à droite */}
+  <button
+    onClick={toggleDarkMode}
+    className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg"
+    title={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
+  >
+    <span className="text-2xl">
+      {darkMode ? '☀️' : '🌙'}
+    </span>
+  </button>
+
+  {/* Titre et description du portfolio (code existant) */}
+  <div className="max-w-4xl mx-auto text-center">
+    <h1 
+      className="text-4xl md:text-5xl font-bold mb-4"
+      style={{ 
+        color: templateStyles.titleColor.includes('white') 
+          ? 'white' 
+          : (portfolio?.primary_color || '#1f2937') 
+      }}
+    >
+      {portfolio.title}
+    </h1>
+    {portfolio.description && (
+      <p className={`text-xl ${templateStyles.subtitleColor}`}>
+        {portfolio.description}
+      </p>
+    )}
+  </div>
+</header>
 
       {/* Contenu - Blocs */}
       <main className="max-w-4xl mx-auto py-12 px-4">
@@ -168,7 +197,23 @@ return (
 // STYLES PAR TEMPLATE
 // ==========================================
 
-function getTemplateStyles(template) {
+function getTemplateStyles(template, darkMode) {
+  // ✅ Si mode sombre activé, forcer les styles sombres pour tous les templates
+  if (darkMode) {
+    return {
+      background: 'bg-gray-900',
+      header: 'bg-gray-800',
+      titleColor: 'text-white',
+      subtitleColor: 'text-gray-300',
+      cardBg: 'bg-gray-800 shadow-xl border border-gray-700',
+      textColor: 'text-gray-200',
+      accentColor: 'text-blue-400',
+      footerBg: 'bg-gray-900 border-t border-gray-800',
+      footerText: 'text-gray-400'
+    }
+  }
+
+  // Sinon, utiliser les styles du template normal
   switch (template) {
     case 'moderne':
       return {
