@@ -110,35 +110,51 @@ class PortfolioService {
     return portfolio;
   }
 
-  /**
-   * Mettre à jour un portfolio
-   */
-  async updatePortfolio(portfolioId, userId, data) {
-    console.log('✏️ [PortfolioService] Mise à jour portfolio:', portfolioId);
+/**
+ * Mettre à jour un portfolio
+ */
+async updatePortfolio(portfolioId, userId, data) {
+  console.log('✏️ [PortfolioService] Mise à jour portfolio:', portfolioId);
 
-    const updateData = {};
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.template !== undefined) updateData.template = data.template;
-    if (data.published !== undefined) updateData.published = data.published;
-    if (data.settings !== undefined) updateData.settings = data.settings;
+  const updateData = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.template !== undefined) updateData.template = data.template;
+  if (data.published !== undefined) updateData.published = data.published;
+  if (data.settings !== undefined) updateData.settings = data.settings;
+  if (data.primary_color !== undefined) updateData.primary_color = data.primary_color; // ✅ AJOUT
 
-    const { data: portfolio, error } = await this.supabase
-      .from('portfolios')
-      .update(updateData)
-      .eq('id', portfolioId)
-      .eq('user_id', userId)
-      .select()
-      .single();
+  console.log('📝 [PortfolioService] Données à mettre à jour:', updateData);
 
-    if (error) {
-      console.error('❌ [PortfolioService] Erreur mise à jour:', error);
-      throw new Error('Impossible de mettre à jour le portfolio');
-    }
+  // ✅ VÉRIFICATION : Le portfolio existe et appartient à l'utilisateur
+  const { data: existing, error: checkError } = await this.supabase
+    .from('portfolios')
+    .select('id')
+    .eq('id', portfolioId)
+    .eq('user_id', userId)
+    .single();
 
-    console.log('✅ [PortfolioService] Portfolio mis à jour');
-    return portfolio;
+  if (checkError || !existing) {
+    console.error('❌ [PortfolioService] Portfolio non trouvé ou accès refusé');
+    throw new Error('Portfolio non trouvé ou accès refusé');
   }
+
+  // ✅ MISE À JOUR
+  const { data: portfolio, error } = await this.supabase
+    .from('portfolios')
+    .update(updateData)
+    .eq('id', portfolioId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('❌ [PortfolioService] Erreur mise à jour:', error);
+    throw new Error('Impossible de mettre à jour le portfolio');
+  }
+
+  console.log('✅ [PortfolioService] Portfolio mis à jour');
+  return portfolio;
+}
 
   /**
    * Supprimer un portfolio

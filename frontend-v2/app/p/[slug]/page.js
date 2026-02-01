@@ -4,6 +4,19 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { portfolioApi } from '@/lib/api/portfolioApi'
 
+// ✅ FONCTION pour incrémenter les vues
+async function incrementViews(portfolioId) {
+  try {
+    await fetch('http://localhost:5000/api/portfolio-stats/increment-views', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ portfolioId })
+    });
+  } catch (err) {
+    console.error('Erreur incrémentation vues:', err);
+  }
+}
+
 export default function PublicPortfolioPage() {
   const params = useParams()
   const slug = params.slug
@@ -23,6 +36,7 @@ export default function PublicPortfolioPage() {
       setLoading(true)
       const result = await portfolioApi.getPublicPortfolio(slug)
       setPortfolio(result.data)
+      await incrementViews(result.data.id) 
     } catch (err) {
       console.error('Erreur:', err)
       setError('Portfolio non trouvé')
@@ -42,6 +56,34 @@ export default function PublicPortfolioPage() {
     )
   }
 
+  // ✅ NOUVEAU : Créer les styles CSS dynamiques basés sur la couleur du portfolio
+  const customStyles = portfolio?.primary_color ? `
+    <style>
+      /* Appliquer la couleur personnalisée */
+      .custom-color-bg {
+        background-color: ${portfolio.primary_color} !important;
+      }
+      .custom-color-text {
+        color: ${portfolio.primary_color} !important;
+      }
+      .custom-color-border {
+        border-color: ${portfolio.primary_color} !important;
+      }
+      .custom-color-hover:hover {
+        background-color: ${portfolio.primary_color} !important;
+      }
+      
+      /* Boutons avec la couleur principale */
+      .btn-primary {
+        background-color: ${portfolio.primary_color};
+        border-color: ${portfolio.primary_color};
+      }
+      .btn-primary:hover {
+        opacity: 0.9;
+      }
+    </style>
+  ` : '';
+
   if (error || !portfolio) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -60,15 +102,28 @@ export default function PublicPortfolioPage() {
   // Appliquer le template
   const templateStyles = getTemplateStyles(portfolio.template)
 
-  return (
+return (
+  <>
+    {/* ✅ Injection des styles personnalisés */}
+    {customStyles && (
+      <div dangerouslySetInnerHTML={{ __html: customStyles }} />
+    )}
+    
     <div className={`min-h-screen ${templateStyles.background}`}>
       
       {/* Header du portfolio */}
       <header className={`${templateStyles.header} py-16 px-4`}>
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${templateStyles.titleColor}`}>
-            {portfolio.title}
-          </h1>
+          <h1 
+  className="text-4xl md:text-5xl font-bold mb-4"
+  style={{ 
+    color: templateStyles.titleColor.includes('white') 
+      ? 'white' 
+      : (portfolio?.primary_color || '#1f2937') 
+  }}
+>
+  {portfolio.title}
+</h1>
           {portfolio.description && (
             <p className={`text-xl ${templateStyles.subtitleColor}`}>
               {portfolio.description}
@@ -83,11 +138,12 @@ export default function PublicPortfolioPage() {
           {portfolio.blocks && portfolio.blocks.length > 0 ? (
             portfolio.blocks.map((block) => (
               <PublicBlock 
-                key={block.id} 
-                block={block} 
-                template={portfolio.template}
-                styles={templateStyles}
-              />
+  key={block.id} 
+  block={block} 
+  template={portfolio.template}
+  styles={templateStyles}
+  portfolio={portfolio}
+/>
             ))
           ) : (
             <div className="text-center py-16">
@@ -102,8 +158,9 @@ export default function PublicPortfolioPage() {
         <p className={`text-sm ${templateStyles.footerText}`}>
           Créé avec ❤️ sur <a href="/" className="underline hover:no-underline">Mew</a>
         </p>
-      </footer>
+</footer>
     </div>
+  </>
   )
 }
 
@@ -171,12 +228,12 @@ function getTemplateStyles(template) {
 // COMPOSANT PUBLIC BLOCK
 // ==========================================
 
-function PublicBlock({ block, template, styles }) {
+function PublicBlock({ block, template, styles, portfolio }) {
   const content = block.content || {}
 
   switch (block.type) {
     
-    case 'hero':
+case 'hero':
   return (
     <div 
       className="relative h-80 md:h-96 rounded-xl overflow-hidden flex items-center justify-center"
@@ -184,7 +241,7 @@ function PublicBlock({ block, template, styles }) {
         backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundColor: content.backgroundImage ? 'transparent' : '#4F46E5'
+        backgroundColor: content.backgroundImage ? 'transparent' : (portfolio?.primary_color || '#4F46E5')
       }}
     >
       {content.overlay && content.backgroundImage && (
@@ -209,23 +266,26 @@ function PublicBlock({ block, template, styles }) {
     </div>
   )
   
-    case 'text':
-      return (
-        <div className={`${styles.cardBg} rounded-xl p-8`}>
-          {content.title && (
-            <h2 className={`font-bold mb-4 ${styles.accentColor} ${
-              content.style === 'heading' ? 'text-3xl' : 'text-xl'
-            }`}>
-              {content.title}
-            </h2>
-          )}
-          {content.text && (
-            <p className={`${styles.textColor} whitespace-pre-wrap leading-relaxed`}>
-              {content.text}
-            </p>
-          )}
-        </div>
-      )
+case 'text':
+  return (
+    <div className={`${styles.cardBg} rounded-xl p-8`}>
+      {content.title && (
+        <h2 
+          className={`font-bold mb-4 ${
+            content.style === 'heading' ? 'text-3xl' : 'text-xl'
+          }`}
+          style={{ color: portfolio?.primary_color || styles.accentColor }}
+        >
+          {content.title}
+        </h2>
+      )}
+      {content.text && (
+        <p className={`${styles.textColor} whitespace-pre-wrap leading-relaxed`}>
+          {content.text}
+        </p>
+      )}
+    </div>
+  )
 
     case 'image':
       if (!content.url) return null

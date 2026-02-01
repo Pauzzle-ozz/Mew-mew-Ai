@@ -176,6 +176,16 @@ export default function PortfolioListPage() {
                     </span>
                   </div>
 
+  {/* ✅ NOUVEAU : Affichage des vues et date */}
+  <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+    <span className="flex items-center gap-1">
+      👁️ {portfolio.views_count || 0} {(portfolio.views_count || 0) > 1 ? 'vues' : 'vue'}
+    </span>
+    <span className="flex items-center gap-1">
+      📅 {new Date(portfolio.created_at).toLocaleDateString('fr-FR')}
+    </span>
+  </div>
+
                   {portfolio.description && (
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">{portfolio.description}</p>
                   )}

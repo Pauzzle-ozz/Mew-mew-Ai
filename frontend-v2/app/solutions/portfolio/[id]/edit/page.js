@@ -298,9 +298,23 @@ export default function PortfolioEditorPage() {
     } finally {
       setSaving(false)
     }
-  }
+}
 
-  const handleTogglePublish = async () => {
+// ✅ NOUVELLE FONCTION : Changer la couleur principale
+const handleChangeColor = async (newColor) => {
+  try {
+    setSaving(true)
+    await portfolioApi.updatePortfolio(portfolioId, user.id, { primary_color: newColor })
+    setPortfolio({ ...portfolio, primary_color: newColor })
+  } catch (err) {
+    console.error('Erreur changement couleur:', err)
+    setError('Impossible de changer la couleur')
+  } finally {
+    setSaving(false)
+  }
+}
+
+const handleTogglePublish = async () => {
     try {
       setSaving(true)
       await portfolioApi.togglePublish(portfolioId, user.id, !portfolio.published)
@@ -425,9 +439,67 @@ export default function PortfolioEditorPage() {
               </button>
             ))}
           </div>
-        </div>
+</div>
 
-        {/* QR Code & Partage */}
+{/* ✅ NOUVEAU : Sélecteur de couleur principale */}
+<div className="mb-6 p-4 bg-white rounded-xl shadow">
+  <h3 className="font-bold text-gray-900 mb-3">🎨 Couleur principale</h3>
+  <p className="text-sm text-gray-600 mb-4">
+    Personnalisez la couleur de votre portfolio (boutons, liens, accents...)
+  </p>
+  
+  <div className="flex flex-wrap items-center gap-4">
+    
+    {/* Couleurs prédéfinies */}
+    <div className="flex gap-2">
+      {[
+        { name: 'Bleu', color: '#3b82f6' },
+        { name: 'Violet', color: '#8b5cf6' },
+        { name: 'Rose', color: '#ec4899' },
+        { name: 'Vert', color: '#10b981' },
+        { name: 'Orange', color: '#f97316' },
+        { name: 'Rouge', color: '#ef4444' }
+      ].map((preset) => (
+        <button
+          key={preset.color}
+          type="button"
+          onClick={() => handleChangeColor(preset.color)}
+          className={`w-12 h-12 rounded-lg border-2 transition-all hover:scale-110 ${
+            (portfolio.primary_color || '#3b82f6') === preset.color
+              ? 'border-gray-900 scale-110 ring-2 ring-gray-300'
+              : 'border-gray-200 hover:border-gray-400'
+          }`}
+          style={{ backgroundColor: preset.color }}
+          title={preset.name}
+        />
+      ))}
+    </div>
+
+    {/* Séparateur visuel */}
+    <div className="h-12 w-px bg-gray-300"></div>
+
+    {/* Sélecteur personnalisé */}
+    <div className="flex items-center gap-3">
+      <label className="cursor-pointer">
+        <input
+          type="color"
+          value={portfolio.primary_color || '#3b82f6'}
+          onChange={(e) => handleChangeColor(e.target.value)}
+          className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-200"
+          title="Choisir une couleur personnalisée"
+        />
+      </label>
+      <div>
+        <div className="text-xs text-gray-500">Couleur personnalisée</div>
+        <code className="text-sm font-mono text-gray-700 font-medium">
+          {portfolio.primary_color || '#3b82f6'}
+        </code>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* QR Code & Partage */}
         <div className="mb-6 p-4 bg-white rounded-xl shadow">
           <h3 className="font-bold text-gray-900 mb-3">📱 Partager le portfolio</h3>
           
