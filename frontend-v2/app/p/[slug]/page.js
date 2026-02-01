@@ -466,56 +466,8 @@ case 'text':
         </div>
       )
 
-    case 'contact':
-      return (
-        <div className={`${styles.cardBg} rounded-xl p-8`}>
-          <h3 className={`text-xl font-bold mb-6 ${styles.accentColor}`}>
-            📧 Contact
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {content.email && (
-              <a 
-                href={`mailto:${content.email}`}
-                className={`flex items-center gap-3 p-4 rounded-lg border hover:bg-gray-50 ${styles.textColor}`}
-              >
-                <span className="text-2xl">📧</span>
-                <span>{content.email}</span>
-              </a>
-            )}
-            {content.phone && (
-              <a 
-                href={`tel:${content.phone}`}
-                className={`flex items-center gap-3 p-4 rounded-lg border hover:bg-gray-50 ${styles.textColor}`}
-              >
-                <span className="text-2xl">📱</span>
-                <span>{content.phone}</span>
-              </a>
-            )}
-            {content.linkedin && (
-              <a 
-                href={content.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center gap-3 p-4 rounded-lg border hover:bg-gray-50 ${styles.textColor}`}
-              >
-                <span className="text-2xl">💼</span>
-                <span>LinkedIn</span>
-              </a>
-            )}
-            {content.github && (
-              <a 
-                href={content.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center gap-3 p-4 rounded-lg border hover:bg-gray-50 ${styles.textColor}`}
-              >
-                <span className="text-2xl">💻</span>
-                <span>GitHub</span>
-              </a>
-            )}
-          </div>
-        </div>
-      )
+case 'contact':
+  return <ContactForm content={content} styles={styles} portfolio={portfolio} />
 
     case 'separator':
       if (content.style === 'space') {

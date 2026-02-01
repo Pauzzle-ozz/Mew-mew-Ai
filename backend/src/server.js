@@ -8,6 +8,7 @@ dotenv.config({ path: './src/.env' });
 const solutionsRoutes = require('./routes/solutions');
 const portfolioRoutes = require('./routes/portfolio');
 const portfolioStatsRoutes = require('./routes/portfolioStats');
+const contactRoutes = require('./routes/contact');
 
 // Création de l'application Express
 const app = express();
@@ -23,6 +24,7 @@ app.use(express.json()); // Permet de lire les données JSON
 app.use('/api/solutions', solutionsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/portfolio-stats', portfolioStatsRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {
