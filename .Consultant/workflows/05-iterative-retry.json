@@ -1,0 +1,119 @@
+{
+  "name": "🔄 AI Doctor - Iterative Retry",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "When Called",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 400],
+      "notes": "Déclenché par Slack Validator quand un test échoue. Relance le processus d'analyse."
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Vérifier le nombre de tentatives\nconst data = $input.item.json;\nconst retryCount = data.retryCount || 0;\nconst maxRetries = 3;\n\nif (retryCount >= maxRetries) {\n  throw new Error(`Maximum retry attempts (${maxRetries}) reached. Manual intervention required.`);\n}\n\nreturn {\n  json: {\n    ...data,\n    retryCount: retryCount,\n    maxRetries: maxRetries,\n    shouldContinue: true\n  }\n};"
+      },
+      "id": "check-retry-limit",
+      "name": "Check Retry Limit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400],
+      "notes": "Vérifie qu'on n'a pas dépassé le maximum de 3 tentatives. Sinon, erreur et arrêt."
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://localhost:5678/api/v1/executions/{{ $json.failedExecutionId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "get-failed-execution",
+      "name": "Get Failed Execution Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "n8nApiKey",
+          "name": "n8n API Key"
+        }
+      },
+      "notes": "Récupère les détails de l'exécution qui a échoué pour comprendre pourquoi le fix n'a pas fonctionné."
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Construire un contexte enrichi pour Claude\nconst previousData = $('Check Retry Limit').item.json;\nconst failedExecution = $input.item.json;\n\n// Extraction des infos de l'échec\nconst failedNode = failedExecution.data?.resultData?.error?.node || {};\nconst newErrorMessage = failedExecution.data?.resultData?.error?.message || 'Unknown error';\nconst newErrorStack = failedExecution.data?.resultData?.error?.stack || '';\n\n// Contexte de la tentative précédente\nconst previousFix = previousData.fix;\nconst previousAnalysis = previousData.analysis;\nconst originalError = previousData.originalError;\n\n// Construction du contexte enrichi\nconst enrichedContext = {\n  // Erreur originale\n  originalError: originalError,\n  \n  // Tentative précédente\n  previousAttempt: {\n    retryCount: previousData.retryCount,\n    analysis: previousAnalysis,\n    fix: previousFix,\n    result: 'failed'\n  },\n  \n  // Nouvel échec\n  newFailure: {\n    node: failedNode.name,\n    errorMessage: newErrorMessage,\n    errorStack: newErrorStack,\n    timestamp: new Date().toISOString()\n  },\n  \n  // Instructions pour Claude\n  instructions: `La correction précédente a échoué. Analyse:\n1. Pourquoi la correction précédente n'a pas fonctionné?\n2. Qu'est-ce qui a causé cette nouvelle erreur?\n3. Propose une nouvelle correction différente.\n4. Sois plus conservateur et vérifie toutes les dépendances.`\n};\n\nreturn {\n  json: enrichedContext\n};"
+      },
+      "id": "build-retry-context",
+      "name": "Build Retry Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400],
+      "notes": "Construit un contexte enrichi avec l'historique des tentatives pour que Claude apprenne de ses erreurs."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ai-analyzer-id",
+              "name": "aiAnalyzerWorkflowId",
+              "type": "string",
+              "value": "PLACEHOLDER_AI_ANALYZER_ID"
+            }
+          ]
+        }
+      },
+      "id": "set-analyzer-id",
+      "name": "Set AI Analyzer ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1120, 400],
+      "notes": "⚠️ REMPLACER par l'ID du workflow AI Analyzer"
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $json.aiAnalyzerWorkflowId }}",
+        "waitForCompletion": false
+      },
+      "id": "relaunch-analyzer",
+      "name": "Relaunch AI Analyzer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1340, 400],
+      "notes": "Relance le AI Analyzer avec le contexte enrichi. La boucle continue jusqu'à succès ou max retries."
+    }
+  ],
+  "connections": {
+    "When Called": {
+      "main": [[{"node": "Check Retry Limit", "type": "main", "index": 0}]]
+    },
+    "Check Retry Limit": {
+      "main": [[{"node": "Get Failed Execution Details", "type": "main", "index": 0}]]
+    },
+    "Get Failed Execution Details": {
+      "main": [[{"node": "Build Retry Context", "type": "main", "index": 0}]]
+    },
+    "Build Retry Context": {
+      "main": [[{"node": "Set AI Analyzer ID", "type": "main", "index": 0}]]
+    },
+    "Set AI Analyzer ID": {
+      "main": [[{"node": "Relaunch AI Analyzer", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-04T00:00:00.000Z",
+  "versionId": ""
+}

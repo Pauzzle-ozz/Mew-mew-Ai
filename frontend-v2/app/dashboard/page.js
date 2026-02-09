@@ -172,37 +172,40 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* Solution 4 : Matcher Offre (disabled) */}
-          <div className="group opacity-50 cursor-not-allowed">
-            <div className="bg-surface rounded-xl p-6 border border-border h-full">
-              <div className="w-14 h-14 bg-surface-elevated rounded-xl flex items-center justify-center mb-4">
+          {/* Solution 4 : Matcher d'Offres */}
+          <Link href="/solutions/matcher-offres" className="group">
+            <div className="bg-surface rounded-xl p-6 transition-all duration-300 border border-border hover:border-primary h-full">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <span className="text-3xl">🎯</span>
               </div>
-              <h3 className="text-xl font-bold text-text-muted mb-2">
-                Matcher Offre
+              <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                Matcher d&apos;Offres
               </h3>
               <p className="text-text-muted mb-4 text-sm">
-                Adapte ton CV automatiquement a chaque offre d&apos;emploi
+                Genere 3 documents pour chaque offre : CV perso, CV ideal, lettre
               </p>
-              <div className="space-y-2 text-sm text-text-muted mb-4">
+              <div className="space-y-2 text-sm text-text-secondary mb-4">
                 <div className="flex items-center">
-                  <span className="text-text-muted/50 mr-2">&#9675;</span>
-                  Analyse offre
+                  <span className="text-primary mr-2">&#10003;</span>
+                  Analyse IA
                 </div>
                 <div className="flex items-center">
-                  <span className="text-text-muted/50 mr-2">&#9675;</span>
-                  CV adapte
+                  <span className="text-primary mr-2">&#10003;</span>
+                  3 documents PDF
                 </div>
                 <div className="flex items-center">
-                  <span className="text-text-muted/50 mr-2">&#9675;</span>
-                  Lettre motivation
+                  <span className="text-primary mr-2">&#10003;</span>
+                  Matching optimise
                 </div>
               </div>
-              <div className="inline-block px-4 py-2 bg-surface-elevated text-text-muted rounded-lg text-sm font-semibold">
-                Bientot disponible
+              <div className="text-primary font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
+                Utiliser
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
             </div>
-          </div>
+          </Link>
 
         </div>
 

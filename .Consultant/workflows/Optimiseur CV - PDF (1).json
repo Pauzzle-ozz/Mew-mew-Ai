@@ -1,0 +1,250 @@
+{
+  "name": "Optimiseur CV - PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "optimiser-cv-pdf",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48a716d6-ac55-4dd4-9591-418b2aa1e117",
+      "name": "Webhook",
+      "webhookId": "optimiseur-cv-pdf-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cv-pdf-text",
+              "name": "cv_texte",
+              "value": "=== CV À OPTIMISER (PDF) ===\n\nTexte extrait du CV :\n{{ $json.body.cv_texte_complet }}\n\nNombre de pages : {{ $json.body.nombre_pages }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a8adec7c-c5bd-4141-95a9-d1359b1dfae9",
+      "name": "Préparer PDF"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prompt-pdf",
+              "name": "prompt",
+              "value": "=Tu es un expert en rédaction de CV et optimisation ATS (Applicant Tracking Systems).\n\n=== CV EXTRAIT D'UN PDF ===\n{{ $json.cv_texte }}\n\n=== MISSION ===\n1. EXTRAIRE les informations du CV PDF\n2. OPTIMISER le contenu pour MAXIMISER les chances de passer les ATS\n\n=== RÈGLES ATS CRITIQUES (À RESPECTER ABSOLUMENT) ===\n\n1. MOTS-CLÉS ATS\n   - Intégrer les mots-clés techniques du secteur\n   - Répéter les compétences clés 2-3 fois (titre, résumé, expériences)\n   - Utiliser les termes exacts de l'industrie\n\n2. FORMAT SIMPLE ET LISIBLE PAR LES ROBOTS\n   - Pas de tableaux, pas de colonnes complexes\n   - Sections standards : Résumé, Expérience, Formation, Compétences\n   - Chronologie inversée (le plus récent en premier)\n\n3. VERBES D'ACTION PUISSANTS\n   Chaque point d'expérience doit commencer par :\n   - Développé, Conçu, Piloté, Optimisé, Géré, Augmenté\n   - Créé, Implémenté, Dirigé, Coordonné, Amélioré, Réduit\n\n4. QUANTIFICATION SYSTÉMATIQUE\n   TOUJOURS ajouter des chiffres/résultats mesurables :\n   - Pourcentages (↑ 40%, ↓ 25%)\n   - Montants (500K€, 1M€)\n   - Nombres (10 personnes, 50 clients, 15 projets)\n   - Durée (en 6 mois, sur 2 ans)\n\n5. RÉSUMÉ PROFESSIONNEL (3-4 PHRASES MAX)\n   - Titre du poste + années d'expérience\n   - 2-3 compétences clés avec mots-clés ATS\n   - 1 réalisation majeure chiffrée\n   - Objectif professionnel\n\n6. EXPÉRIENCES PROFESSIONNELLES\n   - Titre du poste en gras\n   - 3-5 bullets par expérience\n   - Structure : Verbe d'action + Tâche + Résultat chiffré\n   - Exemple : \"Développé une API REST servant 100K+ requêtes/jour, réduisant le temps de réponse de 60%\"\n\n7. COMPÉTENCES TECHNIQUES\n   - Liste claire et scannée par les ATS\n   - Regrouper par catégories\n   - Inclure niveau d'expertise\n\n8. CONTRAINTE ABSOLUE : 1 PAGE MAXIMUM\n   - Prioriser les 5 dernières années\n   - Condenser sans perdre l'impact\n   - Résumé : 3-4 phrases max\n   - Expériences : 3-5 bullets max par poste\n   - Formation : diplôme + établissement + année (sans description)\n   - Supprimer les détails anciens\n\n=== RÈGLES STRICTES ===\n- EXTRAIRE toutes les informations disponibles dans le PDF\n- NE JAMAIS inventer d'informations\n- NE PAS modifier les noms d'entreprises, dates, diplômes\n- Rester factuel et vérifiable\n- TOUT DOIT TENIR SUR 1 PAGE au format A4\n\n=== FORMAT DE RÉPONSE ===\nExtrais et optimise le CV en te concentrant sur l'optimisation ATS et la contrainte 1 page.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e15e5481-cad5-4830-aead-51f1cdabe5f3",
+      "name": "Prompt PDF"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "e7c27b06-e538-497d-8947-156e57b85e8d",
+      "name": "OpenAI Extract + Optimize",
+      "credentials": {
+        "openAiApi": {
+          "id": "uzDkI6AxJT2u2V9b",
+          "name": "Grogodumiot@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Tu vas recevoir un CV extrait et optimisé. Transforme-le en JSON STRICT.\n\nRÈGLES :\n- JSON valide uniquement\n- Aucun texte avant/après\n- Pas de ```json\n- Structure EXACTE :\n\n{\n  \"prenom\": \"\",\n  \"nom\": \"\",\n  \"titre_poste\": \"\",\n  \"email\": \"\",\n  \"telephone\": \"\",\n  \"adresse\": \"\",\n  \"linkedin\": \"\",\n  \"resume\": \"\",\n  \"experiences\": [\n    {\n      \"poste\": \"\",\n      \"entreprise\": \"\",\n      \"periode\": \"\",\n      \"description\": \"\"\n    }\n  ],\n  \"formations\": [\n    {\n      \"diplome\": \"\",\n      \"etablissement\": \"\",\n      \"annee\": \"\",\n      \"description\": \"\"\n    }\n  ],\n  \"competences_techniques\": \"\",\n  \"competences_soft\": \"\",\n  \"langues\": \"\",\n  \"interets\": \"\"\n}\n\nCV extrait et optimisé :\n{{ $json.output[0].content[0].text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "3927f7af-cb81-4a51-89ba-fce18a76954c",
+      "name": "Conversion JSON",
+      "credentials": {
+        "openAiApi": {
+          "id": "uzDkI6AxJT2u2V9b",
+          "name": "Grogodumiot@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "parse-result-pdf",
+              "name": "cvData_optimise",
+              "value": "={{ JSON.parse($json.output[0].content[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        304
+      ],
+      "id": "7ac16d6d-9f0b-42cb-a611-2673612e428a",
+      "name": "Parse JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cvOptimise = $('Parse JSON').first().json.cvData_optimise;\n\nreturn [{\n  json: {\n    success: true,\n    cvData_optimise: cvOptimise,\n    message: \"CV optimisé avec succès (PDF)\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        16
+      ],
+      "id": "eff2aa91-58aa-4a5e-8785-030810517bf5",
+      "name": "Réponse Finale"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Préparer PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer PDF": {
+      "main": [
+        [
+          {
+            "node": "Prompt PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt PDF": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Extract + Optimize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Extract + Optimize": {
+      "main": [
+        [
+          {
+            "node": "Conversion JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversion JSON": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Réponse Finale",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b377ed87-49d3-4e47-81d1-710a34f827f8",
+  "meta": {
+    "instanceId": "7794a76bcadfa6f11a81492e0a47661ae47dfbbac1b071f082948258ee8e9f6c"
+  },
+  "id": "TpCfulBWwiKLCwwz",
+  "tags": []
+}

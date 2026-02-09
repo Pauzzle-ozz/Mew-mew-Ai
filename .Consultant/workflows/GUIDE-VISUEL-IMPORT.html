@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide Visuel - Import AI Workflow Doctor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            margin-bottom: 50px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .step-content {
+            margin-left: 20px;
+        }
+
+        .instruction {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 3px solid #28a745;
+        }
+
+        .instruction strong {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .screenshot {
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .screenshot-title {
+            background: #4a5568;
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+            margin: -20px -20px 15px -20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .screenshot-title::before {
+            content: "🖥️";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .ui-mockup {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .button.success {
+            background: #28a745;
+        }
+
+        .button.danger {
+            background: #dc3545;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning::before {
+            content: "⚠️ ";
+            font-size: 1.2em;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success::before {
+            content: "✅ ";
+            font-size: 1.2em;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info::before {
+            content: "ℹ️ ";
+            font-size: 1.2em;
+        }
+
+        .code {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .workflow-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .workflow-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .workflow-icon {
+            font-size: 3em;
+            margin-right: 20px;
+        }
+
+        .workflow-info h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .workflow-info p {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 10px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .checklist li::before {
+            content: "☐ ";
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .ascii-art {
+            font-family: monospace;
+            white-space: pre;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            line-height: 1.2;
+        }
+
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Guide Visuel d'Import</h1>
+            <p>AI Workflow Doctor - Configuration Complète</p>
+        </div>
+
+        <div class="content">
+            <!-- Introduction -->
+            <div class="info">
+                <strong>Bienvenue !</strong> Ce guide vous accompagne pas à pas pour importer et configurer les 3 workflows restants du système AI Workflow Doctor. Suivez chaque étape dans l'ordre.
+            </div>
+
+            <div class="warning">
+                <strong>Avant de commencer :</strong> Assurez-vous que votre instance n8n est accessible sur <code>http://localhost:5678</code> et que vous êtes connecté.
+            </div>
+
+            <!-- Récapitulatif -->
+            <div class="step">
+                <div class="step-number">📋</div>
+                <h2>Récapitulatif des Workflows</h2>
+                <div class="step-content">
+                    <h3>✅ Déjà créés sur votre n8n :</h3>
+
+                    <div class="workflow-card">
+                        <div class="workflow-icon">🚨</div>
+                        <div class="workflow-info">
+                            <h3>1. Error Detector</h3>
+                            <p><strong>ID:</strong> <code>0hWei4DBPRQGXZy6</code></p>
+                            <p>Détecte toutes les erreurs de workflows</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="workflow-icon">🤖</div>
+                        <div class="workflow-info">
+                            <h3>2. AI Analyzer</h3>
+                            <p><strong>ID:</strong> <code>9qx6wAyScMXl1God</code></p>
+                            <p>Analyse les erreurs avec Claude AI</p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 30px;">📥 À importer maintenant :</h3>
+
+                    <div class="workflow-card">
+                        <div class="workflow-icon">🧪</div>
+                        <div class="workflow-info">
+                            <h3>3. Test Workflow Creator</h3>
+                            <p><strong>Fichier:</strong> <code>03-test-workflow-creator.json</code></p>
+                            <p>Crée et teste les corrections</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="workflow-icon">📨</div>
+                        <div class="workflow-info">
+                            <h3>4. Slack Validator</h3>
+                            <p><strong>Fichier:</strong> <code>04-slack-validator.json</code></p>
+                            <p>Notifications et validation interactive</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-card">
+                        <div class="workflow-icon">🔄</div>
+                        <div class="workflow-info">
+                            <h3>5. Iterative Retry</h3>
+                            <p><strong>Fichier:</strong> <code>05-iterative-retry.json</code></p>
+                            <p>Boucle de retry intelligente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 1 -->
+            <div class="step">
+                <div class="step-number">1</div>
+                <h2>Ouvrir l'Interface n8n</h2>
+                <div class="step-content">
+                    <div class="instruction">
+                        <strong>Action :</strong> Ouvrez votre navigateur et allez sur votre instance n8n
+                    </div>
+
+                    <div class="code">
+                        http://localhost:5678
+                    </div>
+
+                    <div class="screenshot">
+                        <div class="screenshot-title">Ce que vous devez voir :</div>
+                        <div class="ascii-art">
+┌─────────────────────────────────────────────────────────────────┐
+│  n8n                                          👤 Votre Profil    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  📊 Dashboard                                                   │
+│  📁 Workflows                    ◄── Cliquez ici                │
+│  🔧 Credentials                                                 │
+│  ⚙️  Settings                                                   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────┐          │
+│  │                                                 │          │
+│  │         Vos Workflows s'affichent ici          │          │
+│  │                                                 │          │
+│  └─────────────────────────────────────────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+                        </div>
+                    </div>
+
+                    <div class="success">
+                        <strong>Vérification :</strong> Vous voyez le menu latéral avec "Workflows"
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 2 -->
+            <div class="step">
+                <div class="step-number">2</div>
+                <h2>Accéder à la Liste des Workflows</h2>
+                <div class="step-content">
+                    <div class="instruction">
+                        <strong>Action :</strong> Cliquez sur <strong>"Workflows"</strong> dans le menu latéral gauche
+                    </div>
+
+                    <div class="screenshot">
+                        <div class="screenshot-title">Vous devriez voir :</div>
+                        <div class="ascii-art">
+┌────────────────────────────────────────────────────────────────┐
+│  Workflows                              [+ Add workflow ▼]      │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  🚨 AI Doctor - Error Detector                  ●●●            │
+│     ID: 0hWei4DBPRQGXZy6                                       │
+│                                                                │
+│  🤖 AI Doctor - AI Analyzer                     ●●●            │
+│     ID: 9qx6wAyScMXl1God                                       │
+│                                                                │
+│  ... (vos autres workflows)                                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+                        </div>
+                    </div>
+
+                    <div class="info">
+                        <strong>Note :</strong> Vous devez déjà voir les 2 workflows AI Doctor créés précédemment
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 3 -->
+            <div class="step">
+                <div class="step-number">3</div>
+                <h2>Importer le Workflow 3 (Test Workflow Creator)</h2>
+                <div class="step-content">
+                    <div class="instruction">
+                        <strong>Action 1 :</strong> Cliquez sur le bouton <span class="button">[+ Add workflow ▼]</span>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Action 2 :</strong> Dans le menu déroulant qui apparaît, cliquez sur <strong>"Import from file"</strong>
+                    </div>
+
+                    <div class="screenshot">
+                        <div class="screenshot-title">Menu déroulant :</div>
+                        <div class="ascii-art">
+┌──────────────────────────┐
+│ + Add workflow           │
+├──────────────────────────┤
+│ ○ New workflow          │
+│ ○ Import from file   ◄── Cliquez ici
+│ ○ Import from URL       │
+└──────────────────────────┘
+                        </div>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Action 3 :</strong> Une fenêtre de sélection de fichier s'ouvre. Naviguez vers :
+                    </div>
+
+                    <div class="code">
+C:\Users\pauzzle\OneDrive\Bureau\n8n Consultant\workflows\03-test-workflow-creator.json
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Action 4 :</strong> Sélectionnez le fichier et cliquez sur <span class="button success">Ouvrir</span>
+                    </div>
+
+                    <div class="success">
+                        <strong>Succès !</strong> Le workflow s'ouvre dans l'éditeur. Vous voyez les nodes connectés :
+                        <ul style="margin-top: 10px;">
+                            <li>When Called</li>
+                            <li>Prepare Workflow Clone</li>
+                            <li>Create Workflow Clone</li>
+                            <li>Apply AI Fix</li>
+                            <li>Update Cloned Workflow</li>
+                            <li>Prepare Slack Message</li>
+                            <li>Set Slack Validator ID</li>
+                            <li>Execute Slack Validator</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning">
+                        <strong>IMPORTANT :</strong> Avant de sauvegarder, notez l'ID du workflow qui apparaît dans l'URL de votre navigateur :
+                        <div class="code" style="margin-top: 10px;">
+http://localhost:5678/workflow/<strong style="color: #ffc107;">XXXXXXXXXXXXX</strong>
+                        </div>
+                        <p style="margin-top: 10px;"><strong>➡️ Notez cet ID :</strong> ____________________________</p>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Action 5 :</strong> Cliquez sur <span class="button success">Save</span> en haut à droite
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 4 -->
+            <div class="step">
+                <div class="step-number">4</div>
+                <h2>Importer le Workflow 4 (Slack Validator)</h2>
+                <div class="step-content">
+                    <div class="instruction">
+                        <strong>Action :</strong> Répétez les mêmes étapes que pour le workflow 3, mais avec le fichier :
+                    </div>
+
+                    <div class="code">
+C:\Users\pauzzle\OneDrive\Bureau\n8n Consultant\workflows\04-slack-validator.json
+                    </div>
+
+                    <div class="info">
+                        <strong>Rappel des étapes :</strong>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Cliquez sur "Workflows" dans le menu</li>
+                            <li>Cliquez sur "[+ Add workflow ▼]"</li>
+                            <li>Sélectionnez "Import from file"</li>
+                            <li>Choisissez le fichier <code>04-slack-validator.json</code></li>
+                            <li><strong>NOTEZ L'ID</strong> dans l'URL</li>
+                            <li>Cliquez sur "Save"</li>
+                        </ol>
+                    </div>
+
+                    <div class="warning">
+                        <strong>➡️ Notez l'ID du Workflow 4 :</strong> ____________________________
+                    </div>
+
+                    <div class="success">
+                        <strong>Nodes attendus :</strong> Ce workflow est plus complexe avec 17 nodes incluant un webhook pour les boutons Slack
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 5 -->
+            <div class="step">
+                <div class="step-number">5</div>
+                <h2>Importer le Workflow 5 (Iterative Retry)</h2>
+                <div class="step-content">
+                    <div class="instruction">
+                        <strong>Action :</strong> Dernière importation avec le fichier :
+                    </div>
+
+                    <div class="code">
+C:\Users\pauzzle\OneDrive\Bureau\n8n Consultant\workflows\05-iterative-retry.json
+                    </div>
+
+                    <div class="info">
+                        <strong>Répétez le processus d'import</strong>
+                    </div>
+
+                    <div class="warning">
+                        <strong>➡️ Notez l'ID du Workflow 5 :</strong> ____________________________
+                    </div>
+
+                    <div class="success">
+                        <strong>Bravo ! 🎉</strong> Les 5 workflows du système AI Workflow Doctor sont maintenant dans votre n8n !
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 6 -->
+            <div class="step">
+                <div class="step-number">6</div>
+                <h2>Configuration des IDs Inter-Workflows</h2>
+                <div class="step-content">
+                    <div class="info">
+                        Maintenant que tous les workflows sont importés, il faut les connecter entre eux en remplaçant les placeholders par les vrais IDs.
+                    </div>
+
+                    <h3 style="margin-top: 20px; color: #667eea;">📝 Tableau de Configuration</h3>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr style="background: #667eea; color: white;">
+                                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Workflow</th>
+                                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Node à Modifier</th>
+                                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Remplacer</th>
+                                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>1. Error Detector</strong><br><code>0hWei4DBPRQGXZy6</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;">Set AI Analyzer ID</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>PLACEHOLDER_AI_ANALYZER_ID</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>9qx6wAyScMXl1God</code></td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>2. AI Analyzer</strong><br><code>9qx6wAyScMXl1God</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;">Set Test Creator ID</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>PLACEHOLDER_TEST_CREATOR_ID</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>ID Workflow 3</strong> (noté étape 3)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>3. Test Workflow Creator</strong><br>(ID noté étape 3)</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;">Set Slack Validator ID</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>PLACEHOLDER_SLACK_VALIDATOR_ID</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>ID Workflow 4</strong> (noté étape 4)</td>
+                            </tr>
+                            <tr style="background: #f8f9fa;">
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>4. Slack Validator</strong><br>(ID noté étape 4)</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;">Set Retry Workflow ID</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>PLACEHOLDER_ITERATIVE_RETRY_ID</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>ID Workflow 5</strong> (noté étape 5)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><strong>5. Iterative Retry</strong><br>(ID noté étape 5)</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;">Set AI Analyzer ID</td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>PLACEHOLDER_AI_ANALYZER_ID</code></td>
+                                <td style="padding: 15px; border: 1px solid #ddd;"><code>9qx6wAyScMXl1God</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin-top: 30px; color: #667eea;">📋 Instructions Détaillées</h3>
+
+                    <div class="instruction">
+                        <strong>Pour chaque ligne du tableau ci-dessus :</strong>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Ouvrez le workflow mentionné</li>
+                            <li>Cliquez sur le node mentionné (ex: "Set AI Analyzer ID")</li>
+                            <li>Dans le panneau de droite, cherchez le champ avec le placeholder</li>
+                            <li>Remplacez par l'ID indiqué</li>
+                            <li>Cliquez sur "Save" en haut à droite</li>
+                        </ol>
+                    </div>
+
+                    <div class="screenshot">
+                        <div class="screenshot-title">Exemple visuel - Modifier un node :</div>
+                        <div class="ascii-art">
+┌────────────────────────────────────────────────────────────┐
+│  Workflow: Error Detector                          [Save]  │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  [Node Canvas]                │  Node: Set AI Analyzer ID │
+│                               │                            │
+│    ┌──────────────┐           │  ┌──────────────────────┐ │
+│    │ Error        │           │  │ Value:               │ │
+│    │ Trigger      │           │  │                      │ │
+│    └──┬───────────┘           │  │ PLACEHOLDER_AI_...   │ │
+│       │                       │  │ ▲                    │ │
+│       ▼                       │  │ └─ Remplacer ici    │ │
+│    ┌──────────────┐           │  │                      │ │
+│    │ Set AI       │ ◄─ Clic   │  │ Nouveau:             │ │
+│    │ Analyzer ID  │           │  │ 9qx6wAyScMXl1God     │ │
+│    └──────────────┘           │  └──────────────────────┘ │
+│                               │                            │
+└────────────────────────────────────────────────────────────┘
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 7 -->
+            <div class="step">
+                <div class="step-number">7</div>
+                <h2>Checklist Finale</h2>
+                <div class="step-content">
+                    <div class="info">
+                        Avant d'activer les workflows, vérifiez que tout est en place :
+                    </div>
+
+                    <ul class="checklist">
+                        <li>Les 5 workflows sont importés et visibles dans la liste</li>
+                        <li>Tous les placeholders d'IDs ont été remplacés</li>
+                        <li>Les credentials sont configurées (voir INSTALLATION-GUIDE.md)</li>
+                        <li>n8n API Key créée et configurée</li>
+                        <li>Anthropic API Key créée et configurée</li>
+                        <li>Slack Webhook URL configurée (optionnel pour l'instant)</li>
+                    </ul>
+
+                    <div class="success">
+                        <strong>Tout est coché ?</strong> Vous êtes prêt à activer les workflows !
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 8 -->
+            <div class="step">
+                <div class="step-number">8</div>
+                <h2>Activation des Workflows</h2>
+                <div class="step-content">
+                    <div class="warning">
+                        <strong>Ordre d'activation important !</strong> Activez dans cet ordre pour éviter les erreurs :
+                    </div>
+
+                    <div class="instruction">
+                        <strong>1. Iterative Retry</strong> (aucune dépendance)
+                        <div style="margin-top: 10px;">
+                            • Ouvrez le workflow<br>
+                            • Cliquez sur le toggle "Active" en haut à droite<br>
+                            • Il devient vert ✅
+                        </div>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>2. Slack Validator</strong> (dépend de Iterative Retry)
+                    </div>
+
+                    <div class="instruction">
+                        <strong>3. Test Workflow Creator</strong> (dépend de Slack Validator)
+                    </div>
+
+                    <div class="instruction">
+                        <strong>4. AI Analyzer</strong> (dépend de Test Workflow Creator)
+                    </div>
+
+                    <div class="instruction">
+                        <strong>5. Error Detector</strong> (dépend de AI Analyzer)
+                    </div>
+
+                    <div class="screenshot">
+                        <div class="screenshot-title">Toggle d'activation :</div>
+                        <div class="ascii-art">
+┌────────────────────────────────────────────────────┐
+│  🧪 AI Doctor - Test Workflow Creator             │
+│                                                    │
+│                                   [ Active: ◯ ]   │
+│                                           ▲        │
+│                                           │        │
+│                                  Cliquez ici       │
+│                                                    │
+│  Devient:                        [ Active: ● ]    │
+│                                      (vert)        │
+└────────────────────────────────────────────────────┘
+                        </div>
+                    </div>
+
+                    <div class="success">
+                        <strong>🎉 Félicitations !</strong> Votre système AI Workflow Doctor est maintenant opérationnel !
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÉTAPE 9 -->
+            <div class="step">
+                <div class="step-number">9</div>
+                <h2>Test du Système</h2>
+                <div class="step-content">
+                    <div class="info">
+                        Testons le système avec une erreur volontaire :
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Étape 1 :</strong> Créez un nouveau workflow de test
+                        <div style="margin-top: 10px;">
+                            • Workflows → Add workflow → New workflow<br>
+                            • Nom: "Test AI Doctor"
+                        </div>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Étape 2 :</strong> Ajoutez un node HTTP Request avec une URL invalide
+                        <div style="margin-top: 10px;">
+                            • Cliquez sur "+" pour ajouter un node<br>
+                            • Cherchez "HTTP Request"<br>
+                            • URL: <code>https://api.invalid-test-12345.com/error</code><br>
+                            • Sauvegardez
+                        </div>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Étape 3 :</strong> Activez et exécutez le workflow
+                        <div style="margin-top: 10px;">
+                            • Activez le workflow (toggle Active)<br>
+                            • Cliquez sur "Execute Workflow"
+                        </div>
+                    </div>
+
+                    <div class="instruction">
+                        <strong>Étape 4 :</strong> Le workflow échoue (c'est normal !)
+                        <div style="margin-top: 10px;">
+                            • Le node HTTP Request devient rouge ❌<br>
+                            • Erreur: "getaddrinfo ENOTFOUND"
+                        </div>
+                    </div>
+
+                    <div class="success">
+                        <strong>Résultats attendus :</strong>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Dans les 10 secondes, Error Detector capture l'erreur</li>
+                            <li>AI Analyzer envoie l'erreur à Claude</li>
+                            <li>Un workflow de test est créé : "Test AI Doctor [AI-FIX-TEST-v1]"</li>
+                            <li>Vous recevez une notification Slack (si configuré)</li>
+                        </ol>
+                    </div>
+
+                    <div class="info">
+                        <strong>Vérification :</strong> Allez dans "Executions" pour voir l'historique :
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>✅ Execution de Error Detector (succès)</li>
+                            <li>✅ Execution de AI Analyzer (succès)</li>
+                            <li>✅ Execution de Test Workflow Creator (succès)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dépannage -->
+            <div class="step">
+                <div class="step-number">🔧</div>
+                <h2>Dépannage Rapide</h2>
+                <div class="step-content">
+                    <h3 style="color: #dc3545;">❌ Problème : "Workflow not found"</h3>
+                    <div class="instruction">
+                        <strong>Solution :</strong> Vérifiez que tous les IDs ont été correctement remplacés dans les nodes "Set ... ID"
+                    </div>
+
+                    <h3 style="color: #dc3545; margin-top: 20px;">❌ Problème : "Authentication failed"</h3>
+                    <div class="instruction">
+                        <strong>Solution :</strong> Vérifiez vos credentials :
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Credentials → Recherchez "n8n API Key"</li>
+                            <li>Credentials → Recherchez "Anthropic API Key"</li>
+                            <li>Testez chaque credential avec "Test"</li>
+                        </ul>
+                    </div>
+
+                    <h3 style="color: #dc3545; margin-top: 20px;">❌ Problème : Rien ne se passe après l'erreur</h3>
+                    <div class="instruction">
+                        <strong>Solution :</strong> Vérifiez que Error Detector est bien activé (toggle vert)
+                    </div>
+
+                    <div class="info">
+                        <strong>Besoin d'aide ?</strong> Consultez le guide complet :
+                        <div class="code" style="margin-top: 10px;">
+workflows/INSTALLATION-GUIDE.md
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3>🎉 Bravo ! Votre Système est Configuré !</h3>
+            <p style="margin-top: 10px;">
+                AI Workflow Doctor surveille maintenant tous vos workflows<br>
+                et corrigera automatiquement les erreurs avec l'aide de Claude AI
+            </p>
+            <p style="margin-top: 20px; font-size: 0.9em;">
+                Documentation complète : <a href="file:///C:/Users/pauzzle/OneDrive/Bureau/n8n%20Consultant/workflows/README.md">README.md</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

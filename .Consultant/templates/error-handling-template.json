@@ -1,0 +1,265 @@
+{
+  "name": "Error Handling Template",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Exemple de logique qui pourrait échouer\nconst data = $input.item.json;\n\nif (!data.email) {\n  throw new Error('Email is required');\n}\n\nif (!data.email.includes('@')) {\n  throw new Error('Invalid email format');\n}\n\nreturn {\n  json: {\n    email: data.email,\n    validated: true,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Process Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.error}}",
+              "operation": "exists"
+            }
+          ]
+        }
+      },
+      "name": "Check for Errors",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Success path - process successful result\nconst result = $input.item.json;\n\nreturn {\n  json: {\n    status: 'success',\n    data: result,\n    processedAt: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Handle Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Error handling logic\nconst error = $input.item.json.error || {};\nconst originalData = $input.item.json;\n\n// Log the error\nconsole.error('Workflow error:', error);\n\n// Prepare error details\nconst errorDetails = {\n  errorMessage: error.message || 'Unknown error',\n  errorStack: error.stack || '',\n  failedNode: error.node?.name || 'Unknown node',\n  executionId: $execution.id,\n  workflowId: $workflow.id,\n  workflowName: $workflow.name,\n  timestamp: new Date().toISOString(),\n  originalData: originalData\n};\n\n// Determine if retry is needed\nconst retryableErrors = ['ETIMEDOUT', 'ECONNRESET', 'Rate limit'];\nconst shouldRetry = retryableErrors.some(err => \n  errorDetails.errorMessage.includes(err)\n);\n\nreturn {\n  json: {\n    status: 'error',\n    shouldRetry: shouldRetry,\n    errorDetails: errorDetails\n  }\n};"
+      },
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.shouldRetry}}",
+              "operation": "equal",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Should Retry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "name": "Wait Before Retry",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Retry logic with exponential backoff\nconst retryCount = $json.retryCount || 0;\nconst maxRetries = 3;\n\nif (retryCount >= maxRetries) {\n  throw new Error('Max retries reached');\n}\n\nreturn {\n  json: {\n    ...$json.errorDetails.originalData,\n    retryCount: retryCount + 1,\n    retryAttempt: true\n  }\n};"
+      },
+      "name": "Prepare Retry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channel": "{{$json.notificationChannel || '#alerts'}}",
+        "text": "=🚨 Workflow Error Alert\n\n*Workflow:* {{$json.errorDetails.workflowName}}\n*Node:* {{$json.errorDetails.failedNode}}\n*Error:* {{$json.errorDetails.errorMessage}}\n*Execution ID:* {{$json.errorDetails.executionId}}\n*Time:* {{$json.errorDetails.timestamp}}\n\n*Status:* Error not retryable, manual intervention required.",
+        "attachments": []
+      },
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [1250, 500],
+      "credentials": {
+        "slackApi": {
+          "id": "1",
+          "name": "Slack API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "error_logs",
+        "columns": "workflow_id,workflow_name,execution_id,error_message,error_details,timestamp",
+        "values": "={{$json.errorDetails.workflowId}},={{$json.errorDetails.workflowName}},={{$json.errorDetails.executionId}},={{$json.errorDetails.errorMessage}},={{JSON.stringify($json.errorDetails)}},={{$json.errorDetails.timestamp}}"
+      },
+      "name": "Log to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1250, 600],
+      "credentials": {
+        "postgres": {
+          "id": "2",
+          "name": "PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data": {
+      "main": [
+        [
+          {
+            "node": "Check for Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Errors": {
+      "main": [
+        [
+          {
+            "node": "Handle Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Error": {
+      "main": [
+        [
+          {
+            "node": "Should Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Retry?": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Retry": {
+      "main": [
+        [
+          {
+            "node": "Prepare Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Retry": {
+      "main": [
+        [
+          {
+            "node": "Process Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "template",
+      "createdAt": "2026-02-02T00:00:00.000Z",
+      "updatedAt": "2026-02-02T00:00:00.000Z",
+      "id": "1"
+    },
+    {
+      "name": "error-handling",
+      "createdAt": "2026-02-02T00:00:00.000Z",
+      "updatedAt": "2026-02-02T00:00:00.000Z",
+      "id": "2"
+    }
+  ],
+  "meta": {
+    "templateDescription": "Template réutilisable pour gestion d'erreurs avancée avec retry logic, alertes Slack, et logging en base de données",
+    "version": "1.0.0",
+    "features": [
+      "Gestion d'erreurs automatique",
+      "Retry avec exponential backoff",
+      "Notifications Slack en cas d'échec",
+      "Logging des erreurs en base de données",
+      "Distinction erreurs retryable/non-retryable"
+    ],
+    "usage": "Copiez ce template et adaptez la logique dans le node 'Process Data' selon vos besoins. Configurez les credentials Slack et PostgreSQL.",
+    "requirements": [
+      "Credentials Slack API configurés",
+      "Credentials PostgreSQL configurés",
+      "Table error_logs créée en base de données"
+    ]
+  }
+}

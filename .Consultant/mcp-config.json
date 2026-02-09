@@ -1,0 +1,231 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "command": "npx",
+      "args": ["n8n-mcp"],
+      "description": "Serveur MCP officiel n8n par czlonkowski - Accès à 1,084 nodes n8n avec documentation complète",
+      "env": {
+        "MCP_MODE": "stdio",
+        "LOG_LEVEL": "error",
+        "DISABLE_CONSOLE_OUTPUT": "true"
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.1.0",
+    "description": "Configuration MCP pour N8N Expert Consultant utilisant le serveur officiel n8n-mcp",
+    "repository": "https://github.com/czlonkowski/n8n-mcp",
+    "documentation": "https://github.com/czlonkowski/n8n-mcp/blob/main/README.md"
+  },
+  "configurations": {
+    "minimal": {
+      "description": "Configuration minimale - Documentation n8n uniquement (sans API)",
+      "mcpServers": {
+        "n8n-mcp": {
+          "command": "npx",
+          "args": ["n8n-mcp"],
+          "env": {
+            "MCP_MODE": "stdio",
+            "LOG_LEVEL": "error",
+            "DISABLE_CONSOLE_OUTPUT": "true"
+          }
+        }
+      },
+      "capabilities": [
+        "Node documentation (1,084 nodes: 537 core + 547 community)",
+        "Property validation and schemas (99% coverage)",
+        "Example workflow configurations (2,646 examples)",
+        "Template library (2,709 templates)",
+        "Node metadata and operation details (63.6% coverage)"
+      ]
+    },
+    "complete": {
+      "description": "Configuration complète - Documentation + Gestion n8n (avec N8N_API_KEY)",
+      "mcpServers": {
+        "n8n-mcp": {
+          "command": "npx",
+          "args": ["n8n-mcp"],
+          "env": {
+            "MCP_MODE": "stdio",
+            "N8N_API_URL": "http://localhost:5678/api/v1",
+            "N8N_API_KEY": "${N8N_API_KEY}",
+            "LOG_LEVEL": "error",
+            "DISABLE_CONSOLE_OUTPUT": "true"
+          }
+        }
+      },
+      "capabilities": [
+        "All minimal configuration capabilities",
+        "Workflow management (create, read, update, delete)",
+        "Workflow execution with parameters",
+        "Execution monitoring and details",
+        "Workflow listing and filtering",
+        "System health checks",
+        "Trigger management"
+      ]
+    },
+    "docker_local": {
+      "description": "Configuration pour n8n local avec Docker",
+      "mcpServers": {
+        "n8n-mcp": {
+          "command": "npx",
+          "args": ["n8n-mcp"],
+          "env": {
+            "MCP_MODE": "stdio",
+            "N8N_API_URL": "http://host.docker.internal:5678/api/v1",
+            "N8N_API_KEY": "${N8N_API_KEY}",
+            "WEBHOOK_SECURITY_MODE": "moderate",
+            "LOG_LEVEL": "error",
+            "DISABLE_CONSOLE_OUTPUT": "true"
+          }
+        }
+      }
+    },
+    "cloud": {
+      "description": "Configuration pour n8n Cloud",
+      "mcpServers": {
+        "n8n-mcp": {
+          "command": "npx",
+          "args": ["n8n-mcp"],
+          "env": {
+            "MCP_MODE": "stdio",
+            "N8N_API_URL": "https://your-instance.app.n8n.cloud/api/v1",
+            "N8N_API_KEY": "${N8N_API_KEY}",
+            "LOG_LEVEL": "error",
+            "DISABLE_CONSOLE_OUTPUT": "true"
+          }
+        }
+      }
+    }
+  },
+  "tools_available": {
+    "core_documentation_tools": {
+      "count": 7,
+      "description": "Outils de documentation (toujours disponibles)",
+      "tools": [
+        "get_node_documentation",
+        "search_nodes",
+        "get_node_metadata",
+        "validate_node_properties",
+        "get_node_schema",
+        "get_workflow_examples",
+        "search_templates"
+      ]
+    },
+    "management_tools": {
+      "count": 13,
+      "description": "Outils de gestion (nécessite N8N_API_KEY)",
+      "workflow_management": [
+        "list_workflows",
+        "get_workflow",
+        "create_workflow",
+        "update_workflow",
+        "delete_workflow",
+        "execute_workflow"
+      ],
+      "execution_management": [
+        "list_executions",
+        "get_execution",
+        "get_execution_details"
+      ],
+      "system_tools": [
+        "health_check",
+        "get_system_info",
+        "manage_triggers"
+      ]
+    }
+  },
+  "database_adapters": {
+    "better-sqlite3": {
+      "description": "Adaptateur par défaut dans Docker",
+      "type": "Native C++ bindings",
+      "memory_usage": "100-120 MB stable",
+      "performance": "Optimal"
+    },
+    "sql.js": {
+      "description": "Adaptateur fallback JavaScript",
+      "type": "Pure JavaScript implementation",
+      "memory_usage": "150-200 MB stable",
+      "performance": "Compatible",
+      "config": {
+        "SQLJS_SAVE_INTERVAL_MS": 5000,
+        "recommended_production": "5000-10000ms"
+      }
+    }
+  },
+  "installation_options": {
+    "hosted_service": {
+      "url": "https://dashboard.n8n-mcp.com",
+      "description": "Service managé sans installation",
+      "free_tier": "100 tool calls/day",
+      "recommended_for": "Testing and experimentation"
+    },
+    "npx": {
+      "command": "npx n8n-mcp",
+      "description": "Installation locale rapide",
+      "requirements": ["Node.js installed"],
+      "critical": "Set MCP_MODE: 'stdio' to prevent JSON parsing errors"
+    },
+    "docker": {
+      "command": "docker pull ghcr.io/czlonkowski/n8n-mcp:latest",
+      "description": "Déploiement Docker",
+      "image_size": "~280MB (compact, no n8n dependencies)",
+      "run": "docker run ghcr.io/czlonkowski/n8n-mcp:latest"
+    },
+    "railway": {
+      "description": "Déploiement cloud en un clic",
+      "url": "https://railway.app"
+    },
+    "local_development": {
+      "steps": [
+        "git clone https://github.com/czlonkowski/n8n-mcp",
+        "cd n8n-mcp",
+        "npm install",
+        "npm run build",
+        "npm run rebuild"
+      ]
+    }
+  },
+  "telemetry": {
+    "description": "Statistiques d'usage anonymes collectées",
+    "opt_out": {
+      "npx": "npx n8n-mcp telemetry disable",
+      "docker": "N8N_MCP_TELEMETRY_DISABLED=true",
+      "docker_compose": "Set in environment configuration"
+    }
+  },
+  "security": {
+    "critical_warning": "NEVER edit production workflows directly with AI",
+    "best_practices": [
+      "Create workflow copies before modifications",
+      "Test changes in development environments",
+      "Export backups of important workflows",
+      "Validate changes before production deployment"
+    ]
+  },
+  "platform_support": [
+    "Claude Code (via MCP integration)",
+    "Visual Studio Code",
+    "Cursor IDE",
+    "Windsurf",
+    "Codex",
+    "Antigravity"
+  ],
+  "config_file_locations": {
+    "macOS": "~/Library/Application Support/Claude/claude_desktop_config.json",
+    "Windows": "%APPDATA%\\Claude\\claude_desktop_config.json",
+    "Linux": "~/.config/Claude/claude_desktop_config.json",
+    "note": "Restart Claude Desktop after configuration changes"
+  },
+  "statistics": {
+    "total_nodes": 1084,
+    "core_nodes": 537,
+    "community_nodes": 547,
+    "property_coverage": "99%",
+    "operation_coverage": "63.6%",
+    "documentation_coverage": "87%",
+    "ai_tool_variants": 265,
+    "real_world_examples": 2646,
+    "workflow_templates": 2709
+  }
+}
