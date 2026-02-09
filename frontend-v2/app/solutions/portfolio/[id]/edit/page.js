@@ -35,6 +35,10 @@ export default function PortfolioEditorPage() {
   const [importCVData, setImportCVData] = useState('')
   const [importError, setImportError] = useState(null)
   const [importing, setImporting] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordMsg, setPasswordMsg] = useState(null)
+  const [exporting, setExporting] = useState(false)
 
   // Charger le portfolio
   useEffect(() => {
@@ -314,6 +318,44 @@ const handleChangeColor = async (newColor) => {
   }
 }
 
+// Définir le mot de passe du portfolio
+const handleSetPassword = async () => {
+  if (!passwordInput || passwordInput.length < 4) {
+    setPasswordMsg({ type: 'error', text: 'Le mot de passe doit contenir au moins 4 caractères' })
+    return
+  }
+
+  try {
+    setPasswordSaving(true)
+    setPasswordMsg(null)
+    await portfolioApi.setPassword(portfolioId, user.id, passwordInput)
+    setPortfolio({ ...portfolio, is_protected: true })
+    setPasswordInput('')
+    setPasswordMsg({ type: 'success', text: 'Mot de passe défini !' })
+  } catch (err) {
+    console.error('Erreur mot de passe:', err)
+    setPasswordMsg({ type: 'error', text: err.message })
+  } finally {
+    setPasswordSaving(false)
+  }
+}
+
+// Supprimer la protection par mot de passe
+const handleRemovePassword = async () => {
+  try {
+    setPasswordSaving(true)
+    setPasswordMsg(null)
+    await portfolioApi.removePassword(portfolioId, user.id)
+    setPortfolio({ ...portfolio, is_protected: false })
+    setPasswordMsg({ type: 'success', text: 'Protection supprimée' })
+  } catch (err) {
+    console.error('Erreur suppression mot de passe:', err)
+    setPasswordMsg({ type: 'error', text: err.message })
+  } finally {
+    setPasswordSaving(false)
+  }
+}
+
 const handleTogglePublish = async () => {
     try {
       setSaving(true)
@@ -324,6 +366,36 @@ const handleTogglePublish = async () => {
       setError('Impossible de modifier la publication')
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Exporter le portfolio en PDF
+  const handleExportPDF = async () => {
+    try {
+      setExporting(true)
+      const result = await portfolioApi.exportPDF(portfolioId, user.id)
+      const { pdf, filename } = result.data
+
+      // Decoder base64 et telecharger
+      const byteCharacters = atob(pdf)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${filename}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erreur export PDF:', err)
+      setError('Impossible d\'exporter en PDF')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -371,6 +443,15 @@ const handleTogglePublish = async () => {
 
             {/* Droite */}
             <div className="flex items-center space-x-3">
+              {/* Export PDF */}
+              <button
+                onClick={handleExportPDF}
+                disabled={exporting}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                {exporting ? '⏳ Export...' : '📄 PDF'}
+              </button>
+
               {/* Prévisualisation */}
               <Link
                 href={`/p/${portfolio.slug}`}
@@ -569,6 +650,85 @@ const handleTogglePublish = async () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Protection par mot de passe */}
+        <div className="mb-6 p-4 bg-white rounded-xl shadow">
+          <h3 className="font-bold text-gray-900 mb-3">🔒 Protection par mot de passe</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Protège ton portfolio avec un mot de passe. Les visiteurs devront le saisir pour voir le contenu.
+          </p>
+
+          {/* Message de feedback */}
+          {passwordMsg && (
+            <div className={`mb-4 p-3 rounded-lg text-sm ${
+              passwordMsg.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-700'
+                : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              {passwordMsg.text}
+            </div>
+          )}
+
+          {portfolio.is_protected ? (
+            <div>
+              <div className="flex items-center gap-3 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <span className="text-xl">🔒</span>
+                <div>
+                  <p className="font-medium text-yellow-800">Portfolio protégé</p>
+                  <p className="text-sm text-yellow-700">Les visiteurs doivent entrer un mot de passe pour voir le contenu.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                {/* Changer le mot de passe */}
+                <div className="flex-1">
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      placeholder="Nouveau mot de passe (min. 4 car.)"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                    />
+                    <button
+                      onClick={handleSetPassword}
+                      disabled={passwordSaving}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {passwordSaving ? '...' : 'Changer'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Supprimer la protection */}
+                <button
+                  onClick={handleRemovePassword}
+                  disabled={passwordSaving}
+                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 disabled:opacity-50"
+                >
+                  🔓 Supprimer
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="password"
+                placeholder="Mot de passe (min. 4 caractères)"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="flex-1 px-3 py-2 border rounded-lg text-sm"
+              />
+              <button
+                onClick={handleSetPassword}
+                disabled={passwordSaving}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 disabled:opacity-50"
+              >
+                {passwordSaving ? '...' : '🔒 Activer la protection'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Import CV */}

@@ -25,6 +25,11 @@ export default function PublicPortfolioPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [darkMode, setDarkMode] = useState(false)
+  const [passwordRequired, setPasswordRequired] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     if (slug) {
@@ -32,7 +37,7 @@ export default function PublicPortfolioPage() {
     }
 }, [slug])
 
-// ✅ NOUVEAU : Charger la préférence de mode sombre
+// Charger la préférence de mode sombre
 useEffect(() => {
   const savedMode = localStorage.getItem('portfolioDarkMode')
   if (savedMode === 'true') {
@@ -43,9 +48,31 @@ useEffect(() => {
   const loadPortfolio = async () => {
     try {
       setLoading(true)
+
+      // Vérifier si on a déjà un accès en sessionStorage
+      const cachedAccess = sessionStorage.getItem(`portfolio_access_${slug}`)
+      if (cachedAccess) {
+        try {
+          const cachedData = JSON.parse(cachedAccess)
+          setPortfolio(cachedData)
+          await incrementViews(cachedData.id)
+          return
+        } catch (e) {
+          sessionStorage.removeItem(`portfolio_access_${slug}`)
+        }
+      }
+
       const result = await portfolioApi.getPublicPortfolio(slug)
+
+      // Si le portfolio est protégé par mot de passe
+      if (result.data.is_protected && (!result.data.blocks || result.data.blocks.length === 0)) {
+        setPortfolio(result.data)
+        setPasswordRequired(true)
+        return
+      }
+
       setPortfolio(result.data)
-      await incrementViews(result.data.id) 
+      await incrementViews(result.data.id)
     } catch (err) {
       console.error('Erreur:', err)
       setError('Portfolio non trouvé')
@@ -54,11 +81,63 @@ useEffect(() => {
     }
   }
 
+  // Vérifier le mot de passe
+  const handleVerifyPassword = async (e) => {
+    e.preventDefault()
+    if (!passwordInput) return
+
+    try {
+      setVerifying(true)
+      setPasswordError('')
+      const result = await portfolioApi.verifyPassword(slug, passwordInput)
+
+      // Stocker en sessionStorage pour ne pas re-demander
+      sessionStorage.setItem(`portfolio_access_${slug}`, JSON.stringify(result.data))
+
+      setPortfolio(result.data)
+      setPasswordRequired(false)
+      await incrementViews(result.data.id)
+    } catch (err) {
+      console.error('Erreur vérification:', err)
+      setPasswordError('Mot de passe incorrect')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   // ✅ NOUVEAU : Toggle mode sombre
   const toggleDarkMode = () => {
     const newMode = !darkMode
     setDarkMode(newMode)
     localStorage.setItem('portfolioDarkMode', newMode.toString())
+  }
+
+  // Telecharger le portfolio en PDF
+  const handleExportPDF = async () => {
+    try {
+      setExporting(true)
+      const result = await portfolioApi.exportPublicPDF(slug)
+      const { pdf, filename } = result.data
+
+      const byteCharacters = atob(pdf)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${filename}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erreur export PDF:', err)
+    } finally {
+      setExporting(false)
+    }
   }
 
   if (loading) {
@@ -72,7 +151,55 @@ useEffect(() => {
     )
   }
 
-  // ✅ NOUVEAU : Créer les styles CSS dynamiques basés sur la couleur du portfolio
+  // Gate mot de passe
+  if (passwordRequired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="text-5xl mb-4">🔒</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {portfolio?.title || 'Portfolio protégé'}
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Ce portfolio est protégé par un mot de passe.
+            </p>
+
+            {passwordError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {passwordError}
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyPassword} className="space-y-4">
+              <input
+                type="password"
+                placeholder="Entrez le mot de passe"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={verifying || !passwordInput}
+                className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: portfolio?.primary_color || '#3b82f6' }}
+              >
+                {verifying ? 'Vérification...' : 'Accéder au portfolio'}
+              </button>
+            </form>
+
+            <a href="/" className="inline-block mt-6 text-sm text-gray-500 hover:text-gray-700">
+              ← Retour à l'accueil
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Créer les styles CSS dynamiques basés sur la couleur du portfolio
   const customStyles = portfolio?.primary_color ? `
     <style>
       /* Appliquer la couleur personnalisée */
@@ -130,16 +257,29 @@ return (
 {/* Header du portfolio */}
 <header className={`${templateStyles.header} py-16 px-4 relative transition-colors duration-300`}>
   
-  {/* ✅ NOUVEAU : Bouton mode sombre en haut à droite */}
-  <button
-    onClick={toggleDarkMode}
-    className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg"
-    title={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
-  >
-    <span className="text-2xl">
-      {darkMode ? '☀️' : '🌙'}
-    </span>
-  </button>
+  {/* Boutons en haut a droite */}
+  <div className="absolute top-4 right-4 flex items-center gap-2">
+    {/* Telecharger en PDF */}
+    <button
+      onClick={handleExportPDF}
+      disabled={exporting}
+      className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg disabled:opacity-50"
+      title="Telecharger en PDF"
+    >
+      <span className="text-2xl">{exporting ? '⏳' : '📄'}</span>
+    </button>
+
+    {/* Mode sombre */}
+    <button
+      onClick={toggleDarkMode}
+      className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg"
+      title={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
+    >
+      <span className="text-2xl">
+        {darkMode ? '☀️' : '🌙'}
+      </span>
+    </button>
+  </div>
 
   {/* Titre et description du portfolio (code existant) */}
   <div className="max-w-4xl mx-auto text-center">

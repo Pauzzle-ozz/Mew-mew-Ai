@@ -111,6 +111,96 @@ export const portfolioApi = {
   },
 
   // ==========================================
+  // PROTECTION PAR MOT DE PASSE
+  // ==========================================
+
+  /**
+   * Définir ou modifier le mot de passe d'un portfolio
+   */
+  async setPassword(portfolioId, userId, password) {
+    const response = await fetch(`${API_BASE_URL}/${portfolioId}/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la définition du mot de passe');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Supprimer la protection par mot de passe
+   */
+  async removePassword(portfolioId, userId) {
+    const response = await fetch(`${API_BASE_URL}/${portfolioId}/password`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de la suppression du mot de passe');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Vérifier le mot de passe d'un portfolio public
+   */
+  async verifyPassword(slug, password) {
+    const response = await fetch(`${API_BASE_URL}/public/${slug}/verify-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Mot de passe incorrect');
+    }
+
+    return response.json();
+  },
+
+  // ==========================================
+  // EXPORT PDF
+  // ==========================================
+
+  /**
+   * Exporter un portfolio en PDF (proprietaire)
+   */
+  async exportPDF(portfolioId, userId) {
+    const response = await fetch(`${API_BASE_URL}/${portfolioId}/export-pdf?userId=${userId}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de l\'export PDF');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Exporter un portfolio public en PDF (par slug)
+   */
+  async exportPublicPDF(slug) {
+    const response = await fetch(`${API_BASE_URL}/public/${slug}/export-pdf`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors de l\'export PDF');
+    }
+
+    return response.json();
+  },
+
+  // ==========================================
   // BLOCS
   // ==========================================
 

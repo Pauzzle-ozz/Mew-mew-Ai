@@ -2,8 +2,10 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 
-// Import du service
+// Import des services
 const portfolioService = require('../services/portfolioService');
+const pdfService = require('../services/pdfService');
+const portfolioTemplate = require('../templates/portfolioTemplate');
 
 // Configuration multer pour upload fichiers (50MB max pour vidéos)
 const storage = multer.memoryStorage();
@@ -85,6 +87,203 @@ router.get('/user/:userId', async (req, res) => {
     });
   }
 });
+
+// ==========================================
+// ROUTES PROTECTION PAR MOT DE PASSE
+// ==========================================
+
+/**
+ * Définir ou modifier le mot de passe d'un portfolio
+ * PUT /api/portfolio/:portfolioId/password
+ */
+router.put('/:portfolioId/password', async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    const { userId, password } = req.body;
+
+    if (!userId || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId et password sont obligatoires'
+      });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({
+        success: false,
+        error: 'Le mot de passe doit contenir au moins 4 caractères'
+      });
+    }
+
+    const result = await portfolioService.setPortfolioPassword(portfolioId, userId, password);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('❌ [API Portfolio] Erreur définition mot de passe:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Supprimer la protection par mot de passe
+ * DELETE /api/portfolio/:portfolioId/password
+ */
+router.delete('/:portfolioId/password', async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId requis'
+      });
+    }
+
+    const result = await portfolioService.removePortfolioPassword(portfolioId, userId);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('❌ [API Portfolio] Erreur suppression mot de passe:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Vérifier le mot de passe d'un portfolio public
+ * POST /api/portfolio/public/:slug/verify-password
+ */
+router.post('/public/:slug/verify-password', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Le mot de passe est requis'
+      });
+    }
+
+    const portfolio = await portfolioService.verifyPortfolioPassword(slug, password);
+
+    res.json({
+      success: true,
+      data: portfolio
+    });
+
+  } catch (error) {
+    console.error('❌ [API Portfolio] Erreur vérification mot de passe:', error.message);
+    const status = error.message === 'Mot de passe incorrect' ? 401 : 500;
+    res.status(status).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ==========================================
+// ROUTES EXPORT PDF
+// ==========================================
+
+/**
+ * Exporter un portfolio en PDF (pour le proprietaire)
+ * GET /api/portfolio/:portfolioId/export-pdf?userId=xxx
+ */
+router.get('/:portfolioId/export-pdf', async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId requis'
+      });
+    }
+
+    console.log('📄 [API Portfolio] Export PDF pour:', portfolioId);
+
+    const portfolio = await portfolioService.getFullPortfolio(portfolioId, userId);
+    const html = portfolioTemplate.generateHTML(portfolio);
+    const pdfBuffer = await pdfService.generatePDF(html);
+    const pdfBase64 = pdfBuffer.toString('base64');
+
+    const slug = portfolio.slug || 'portfolio';
+    res.json({
+      success: true,
+      data: {
+        pdf: pdfBase64,
+        filename: `Portfolio_${slug}`
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API Portfolio] Erreur export PDF:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Exporter un portfolio public en PDF (par slug)
+ * GET /api/portfolio/public/:slug/export-pdf
+ */
+router.get('/public/:slug/export-pdf', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    console.log('📄 [API Portfolio] Export PDF public pour:', slug);
+
+    const portfolio = await portfolioService.getFullPortfolioBySlug(slug);
+
+    if (portfolio.is_protected) {
+      return res.status(403).json({
+        success: false,
+        error: 'Ce portfolio est protege par un mot de passe'
+      });
+    }
+
+    const html = portfolioTemplate.generateHTML(portfolio);
+    const pdfBuffer = await pdfService.generatePDF(html);
+    const pdfBase64 = pdfBuffer.toString('base64');
+
+    res.json({
+      success: true,
+      data: {
+        pdf: pdfBase64,
+        filename: `Portfolio_${slug}`
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API Portfolio] Erreur export PDF public:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ==========================================
+// ROUTES PORTFOLIOS (suite)
+// ==========================================
 
 /**
  * Récupérer un portfolio par ID (pour l'éditeur)
