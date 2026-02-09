@@ -1,66 +1,58 @@
-/**
- * Composant ResultsDisplay
- * Affiche les résultats de l'analyse CV avec les métiers proposés
- */
-
 export default function ResultsDisplay({ result }) {
   if (!result) return null;
 
-  // Grouper les métiers par catégorie
   const groupedMetiers = {
     'Ce que je veux': [],
-    'Correspond à mes compétences': [],
+    'Correspond a mes competences': [],
     'Je pourrais tenter': []
   };
 
   result.metiers_proposes?.forEach(metier => {
-    const categorie = metier.categorie || 'Correspond à mes compétences';
+    const categorie = metier.categorie || 'Correspond a mes competences';
     if (groupedMetiers[categorie]) {
       groupedMetiers[categorie].push(metier);
     }
   });
 
-  // Couleurs par catégorie
   const categoryColors = {
     'Ce que je veux': {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-900',
-      badge: 'bg-blue-100 text-blue-700'
+      bg: 'bg-info/10',
+      border: 'border-info/20',
+      text: 'text-info',
+      badge: 'bg-info/20 text-info'
     },
-    'Correspond à mes compétences': {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      text: 'text-green-900',
-      badge: 'bg-green-100 text-green-700'
+    'Correspond a mes competences': {
+      bg: 'bg-success/10',
+      border: 'border-success/20',
+      text: 'text-success',
+      badge: 'bg-success/20 text-success'
     },
     'Je pourrais tenter': {
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      text: 'text-purple-900',
-      badge: 'bg-purple-100 text-purple-700'
+      bg: 'bg-secondary/10',
+      border: 'border-secondary/20',
+      text: 'text-secondary',
+      badge: 'bg-secondary/20 text-secondary'
     }
   };
 
-  // Icônes par catégorie
   const categoryIcons = {
     'Ce que je veux': '🎯',
-    'Correspond à mes compétences': '✅',
+    'Correspond a mes competences': '&#10003;',
     'Je pourrais tenter': '🚀'
   };
 
   return (
     <div className="space-y-6">
-      
-      {/* En-tête résultats */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-2">✨ Analyse terminée !</h2>
-        <p className="text-blue-100">
-          Voici {result.metiers_proposes?.length || 0} métiers recommandés pour toi
+
+      {/* Header resultats */}
+      <div className="bg-gradient-to-r from-primary to-amber-400 text-gray-900 rounded-xl p-6">
+        <h2 className="text-2xl font-bold mb-2">Analyse terminee !</h2>
+        <p className="text-gray-900/70">
+          Voici {result.metiers_proposes?.length || 0} metiers recommandes pour toi
         </p>
       </div>
 
-      {/* Métiers par catégorie */}
+      {/* Metiers par categorie */}
       {Object.entries(groupedMetiers).map(([categorie, metiers]) => {
         if (metiers.length === 0) return null;
 
@@ -68,12 +60,12 @@ export default function ResultsDisplay({ result }) {
         const icon = categoryIcons[categorie];
 
         return (
-          <div key={categorie} className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+          <div key={categorie} className="bg-surface rounded-xl border border-border p-6">
+            <h3 className="text-xl font-bold text-text-primary mb-4 flex items-center">
               <span className="text-3xl mr-3">{icon}</span>
               {categorie}
-              <span className="ml-3 text-sm font-normal text-gray-500">
-                ({metiers.length} métier{metiers.length > 1 ? 's' : ''})
+              <span className="ml-3 text-sm font-normal text-text-muted">
+                ({metiers.length} metier{metiers.length > 1 ? 's' : ''})
               </span>
             </h3>
 
@@ -81,7 +73,7 @@ export default function ResultsDisplay({ result }) {
               {metiers.map((metier, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-lg border-2 ${colors.bg} ${colors.border}`}
+                  className={`p-4 rounded-lg border ${colors.bg} ${colors.border}`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -90,24 +82,24 @@ export default function ResultsDisplay({ result }) {
                       </h4>
                       {metier.priorite && (
                         <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${colors.badge}`}>
-                          Priorité #{metier.priorite}
+                          Priorite #{metier.priorite}
                         </span>
                       )}
                     </div>
-                    
+
                     {metier.note_marche !== undefined && (
                       <div className="ml-4 text-right">
                         <div className={`text-3xl font-bold ${colors.text}`}>
                           {metier.note_marche}
                         </div>
-                        <div className="text-xs text-gray-600">/ 100</div>
+                        <div className="text-xs text-text-muted">/ 100</div>
                       </div>
                     )}
                   </div>
 
                   {metier.justification_note && (
-                    <p className="text-sm text-gray-700 mb-3">
-                      💡 {metier.justification_note}
+                    <p className="text-sm text-text-secondary mb-3">
+                      {metier.justification_note}
                     </p>
                   )}
 
@@ -116,7 +108,7 @@ export default function ResultsDisplay({ result }) {
                       {metier.mots_cles.map((mot, i) => (
                         <span
                           key={i}
-                          className="px-2 py-1 bg-white border border-gray-300 rounded text-xs text-gray-700"
+                          className="px-2 py-1 bg-surface-elevated border border-border rounded text-xs text-text-muted"
                         >
                           {mot}
                         </span>
@@ -134,9 +126,9 @@ export default function ResultsDisplay({ result }) {
       <div className="text-center pt-6">
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg"
+          className="px-6 py-3 bg-primary text-gray-900 rounded-lg hover:bg-primary-hover font-medium transition-colors cursor-pointer"
         >
-          🔄 Faire une nouvelle analyse
+          Faire une nouvelle analyse
         </button>
       </div>
     </div>

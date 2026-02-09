@@ -1,12 +1,6 @@
-/**
- * Composant TemplatePreview
- * Affiche une prévisualisation visuelle du template sélectionné
- */
-
 export default function TemplatePreview({ template, cvData }) {
   if (!template || !cvData) return null;
 
-  // Couleurs par template
   const templateColors = {
     moderne: { primary: '#667eea', secondary: '#dbeafe', accent: '#2563eb' },
     classique: { primary: '#2c3e50', secondary: '#f3f4f6', accent: '#000000' },
@@ -19,34 +13,34 @@ export default function TemplatePreview({ template, cvData }) {
   const colors = templateColors[template] || templateColors.moderne;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
-      <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-        👁️ Aperçu du CV
-        <span className="ml-3 text-sm font-normal text-gray-500">
-          (représentation simplifiée)
+    <div className="bg-surface rounded-xl border border-border p-8 max-w-2xl mx-auto">
+      <h3 className="text-xl font-bold text-text-primary mb-4 flex items-center">
+        Apercu du CV
+        <span className="ml-3 text-sm font-normal text-text-muted">
+          (representation simplifiee)
         </span>
       </h3>
 
-      {/* Mini CV Preview */}
-      <div 
+      {/* Mini CV Preview - white bg to represent paper */}
+      <div
         className="border-2 rounded-lg p-6 bg-white"
-        style={{ 
+        style={{
           borderColor: colors.primary,
           minHeight: '400px',
           fontFamily: template === 'tech' ? 'monospace' : template === 'classique' ? 'serif' : 'sans-serif'
         }}
       >
         {/* Header */}
-        <div 
+        <div
           className="pb-4 mb-4"
-          style={{ 
+          style={{
             borderBottom: `2px solid ${colors.primary}`,
             textAlign: template === 'classique' ? 'center' : 'left'
           }}
         >
-          <h1 
+          <h1
             className="font-bold mb-1"
-            style={{ 
+            style={{
               color: colors.primary,
               fontSize: '20px',
               letterSpacing: template === 'executive' ? '2px' : 'normal',
@@ -57,16 +51,16 @@ export default function TemplatePreview({ template, cvData }) {
           </h1>
           <p className="text-gray-600 text-sm mb-2">{cvData.titre_poste}</p>
           <p className="text-gray-500 text-xs">
-            {cvData.email} • {cvData.telephone} • {cvData.adresse}
+            {cvData.email} &bull; {cvData.telephone} &bull; {cvData.adresse}
           </p>
         </div>
 
         {/* Resume */}
         {cvData.resume && (
           <div className="mb-4">
-            <h2 
+            <h2
               className="font-bold text-sm mb-2"
-              style={{ 
+              style={{
                 color: colors.accent,
                 borderBottom: template === 'minimal' ? 'none' : `1px solid ${colors.secondary}`
               }}
@@ -80,20 +74,20 @@ export default function TemplatePreview({ template, cvData }) {
         {/* Experience */}
         {cvData.experiences && cvData.experiences.length > 0 && (
           <div className="mb-4">
-            <h2 
+            <h2
               className="font-bold text-sm mb-2"
-              style={{ 
+              style={{
                 color: colors.accent,
                 borderBottom: template === 'minimal' ? 'none' : `1px solid ${colors.secondary}`
               }}
             >
-              {template === 'tech' ? '# EXPERIENCE' : template === 'executive' ? 'PROFESSIONAL EXPERIENCE' : 'EXPÉRIENCE PROFESSIONNELLE'}
+              {template === 'tech' ? '# EXPERIENCE' : template === 'executive' ? 'PROFESSIONAL EXPERIENCE' : 'EXPERIENCE PROFESSIONNELLE'}
             </h2>
             {cvData.experiences.slice(0, 2).map((exp, i) => (
               <div key={i} className="mb-3">
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-semibold text-xs" style={{ color: colors.primary }}>
-                    {template === 'tech' && '⚡ '}{exp.poste}
+                    {template === 'tech' && '> '}{exp.poste}
                   </h3>
                   <span className="text-xs text-gray-500">{exp.date_debut} - {exp.date_fin}</span>
                 </div>
@@ -102,7 +96,7 @@ export default function TemplatePreview({ template, cvData }) {
               </div>
             ))}
             {cvData.experiences.length > 2 && (
-              <p className="text-xs text-gray-500 italic">+ {cvData.experiences.length - 2} autre(s) expérience(s)...</p>
+              <p className="text-xs text-gray-500 italic">+ {cvData.experiences.length - 2} autre(s) experience(s)...</p>
             )}
           </div>
         )}
@@ -110,14 +104,14 @@ export default function TemplatePreview({ template, cvData }) {
         {/* Skills Preview */}
         {cvData.competences_techniques && (
           <div>
-            <h2 
+            <h2
               className="font-bold text-sm mb-2"
-              style={{ 
+              style={{
                 color: colors.accent,
                 borderBottom: template === 'minimal' ? 'none' : `1px solid ${colors.secondary}`
               }}
             >
-              {template === 'tech' ? '# SKILLS' : 'COMPÉTENCES'}
+              {template === 'tech' ? '# SKILLS' : 'COMPETENCES'}
             </h2>
             <p className="text-xs text-gray-700 line-clamp-2">
               <span className="font-semibold" style={{ color: colors.primary }}>Techniques:</span> {cvData.competences_techniques}
@@ -127,9 +121,9 @@ export default function TemplatePreview({ template, cvData }) {
       </div>
 
       {/* Info message */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800">
-          ℹ️ Ceci est un aperçu simplifié. Le PDF final aura une mise en page complète et optimisée.
+      <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+        <p className="text-xs text-primary">
+          Ceci est un apercu simplifie. Le PDF final aura une mise en page complete et optimisee.
         </p>
       </div>
     </div>

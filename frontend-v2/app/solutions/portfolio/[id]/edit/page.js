@@ -82,13 +82,13 @@ export default function PortfolioEditorPage() {
   const getDefaultContent = (type) => {
     switch (type) {
       case 'hero':
-        return { 
-          title: 'Bienvenue', 
-          subtitle: '', 
-          backgroundImage: '', 
-          buttonText: '', 
+        return {
+          title: 'Bienvenue',
+          subtitle: '',
+          backgroundImage: '',
+          buttonText: '',
           buttonLink: '',
-          overlay: true 
+          overlay: true
         }
       case 'text':
         return { title: '', text: '', style: 'paragraph' }
@@ -144,14 +144,14 @@ export default function PortfolioEditorPage() {
   const handleMoveBlock = async (blockId, direction) => {
     const index = blocks.findIndex(b => b.id === blockId)
     if (index === -1) return
-    
+
     const newIndex = direction === 'up' ? index - 1 : index + 1
     if (newIndex < 0 || newIndex >= blocks.length) return
 
     const newBlocks = [...blocks]
     const [removed] = newBlocks.splice(index, 1)
     newBlocks.splice(newIndex, 0, removed)
-    
+
     setBlocks(newBlocks)
 
     try {
@@ -205,7 +205,7 @@ export default function PortfolioEditorPage() {
 
       // 3. Bloc Texte pour les expériences
       if (cvData.experiences && cvData.experiences.length > 0) {
-        const expText = cvData.experiences.map(exp => 
+        const expText = cvData.experiences.map(exp =>
           `**${exp.poste || 'Poste'}** - ${exp.entreprise || 'Entreprise'}\n${exp.periode || exp.date_debut || ''} ${exp.date_fin ? '- ' + exp.date_fin : ''}\n${exp.description || ''}`
         ).join('\n\n')
 
@@ -221,7 +221,7 @@ export default function PortfolioEditorPage() {
 
       // 4. Bloc Texte pour les formations
       if (cvData.formations && cvData.formations.length > 0) {
-        const formText = cvData.formations.map(form => 
+        const formText = cvData.formations.map(form =>
           `**${form.diplome || 'Diplôme'}** - ${form.etablissement || 'Établissement'}\n${form.annee || form.date_fin || ''}`
         ).join('\n\n')
 
@@ -280,7 +280,7 @@ export default function PortfolioEditorPage() {
       // Fermer le modal
       setShowImportModal(false)
       setImportCVData('')
-      alert(`✅ ${blocksToCreate.length} blocs importés avec succès !`)
+      alert(`${blocksToCreate.length} blocs importés avec succès !`)
 
     } catch (err) {
       console.error('Erreur import CV:', err)
@@ -304,7 +304,7 @@ export default function PortfolioEditorPage() {
     }
 }
 
-// ✅ NOUVELLE FONCTION : Changer la couleur principale
+// Changer la couleur principale
 const handleChangeColor = async (newColor) => {
   try {
     setSaving(true)
@@ -401,18 +401,18 @@ const handleTogglePublish = async () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Chargement de l'éditeur...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-text-muted">Chargement de l'éditeur...</p>
       </div>
     )
   }
 
   if (!portfolio) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Portfolio non trouvé</p>
-          <Link href="/solutions/portfolio" className="text-blue-600 hover:underline">
+          <p className="text-error mb-4">Portfolio non trouvé</p>
+          <Link href="/solutions/portfolio" className="text-primary hover:underline">
             ← Retour à mes portfolios
           </Link>
         </div>
@@ -421,21 +421,21 @@ const handleTogglePublish = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      
+    <div className="min-h-screen bg-background">
+
       {/* Header Éditeur */}
-      <header className="bg-white shadow sticky top-0 z-40">
+      <header className="bg-surface border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            
+
             {/* Gauche */}
             <div className="flex items-center space-x-4">
-              <Link href="/solutions/portfolio" className="text-gray-500 hover:text-gray-700">
+              <Link href="/solutions/portfolio" className="text-text-muted hover:text-text-secondary">
                 ← Retour
               </Link>
               <div>
-                <h1 className="font-bold text-gray-900">{portfolio.title}</h1>
-                <p className="text-xs text-gray-500">
+                <h1 className="font-bold text-text-primary">{portfolio.title}</h1>
+                <p className="text-xs text-text-muted">
                   {saving ? '⏳ Sauvegarde...' : '✅ Sauvegardé'}
                 </p>
               </div>
@@ -447,7 +447,7 @@ const handleTogglePublish = async () => {
               <button
                 onClick={handleExportPDF}
                 disabled={exporting}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-text-secondary hover:bg-surface-elevated disabled:opacity-50"
               >
                 {exporting ? '⏳ Export...' : '📄 PDF'}
               </button>
@@ -456,7 +456,7 @@ const handleTogglePublish = async () => {
               <Link
                 href={`/p/${portfolio.slug}`}
                 target="_blank"
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-text-secondary hover:bg-surface-elevated"
               >
                 👁️ Prévisualiser
               </Link>
@@ -467,8 +467,8 @@ const handleTogglePublish = async () => {
                 disabled={saving}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   portfolio.published
-                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    ? 'bg-warning/10 text-warning hover:bg-warning/20'
+                    : 'bg-success text-white hover:bg-success/80'
                 }`}
               >
                 {portfolio.published ? '📤 Dépublier' : '🚀 Publier'}
@@ -481,7 +481,7 @@ const handleTogglePublish = async () => {
       {/* Erreur */}
       {error && (
         <div className="max-w-4xl mx-auto mt-4 px-4">
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="p-4 bg-error/10 border border-error/20 text-error rounded-lg">
             {error}
             <button onClick={() => setError(null)} className="ml-4">✕</button>
           </div>
@@ -492,8 +492,8 @@ const handleTogglePublish = async () => {
       <main className="max-w-4xl mx-auto py-8 px-4">
 
         {/* Sélecteur de template */}
-        <div className="mb-6 p-4 bg-white rounded-xl shadow">
-          <h3 className="font-bold text-gray-900 mb-3">🎨 Design du portfolio</h3>
+        <div className="mb-6 p-4 bg-surface rounded-xl border border-border">
+          <h3 className="font-bold text-text-primary mb-3">🎨 Design du portfolio</h3>
           <div className="grid grid-cols-3 gap-3">
             {[
               { id: 'moderne', name: 'Moderne', icon: '🎨', color: 'from-blue-600 to-purple-600' },
@@ -505,15 +505,15 @@ const handleTogglePublish = async () => {
                 onClick={() => handleChangeTemplate(tpl.id)}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   portfolio.template === tpl.id
-                    ? 'border-blue-500 ring-2 ring-blue-200'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-border hover:border-border-light'
                 }`}
               >
                 <div className={`h-16 rounded-md bg-gradient-to-br ${tpl.color} mb-2 flex items-center justify-center`}>
                   <span className="text-2xl">{tpl.icon}</span>
                 </div>
                 <p className={`text-sm font-medium ${
-                  portfolio.template === tpl.id ? 'text-blue-600' : 'text-gray-700'
+                  portfolio.template === tpl.id ? 'text-primary' : 'text-text-secondary'
                 }`}>
                   {tpl.name}
                 </p>
@@ -522,15 +522,15 @@ const handleTogglePublish = async () => {
           </div>
 </div>
 
-{/* ✅ NOUVEAU : Sélecteur de couleur principale */}
-<div className="mb-6 p-4 bg-white rounded-xl shadow">
-  <h3 className="font-bold text-gray-900 mb-3">🎨 Couleur principale</h3>
-  <p className="text-sm text-gray-600 mb-4">
+{/* Sélecteur de couleur principale */}
+<div className="mb-6 p-4 bg-surface rounded-xl border border-border">
+  <h3 className="font-bold text-text-primary mb-3">🎨 Couleur principale</h3>
+  <p className="text-sm text-text-muted mb-4">
     Personnalisez la couleur de votre portfolio (boutons, liens, accents...)
   </p>
-  
+
   <div className="flex flex-wrap items-center gap-4">
-    
+
     {/* Couleurs prédéfinies */}
     <div className="flex gap-2">
       {[
@@ -547,8 +547,8 @@ const handleTogglePublish = async () => {
           onClick={() => handleChangeColor(preset.color)}
           className={`w-12 h-12 rounded-lg border-2 transition-all hover:scale-110 ${
             (portfolio.primary_color || '#3b82f6') === preset.color
-              ? 'border-gray-900 scale-110 ring-2 ring-gray-300'
-              : 'border-gray-200 hover:border-gray-400'
+              ? 'border-primary scale-110 ring-2 ring-primary/20'
+              : 'border-border hover:border-border-light'
           }`}
           style={{ backgroundColor: preset.color }}
           title={preset.name}
@@ -557,7 +557,7 @@ const handleTogglePublish = async () => {
     </div>
 
     {/* Séparateur visuel */}
-    <div className="h-12 w-px bg-gray-300"></div>
+    <div className="h-12 w-px bg-border"></div>
 
     {/* Sélecteur personnalisé */}
     <div className="flex items-center gap-3">
@@ -566,13 +566,13 @@ const handleTogglePublish = async () => {
           type="color"
           value={portfolio.primary_color || '#3b82f6'}
           onChange={(e) => handleChangeColor(e.target.value)}
-          className="w-12 h-12 rounded-lg cursor-pointer border-2 border-gray-200"
+          className="w-12 h-12 rounded-lg cursor-pointer border-2 border-border"
           title="Choisir une couleur personnalisée"
         />
       </label>
       <div>
-        <div className="text-xs text-gray-500">Couleur personnalisée</div>
-        <code className="text-sm font-mono text-gray-700 font-medium">
+        <div className="text-xs text-text-muted">Couleur personnalisée</div>
+        <code className="text-sm font-mono text-text-secondary font-medium">
           {portfolio.primary_color || '#3b82f6'}
         </code>
       </div>
@@ -581,13 +581,13 @@ const handleTogglePublish = async () => {
 </div>
 
 {/* QR Code & Partage */}
-        <div className="mb-6 p-4 bg-white rounded-xl shadow">
-          <h3 className="font-bold text-gray-900 mb-3">📱 Partager le portfolio</h3>
-          
+        <div className="mb-6 p-4 bg-surface rounded-xl border border-border">
+          <h3 className="font-bold text-text-primary mb-3">📱 Partager le portfolio</h3>
+
           <div className="flex items-center gap-6">
-            {/* QR Code */}
-            <div className="bg-white p-3 rounded-lg border">
-              <QRCodeSVG 
+            {/* QR Code - keep bg-white for QR readability */}
+            <div className="bg-white p-3 rounded-lg border border-border">
+              <QRCodeSVG
                 id="qr-code-svg"
                 value={`${window.location.origin}/p/${portfolio.slug}`}
                 size={120}
@@ -600,17 +600,17 @@ const handleTogglePublish = async () => {
             <div className="flex-1 space-y-3">
               {/* URL */}
               <div>
-                <p className="text-sm text-gray-500 mb-1">Lien du portfolio :</p>
+                <p className="text-sm text-text-muted mb-1">Lien du portfolio :</p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 px-3 py-2 bg-gray-100 rounded text-sm truncate">
+                  <code className="flex-1 px-3 py-2 bg-surface-elevated rounded text-sm truncate text-text-secondary">
                     {window.location.origin}/p/{portfolio.slug}
                   </code>
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/p/${portfolio.slug}`)
-                      alert('✅ Lien copié !')
+                      alert('Lien copié !')
                     }}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    className="px-3 py-2 bg-primary text-gray-900 rounded-lg text-sm font-medium hover:bg-primary-hover"
                   >
                     📋 Copier
                   </button>
@@ -637,14 +637,14 @@ const handleTogglePublish = async () => {
                   }
                   img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
                 }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                className="px-4 py-2 bg-success text-white rounded-lg text-sm font-medium hover:bg-success/80"
               >
                 📥 Télécharger le QR Code
               </button>
 
               {/* Statut */}
               {!portfolio.published && (
-                <p className="text-sm text-orange-600">
+                <p className="text-sm text-warning">
                   ⚠️ Publie ton portfolio pour que le lien fonctionne
                 </p>
               )}
@@ -653,9 +653,9 @@ const handleTogglePublish = async () => {
         </div>
 
         {/* Protection par mot de passe */}
-        <div className="mb-6 p-4 bg-white rounded-xl shadow">
-          <h3 className="font-bold text-gray-900 mb-3">🔒 Protection par mot de passe</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="mb-6 p-4 bg-surface rounded-xl border border-border">
+          <h3 className="font-bold text-text-primary mb-3">🔒 Protection par mot de passe</h3>
+          <p className="text-sm text-text-muted mb-4">
             Protège ton portfolio avec un mot de passe. Les visiteurs devront le saisir pour voir le contenu.
           </p>
 
@@ -663,8 +663,8 @@ const handleTogglePublish = async () => {
           {passwordMsg && (
             <div className={`mb-4 p-3 rounded-lg text-sm ${
               passwordMsg.type === 'success'
-                ? 'bg-green-50 border border-green-200 text-green-700'
-                : 'bg-red-50 border border-red-200 text-red-700'
+                ? 'bg-success/10 border border-success/20 text-success'
+                : 'bg-error/10 border border-error/20 text-error'
             }`}>
               {passwordMsg.text}
             </div>
@@ -672,11 +672,11 @@ const handleTogglePublish = async () => {
 
           {portfolio.is_protected ? (
             <div>
-              <div className="flex items-center gap-3 mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-3 mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
                 <span className="text-xl">🔒</span>
                 <div>
-                  <p className="font-medium text-yellow-800">Portfolio protégé</p>
-                  <p className="text-sm text-yellow-700">Les visiteurs doivent entrer un mot de passe pour voir le contenu.</p>
+                  <p className="font-medium text-warning">Portfolio protégé</p>
+                  <p className="text-sm text-warning/80">Les visiteurs doivent entrer un mot de passe pour voir le contenu.</p>
                 </div>
               </div>
 
@@ -689,12 +689,12 @@ const handleTogglePublish = async () => {
                       placeholder="Nouveau mot de passe (min. 4 car.)"
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      className="flex-1 px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     />
                     <button
                       onClick={handleSetPassword}
                       disabled={passwordSaving}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                      className="px-4 py-2 bg-primary text-gray-900 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
                     >
                       {passwordSaving ? '...' : 'Changer'}
                     </button>
@@ -705,7 +705,7 @@ const handleTogglePublish = async () => {
                 <button
                   onClick={handleRemovePassword}
                   disabled={passwordSaving}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 disabled:opacity-50"
+                  className="px-4 py-2 bg-error/10 text-error rounded-lg text-sm font-medium hover:bg-error/20 disabled:opacity-50"
                 >
                   🔓 Supprimer
                 </button>
@@ -718,12 +718,12 @@ const handleTogglePublish = async () => {
                 placeholder="Mot de passe (min. 4 caractères)"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                className="flex-1 px-3 py-2 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
               />
               <button
                 onClick={handleSetPassword}
                 disabled={passwordSaving}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 disabled:opacity-50"
+                className="px-4 py-2 bg-warning text-gray-900 rounded-lg text-sm font-medium hover:bg-warning/80 disabled:opacity-50"
               >
                 {passwordSaving ? '...' : '🔒 Activer la protection'}
               </button>
@@ -732,24 +732,24 @@ const handleTogglePublish = async () => {
         </div>
 
         {/* Import CV */}
-        <div className="mb-6 p-4 bg-white rounded-xl shadow">
-          <h3 className="font-bold text-gray-900 mb-3">📄 Importer depuis mon CV</h3>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className="mb-6 p-4 bg-surface rounded-xl border border-border">
+          <h3 className="font-bold text-text-primary mb-3">📄 Importer depuis mon CV</h3>
+          <p className="text-sm text-text-muted mb-4">
             Tu as déjà optimisé ton CV ? Importe tes informations en un clic !
           </p>
-          
+
           <div className="flex gap-3">
             <button
               onClick={() => setShowImportModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-teal-700"
+              className="px-4 py-2 bg-success text-white rounded-lg font-medium hover:bg-success/80"
             >
               📥 Importer mon CV
             </button>
-            
+
             <Link
               href="/solutions/optimiseur-cv"
               target="_blank"
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+              className="px-4 py-2 border border-border text-text-secondary rounded-lg font-medium hover:bg-surface-elevated"
             >
               ✨ Créer un CV optimisé
             </Link>
@@ -759,10 +759,10 @@ const handleTogglePublish = async () => {
         {/* Modal Import CV */}
         {showImportModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">📄 Importer mon CV</h2>
-              
-              <p className="text-gray-600 mb-4">
+            <div className="bg-surface-elevated rounded-xl shadow-xl shadow-black/30 max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto border border-border">
+              <h2 className="text-xl font-bold text-text-primary mb-4">📄 Importer mon CV</h2>
+
+              <p className="text-text-muted mb-4">
                 Colle ici les données JSON de ton CV optimisé, ou upload le fichier JSON.
               </p>
 
@@ -772,13 +772,13 @@ const handleTogglePublish = async () => {
                 value={importCVData}
                 onChange={(e) => setImportCVData(e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border rounded-lg font-mono text-sm mb-4"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg font-mono text-sm mb-4 text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
               />
 
               {/* Ou upload fichier */}
               <div className="mb-4">
                 <label className="block cursor-pointer">
-                  <div className="px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-600 hover:border-blue-400 hover:text-blue-600">
+                  <div className="px-4 py-2 border-2 border-dashed border-border rounded-lg text-center text-text-muted hover:border-primary hover:text-primary">
                     📁 Ou uploader un fichier JSON
                   </div>
                   <input
@@ -801,7 +801,7 @@ const handleTogglePublish = async () => {
 
               {/* Erreur */}
               {importError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                <div className="mb-4 p-3 bg-error/10 border border-error/20 text-error rounded-lg text-sm">
                   {importError}
                 </div>
               )}
@@ -814,14 +814,14 @@ const handleTogglePublish = async () => {
                     setImportCVData('')
                     setImportError(null)
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                  className="flex-1 px-4 py-2 border border-border text-text-secondary rounded-lg font-medium hover:bg-surface"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleImportCV}
                   disabled={!importCVData || importing}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-success text-white rounded-lg font-medium hover:bg-success/80 disabled:opacity-50"
                 >
                   {importing ? '⏳ Import...' : '📥 Importer'}
                 </button>
@@ -832,11 +832,11 @@ const handleTogglePublish = async () => {
 
         {/* URL du portfolio */}
         {portfolio.published && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className="mb-6 p-4 bg-success/10 border border-success/20 rounded-lg">
+            <p className="text-sm text-success">
               🌐 Votre portfolio est en ligne : {' '}
-              <a 
-                href={`/p/${portfolio.slug}`} 
+              <a
+                href={`/p/${portfolio.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium underline"
@@ -870,25 +870,25 @@ const handleTogglePublish = async () => {
         {/* Bouton ajouter bloc */}
         <div className="mt-6">
           {showAddBlock ? (
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="font-bold text-gray-900 mb-4">➕ Ajouter un bloc</h3>
+            <div className="bg-surface rounded-xl border border-border p-6">
+              <h3 className="font-bold text-text-primary mb-4">➕ Ajouter un bloc</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {BLOCK_TYPES.map((blockType) => (
                   <button
                     key={blockType.type}
                     onClick={() => handleAddBlock(blockType.type)}
                     disabled={saving}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+                    className="p-4 border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-left"
                   >
                     <div className="text-2xl mb-1">{blockType.icon}</div>
-                    <div className="font-medium text-gray-900">{blockType.label}</div>
-                    <div className="text-xs text-gray-500">{blockType.description}</div>
+                    <div className="font-medium text-text-primary">{blockType.label}</div>
+                    <div className="text-xs text-text-muted">{blockType.description}</div>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => setShowAddBlock(false)}
-                className="mt-4 text-gray-500 hover:text-gray-700"
+                className="mt-4 text-text-muted hover:text-text-secondary"
               >
                 Annuler
               </button>
@@ -896,7 +896,7 @@ const handleTogglePublish = async () => {
           ) : (
             <button
               onClick={() => setShowAddBlock(true)}
-              className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-all"
+              className="w-full py-4 border-2 border-dashed border-border rounded-xl text-text-muted hover:border-primary hover:text-primary transition-all"
             >
               ➕ Ajouter un bloc
             </button>
@@ -907,10 +907,10 @@ const handleTogglePublish = async () => {
         {blocks.length === 0 && !showAddBlock && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-text-primary mb-2">
               Commencez à créer !
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-text-muted mb-6">
               Ajoutez des blocs pour construire votre portfolio
             </p>
           </div>
@@ -925,13 +925,13 @@ const handleTogglePublish = async () => {
 // COMPOSANT BLOCK EDITOR
 // ==========================================
 
-function BlockEditor({ 
-  block, 
-  isEditing, 
-  onEdit, 
-  onSave, 
-  onDelete, 
-  onMoveUp, 
+function BlockEditor({
+  block,
+  isEditing,
+  onEdit,
+  onSave,
+  onDelete,
+  onMoveUp,
   onMoveDown,
   canMoveUp,
   canMoveDown,
@@ -983,21 +983,21 @@ function BlockEditor({
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow ${isEditing ? 'ring-2 ring-blue-500' : ''}`}>
-      
+    <div className={`bg-surface rounded-xl border ${isEditing ? 'ring-2 ring-primary border-primary' : 'border-border'}`}>
+
       {/* Header du bloc */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-elevated rounded-t-xl">
         <div className="flex items-center space-x-2">
           <span className="text-xl">{getBlockIcon()}</span>
-          <span className="font-medium text-gray-700 capitalize">{block.type}</span>
+          <span className="font-medium text-text-secondary capitalize">{block.type}</span>
         </div>
-        
+
         <div className="flex items-center space-x-1">
           {/* Déplacer */}
           <button
             onClick={onMoveUp}
             disabled={!canMoveUp}
-            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+            className="p-1 text-text-muted hover:text-text-secondary disabled:opacity-30"
             title="Monter"
           >
             ⬆️
@@ -1005,7 +1005,7 @@ function BlockEditor({
           <button
             onClick={onMoveDown}
             disabled={!canMoveDown}
-            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+            className="p-1 text-text-muted hover:text-text-secondary disabled:opacity-30"
             title="Descendre"
           >
             ⬇️
@@ -1015,14 +1015,14 @@ function BlockEditor({
           {isEditing ? (
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              className="px-3 py-1 bg-primary text-gray-900 text-sm rounded hover:bg-primary-hover"
             >
               ✅ Sauvegarder
             </button>
           ) : (
             <button
               onClick={onEdit}
-              className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+              className="px-3 py-1 bg-surface-elevated text-text-secondary text-sm rounded hover:bg-border border border-border"
             >
               ✏️ Modifier
             </button>
@@ -1031,7 +1031,7 @@ function BlockEditor({
           {/* Supprimer */}
           <button
             onClick={onDelete}
-            className="p-1 text-red-400 hover:text-red-600"
+            className="p-1 text-error/60 hover:text-error"
             title="Supprimer"
           >
             🗑️
@@ -1047,7 +1047,7 @@ function BlockEditor({
             {block.type === 'hero' && (
               <>
                 {/* Aperçu Hero */}
-                <div 
+                <div
                   className="relative h-48 rounded-lg overflow-hidden mb-4 flex items-center justify-center"
                   style={{
                     backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
@@ -1076,7 +1076,7 @@ function BlockEditor({
                   placeholder="Titre principal"
                   value={content.title || ''}
                   onChange={(e) => handleChange('title', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-lg font-bold"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-lg font-bold text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
 
                 {/* Sous-titre */}
@@ -1085,14 +1085,14 @@ function BlockEditor({
                   placeholder="Sous-titre (optionnel)"
                   value={content.subtitle || ''}
                   onChange={(e) => handleChange('subtitle', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
 
                 {/* Image de fond */}
-                <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                  <p className="text-sm font-medium text-gray-700">Image de fond :</p>
+                <div className="p-3 bg-surface-elevated rounded-lg space-y-2">
+                  <p className="text-sm font-medium text-text-secondary">Image de fond :</p>
                   <label className="block cursor-pointer">
-                    <div className="px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium text-sm">
+                    <div className="px-4 py-2 bg-primary text-gray-900 text-center rounded-lg hover:bg-primary-hover font-medium text-sm">
                       {uploading ? '⏳ Upload...' : '📤 Choisir une image de fond'}
                     </div>
                     <input
@@ -1107,7 +1107,7 @@ function BlockEditor({
                     <button
                       type="button"
                       onClick={() => handleChange('backgroundImage', '')}
-                      className="text-red-500 text-sm hover:underline"
+                      className="text-error text-sm hover:underline"
                     >
                       🗑️ Supprimer l'image
                     </button>
@@ -1122,7 +1122,7 @@ function BlockEditor({
                     onChange={(e) => handleChange('overlay', e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-gray-700">Assombrir l'image (meilleure lisibilité)</span>
+                  <span className="text-sm text-text-secondary">Assombrir l'image (meilleure lisibilité)</span>
                 </label>
 
                 {/* Bouton d'action */}
@@ -1132,19 +1132,19 @@ function BlockEditor({
                     placeholder="Texte du bouton (optionnel)"
                     value={content.buttonText || ''}
                     onChange={(e) => handleChange('buttonText', e.target.value)}
-                    className="px-3 py-2 border rounded-lg"
+                    className="px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   />
                   <input
                     type="text"
                     placeholder="Lien du bouton"
                     value={content.buttonLink || ''}
                     onChange={(e) => handleChange('buttonLink', e.target.value)}
-                    className="px-3 py-2 border rounded-lg"
+                    className="px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   />
                 </div>
               </>
             )}
-           
+
             {block.type === 'text' && (
               <>
                 <input
@@ -1152,19 +1152,19 @@ function BlockEditor({
                   placeholder="Titre (optionnel)"
                   value={content.title || ''}
                   onChange={(e) => handleChange('title', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <textarea
                   placeholder="Votre texte ici..."
                   value={content.text || ''}
                   onChange={(e) => handleChange('text', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <select
                   value={content.style || 'paragraph'}
                   onChange={(e) => handleChange('style', e.target.value)}
-                  className="px-3 py-2 border rounded-lg"
+                  className="px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 >
                   <option value="heading">Titre principal</option>
                   <option value="subheading">Sous-titre</option>
@@ -1176,14 +1176,14 @@ function BlockEditor({
             {block.type === 'image' && (
               <>
                 {/* Aperçu image */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {content.url ? (
                     <div>
                       <img src={content.url} alt="" className="max-h-64 mx-auto rounded mb-4" />
                       <button
                         type="button"
                         onClick={() => handleChange('url', '')}
-                        className="text-red-500 text-sm hover:underline"
+                        className="text-error text-sm hover:underline"
                       >
                         🗑️ Supprimer l'image
                       </button>
@@ -1191,7 +1191,7 @@ function BlockEditor({
                   ) : (
                     <div className="py-8">
                       <span className="text-4xl mb-2 block">🖼️</span>
-                      <p className="text-gray-500 mb-4">Aucune image sélectionnée</p>
+                      <p className="text-text-muted mb-4">Aucune image sélectionnée</p>
                     </div>
                   )}
                 </div>
@@ -1199,7 +1199,7 @@ function BlockEditor({
                 {/* Bouton Upload */}
                 <div className="flex items-center gap-4">
                   <label className="flex-1 cursor-pointer">
-                    <div className="px-4 py-3 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 font-medium">
+                    <div className="px-4 py-3 bg-primary text-gray-900 text-center rounded-lg hover:bg-primary-hover font-medium">
                       {uploading ? '⏳ Upload en cours...' : '📤 Choisir une image'}
                     </div>
                     <input
@@ -1213,13 +1213,13 @@ function BlockEditor({
                 </div>
 
                 {/* Ou URL externe */}
-                <div className="text-center text-gray-400 text-sm">— ou —</div>
+                <div className="text-center text-text-muted text-sm">— ou —</div>
                 <input
                   type="text"
                   placeholder="Coller une URL d'image"
                   value={content.url || ''}
                   onChange={(e) => handleChange('url', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
 
                 {/* Légende */}
@@ -1228,7 +1228,7 @@ function BlockEditor({
                   placeholder="Légende (optionnel)"
                   value={content.caption || ''}
                   onChange={(e) => handleChange('caption', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
               </>
             )}
@@ -1237,7 +1237,7 @@ function BlockEditor({
               <>
                 {/* Type de vidéo */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-text-secondary">
                     Type de vidéo
                   </label>
                   <div className="flex gap-2">
@@ -1246,8 +1246,8 @@ function BlockEditor({
                       onClick={() => handleChange('type', 'upload')}
                       className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
                         content.type === 'upload' || !content.type
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border hover:border-border-light text-text-secondary'
                       }`}
                     >
                       📤 Depuis mon PC
@@ -1257,8 +1257,8 @@ function BlockEditor({
                       onClick={() => handleChange('type', 'youtube')}
                       className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
                         content.type === 'youtube'
-                          ? 'border-red-500 bg-red-50 text-red-700'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-error bg-error/10 text-error'
+                          : 'border-border hover:border-border-light text-text-secondary'
                       }`}
                     >
                       ▶️ YouTube
@@ -1268,8 +1268,8 @@ function BlockEditor({
                       onClick={() => handleChange('type', 'vimeo')}
                       className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium ${
                         content.type === 'vimeo'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-info bg-info/10 text-info'
+                          : 'border-border hover:border-border-light text-text-secondary'
                       }`}
                     >
                       🎬 Vimeo
@@ -1281,14 +1281,14 @@ function BlockEditor({
                 {(content.type === 'upload' || !content.type) && (
                   <>
                     {/* Aperçu vidéo */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                       {content.url ? (
                         <div>
                           <video src={content.url} controls className="max-h-64 mx-auto rounded mb-4" />
                           <button
                             type="button"
                             onClick={() => handleChange('url', '')}
-                            className="text-red-500 text-sm hover:underline"
+                            className="text-error text-sm hover:underline"
                           >
                             🗑️ Supprimer la vidéo
                           </button>
@@ -1296,15 +1296,15 @@ function BlockEditor({
                       ) : (
                         <div className="py-8">
                           <span className="text-4xl mb-2 block">🎬</span>
-                          <p className="text-gray-500 mb-2">Aucune vidéo sélectionnée</p>
-                          <p className="text-gray-400 text-sm">Formats acceptés : MP4, WEBM (max 50MB)</p>
+                          <p className="text-text-muted mb-2">Aucune vidéo sélectionnée</p>
+                          <p className="text-text-muted text-sm">Formats acceptés : MP4, WEBM (max 50MB)</p>
                         </div>
                       )}
                     </div>
 
                     {/* Bouton Upload */}
                     <label className="block cursor-pointer">
-                      <div className="px-4 py-3 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 font-medium">
+                      <div className="px-4 py-3 bg-secondary text-white text-center rounded-lg hover:bg-secondary/80 font-medium">
                         {uploading ? '⏳ Upload en cours...' : '📤 Choisir une vidéo (MP4, WEBM)'}
                       </div>
                       <input
@@ -1326,7 +1326,7 @@ function BlockEditor({
                       placeholder="Coller l'URL YouTube (ex: https://www.youtube.com/watch?v=...)"
                       value={content.url || ''}
                       onChange={(e) => handleChange('url', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     />
                     {content.url && (
                       <div className="aspect-video">
@@ -1349,7 +1349,7 @@ function BlockEditor({
                       placeholder="Coller l'URL Vimeo (ex: https://vimeo.com/123456789)"
                       value={content.url || ''}
                       onChange={(e) => handleChange('url', e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     />
                     {content.url && (
                       <div className="aspect-video">
@@ -1370,7 +1370,7 @@ function BlockEditor({
                   placeholder="Légende (optionnel)"
                   value={content.caption || ''}
                   onChange={(e) => handleChange('caption', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
               </>
             )}
@@ -1382,20 +1382,20 @@ function BlockEditor({
                   placeholder="Titre du projet"
                   value={content.title || ''}
                   onChange={(e) => handleChange('title', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <textarea
                   placeholder="Description du projet"
                   value={content.description || ''}
                   onChange={(e) => handleChange('description', e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFileUpload(e, 'image')}
-                  className="w-full"
+                  className="w-full text-text-muted"
                   disabled={uploading}
                 />
                 {content.image && (
@@ -1406,20 +1406,20 @@ function BlockEditor({
                   placeholder="Lien vers le projet (optionnel)"
                   value={content.link || ''}
                   onChange={(e) => handleChange('link', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
               </>
             )}
-             
+
             {block.type === 'gallery' && (
               <>
                 {/* Aperçu galerie */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {Array.isArray(content.images) && content.images.map((img, index) => (
                     <div key={index} className="relative">
-                      <img 
-                        src={typeof img === 'string' ? img : img.url} 
-                        alt="" 
+                      <img
+                        src={typeof img === 'string' ? img : img.url}
+                        alt=""
                         className="w-full h-24 object-cover rounded"
                       />
                       <button
@@ -1429,7 +1429,7 @@ function BlockEditor({
                           newImages.splice(index, 1)
                           handleChange('images', newImages)
                         }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600"
+                        className="absolute top-1 right-1 bg-error text-white rounded-full w-6 h-6 text-xs hover:bg-error/80"
                       >
                         ✕
                       </button>
@@ -1439,7 +1439,7 @@ function BlockEditor({
 
                 {/* Bouton ajouter images */}
                 <label className="block cursor-pointer">
-                  <div className="px-4 py-3 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 font-medium">
+                  <div className="px-4 py-3 bg-success text-white text-center rounded-lg hover:bg-success/80 font-medium">
                     {uploading ? '⏳ Upload en cours...' : '📤 Ajouter des images à la galerie'}
                   </div>
                   <input
@@ -1466,7 +1466,7 @@ function BlockEditor({
                   />
                 </label>
 
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-text-muted text-center">
                   {Array.isArray(content.images) ? content.images.length : 0} image(s) dans la galerie
                 </p>
               </>
@@ -1479,28 +1479,28 @@ function BlockEditor({
                   placeholder="Email"
                   value={content.email || ''}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <input
                   type="tel"
                   placeholder="Téléphone"
                   value={content.phone || ''}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <input
                   type="text"
                   placeholder="LinkedIn URL"
                   value={content.linkedin || ''}
                   onChange={(e) => handleChange('linkedin', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <input
                   type="text"
                   placeholder="GitHub URL"
                   value={content.github || ''}
                   onChange={(e) => handleChange('github', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
               </>
             )}
@@ -1509,7 +1509,7 @@ function BlockEditor({
               <select
                 value={content.style || 'line'}
                 onChange={(e) => handleChange('style', e.target.value)}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:ring-2 focus:ring-primary/50 focus:border-primary"
               >
                 <option value="line">Ligne</option>
                 <option value="space">Espace</option>
@@ -1534,10 +1534,10 @@ function BlockPreview({ block }) {
   const content = block.content || {}
 
   switch (block.type) {
-    
+
     case 'hero':
       return (
-        <div 
+        <div
           className="relative h-32 rounded-lg overflow-hidden flex items-center justify-center"
           style={{
             backgroundImage: content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
@@ -1560,11 +1560,11 @@ function BlockPreview({ block }) {
       return (
         <div>
           {content.title && (
-            <h3 className={`font-bold ${content.style === 'heading' ? 'text-2xl' : 'text-lg'} mb-2`}>
+            <h3 className={`font-bold ${content.style === 'heading' ? 'text-2xl' : 'text-lg'} mb-2 text-text-primary`}>
               {content.title}
             </h3>
           )}
-          <p className="text-gray-700 whitespace-pre-wrap">{content.text || 'Aucun texte'}</p>
+          <p className="text-text-secondary whitespace-pre-wrap">{content.text || 'Aucun texte'}</p>
         </div>
       )
 
@@ -1572,15 +1572,15 @@ function BlockPreview({ block }) {
       return content.url ? (
         <div>
           <img src={content.url} alt={content.caption || ''} className="max-h-64 rounded-lg" />
-          {content.caption && <p className="text-sm text-gray-500 mt-2">{content.caption}</p>}
+          {content.caption && <p className="text-sm text-text-muted mt-2">{content.caption}</p>}
         </div>
       ) : (
-        <p className="text-gray-400">Aucune image</p>
+        <p className="text-text-muted">Aucune image</p>
       )
 
     case 'video':
-      if (!content.url) return <p className="text-gray-400">Aucune vidéo</p>
-      
+      if (!content.url) return <p className="text-text-muted">Aucune vidéo</p>
+
       if (content.type === 'youtube') {
         const videoId = content.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1]
         return videoId ? (
@@ -1590,9 +1590,9 @@ function BlockPreview({ block }) {
             allowFullScreen
             title="YouTube preview"
           />
-        ) : <p className="text-red-500">URL YouTube invalide</p>
+        ) : <p className="text-error">URL YouTube invalide</p>
       }
-      
+
       return (
         <video src={content.url} controls className="w-full rounded-lg" />
       )
@@ -1601,10 +1601,10 @@ function BlockPreview({ block }) {
       return (
         <div className="grid grid-cols-3 gap-2">
           {Array.isArray(content.images) && content.images.map((img, index) => (
-            <img 
+            <img
               key={index}
-              src={typeof img === 'string' ? img : img.url} 
-              alt="" 
+              src={typeof img === 'string' ? img : img.url}
+              alt=""
               className="w-full h-24 object-cover rounded"
             />
           ))}
@@ -1618,10 +1618,10 @@ function BlockPreview({ block }) {
             <img src={content.image} alt="" className="w-32 h-24 object-cover rounded" />
           )}
           <div>
-            <h4 className="font-bold">{content.title || 'Sans titre'}</h4>
-            <p className="text-sm text-gray-600">{content.description}</p>
+            <h4 className="font-bold text-text-primary">{content.title || 'Sans titre'}</h4>
+            <p className="text-sm text-text-muted">{content.description}</p>
             {content.link && (
-              <a href={content.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm hover:underline">
+              <a href={content.link} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline">
                 Voir le projet →
               </a>
             )}
@@ -1631,20 +1631,20 @@ function BlockPreview({ block }) {
 
     case 'contact':
       return (
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 text-text-secondary">
           {content.email && <span>📧 {content.email}</span>}
           {content.phone && <span>📱 {content.phone}</span>}
-          {content.linkedin && <a href={content.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600">LinkedIn</a>}
-          {content.github && <a href={content.github} target="_blank" rel="noopener noreferrer" className="text-gray-800">GitHub</a>}
+          {content.linkedin && <a href={content.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary">LinkedIn</a>}
+          {content.github && <a href={content.github} target="_blank" rel="noopener noreferrer" className="text-text-primary">GitHub</a>}
         </div>
       )
 
     case 'separator':
       if (content.style === 'space') return <div className="h-8" />
-      if (content.style === 'dots') return <div className="text-center text-gray-400">• • •</div>
-      return <hr className="border-gray-300" />
+      if (content.style === 'dots') return <div className="text-center text-text-muted">• • •</div>
+      return <hr className="border-border" />
 
     default:
-      return <p className="text-gray-400">Bloc inconnu</p>
+      return <p className="text-text-muted">Bloc inconnu</p>
   }
 }

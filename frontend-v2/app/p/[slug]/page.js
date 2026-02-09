@@ -142,10 +142,10 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-4xl mb-4">🌐</div>
-          <p className="text-gray-600">Chargement du portfolio...</p>
+          <p className="text-text-muted">Chargement du portfolio...</p>
         </div>
       </div>
     )
@@ -154,19 +154,19 @@ useEffect(() => {
   // Gate mot de passe
   if (passwordRequired) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="max-w-md w-full mx-4">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <div className="bg-surface rounded-2xl border border-border p-8 text-center">
             <div className="text-5xl mb-4">🔒</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {portfolio?.title || 'Portfolio protégé'}
+            <h1 className="text-2xl font-bold text-text-primary mb-2">
+              {portfolio?.title || 'Portfolio protege'}
             </h1>
-            <p className="text-gray-600 mb-6">
-              Ce portfolio est protégé par un mot de passe.
+            <p className="text-text-muted mb-6">
+              Ce portfolio est protege par un mot de passe.
             </p>
 
             {passwordError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              <div className="mb-4 p-3 bg-error/10 border border-error/20 rounded-lg text-error text-sm">
                 {passwordError}
               </div>
             )}
@@ -177,21 +177,21 @@ useEffect(() => {
                 placeholder="Entrez le mot de passe"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-center text-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
                 autoFocus
               />
               <button
                 type="submit"
                 disabled={verifying || !passwordInput}
-                className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: portfolio?.primary_color || '#3b82f6' }}
+                className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                style={{ backgroundColor: portfolio?.primary_color || '#F59E0B' }}
               >
-                {verifying ? 'Vérification...' : 'Accéder au portfolio'}
+                {verifying ? 'Verification...' : 'Acceder au portfolio'}
               </button>
             </form>
 
-            <a href="/" className="inline-block mt-6 text-sm text-gray-500 hover:text-gray-700">
-              ← Retour à l'accueil
+            <a href="/" className="inline-block mt-6 text-sm text-text-muted hover:text-primary transition-colors">
+              &larr; Retour a l&apos;accueil
             </a>
           </div>
         </div>
@@ -229,13 +229,13 @@ useEffect(() => {
 
   if (error || !portfolio) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="text-6xl mb-4">😕</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Portfolio non trouvé</h1>
-          <p className="text-gray-600 mb-6">Ce portfolio n'existe pas ou n'est pas publié.</p>
-          <a href="/" className="text-blue-600 hover:underline">
-            ← Retour à l'accueil
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Portfolio non trouve</h1>
+          <p className="text-text-muted mb-6">Ce portfolio n&apos;existe pas ou n&apos;est pas publie.</p>
+          <a href="/" className="text-primary hover:underline">
+            &larr; Retour a l&apos;accueil
           </a>
         </div>
       </div>

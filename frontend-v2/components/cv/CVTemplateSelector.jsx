@@ -1,8 +1,3 @@
-/**
- * Composant CVTemplateSelector (Version améliorée avec miniatures)
- * Permet de sélectionner un template de CV avec aperçu visuel
- */
-
 import { CV_TEMPLATES } from '@/lib/constants/templates';
 
 export default function CVTemplateSelector({ selected, onSelect }) {
@@ -12,22 +7,22 @@ export default function CVTemplateSelector({ selected, onSelect }) {
         <button
           key={template.id}
           onClick={() => onSelect(template.id)}
-          className={`group rounded-xl border-2 transition-all text-left overflow-hidden ${
+          className={`group rounded-xl border-2 transition-all text-left overflow-hidden cursor-pointer ${
             selected === template.id
-              ? 'border-blue-600 bg-blue-50 shadow-xl scale-105'
-              : 'border-gray-200 hover:border-blue-300 hover:shadow-lg hover:scale-102'
+              ? 'border-primary bg-primary/5 shadow-xl scale-105'
+              : 'border-border hover:border-primary/40 hover:shadow-lg hover:scale-102'
           }`}
         >
           {/* Preview visuel miniature */}
-          <div 
+          <div
             className="h-48 p-4 flex items-center justify-center relative"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, ${template.couleur}15 0%, ${template.couleur}05 100%)`
             }}
           >
-            {/* Mini CV mockup */}
+            {/* Mini CV mockup - keep white bg (represents paper) */}
             <div className="w-full max-w-[140px] bg-white rounded shadow-sm p-3 text-xs">
-              <div 
+              <div
                 className="h-1 w-3/4 rounded mb-2"
                 style={{ backgroundColor: template.couleur }}
               />
@@ -44,8 +39,8 @@ export default function CVTemplateSelector({ selected, onSelect }) {
               </div>
             </div>
 
-            {/* Badge icône */}
-            <div 
+            {/* Badge icone */}
+            <div
               className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-xl"
               style={{ backgroundColor: template.couleur }}
             >
@@ -55,42 +50,38 @@ export default function CVTemplateSelector({ selected, onSelect }) {
 
           {/* Infos template */}
           <div className="p-5">
-            {/* Nom du template */}
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-text-primary mb-2 flex items-center justify-between">
               {template.nom}
               {selected === template.id && (
-                <span className="text-blue-600 text-sm">✓</span>
+                <span className="text-primary text-sm">&#10003;</span>
               )}
             </h3>
 
-            {/* Description */}
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            <p className="text-sm text-text-muted mb-3 line-clamp-2">
               {template.description}
             </p>
 
-            {/* Secteurs */}
             <div className="flex flex-wrap gap-1.5">
               {template.secteurs.slice(0, 3).map((secteur, index) => (
                 <span
                   key={index}
-                  className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded"
+                  className="px-2 py-0.5 bg-surface-elevated text-text-muted text-xs rounded"
                 >
                   {secteur}
                 </span>
               ))}
               {template.secteurs.length > 3 && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded">
+                <span className="px-2 py-0.5 bg-surface-elevated text-text-muted/70 text-xs rounded">
                   +{template.secteurs.length - 3}
                 </span>
               )}
             </div>
 
-            {/* Indicateur de sélection */}
             {selected === template.id && (
-              <div className="mt-3 pt-3 border-t border-blue-200">
-                <div className="flex items-center text-blue-600 font-semibold text-sm">
-                  <span className="mr-2">✓</span>
-                  Template sélectionné
+              <div className="mt-3 pt-3 border-t border-primary/20">
+                <div className="flex items-center text-primary font-semibold text-sm">
+                  <span className="mr-2">&#10003;</span>
+                  Template selectionne
                 </div>
               </div>
             )}
