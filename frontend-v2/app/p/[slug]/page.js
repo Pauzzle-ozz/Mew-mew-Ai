@@ -486,3 +486,180 @@ case 'contact':
       return null
   }
 }
+
+// ==========================================
+// COMPOSANT FORMULAIRE DE CONTACT
+// ==========================================
+
+function ContactForm({ content, styles, portfolio }) {
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' })
+  const [status, setStatus] = useState('idle') // idle, sending, success, error
+  const [errorMsg, setErrorMsg] = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setStatus('sending')
+    setErrorMsg('')
+
+    try {
+      const res = await fetch('http://localhost:5000/api/contact/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          portfolioOwnerEmail: portfolio.owner_email,
+          portfolioTitle: portfolio.title
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Erreur lors de l\'envoi')
+      }
+
+      setStatus('success')
+      setFormData({ name: '', email: '', message: '' })
+    } catch (err) {
+      console.error('Erreur envoi contact:', err)
+      setStatus('error')
+      setErrorMsg(err.message || 'Impossible d\'envoyer le message')
+    }
+  }
+
+  return (
+    <div className={`${styles.cardBg} rounded-xl p-8`}>
+      {content.title && (
+        <h2
+          className="text-2xl font-bold mb-6"
+          style={{ color: portfolio?.primary_color || undefined }}
+        >
+          {content.title}
+        </h2>
+      )}
+
+      {/* Liens de contact directs */}
+      {(content.email || content.phone || content.linkedin || content.github) && (
+        <div className="flex flex-wrap gap-4 mb-8">
+          {content.email && (
+            <a
+              href={`mailto:${content.email}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${styles.textColor} hover:opacity-80 transition-opacity`}
+              style={{ backgroundColor: portfolio?.primary_color ? `${portfolio.primary_color}20` : undefined }}
+            >
+              <span>✉️</span> {content.email}
+            </a>
+          )}
+          {content.phone && (
+            <a
+              href={`tel:${content.phone}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${styles.textColor} hover:opacity-80 transition-opacity`}
+              style={{ backgroundColor: portfolio?.primary_color ? `${portfolio.primary_color}20` : undefined }}
+            >
+              <span>📞</span> {content.phone}
+            </a>
+          )}
+          {content.linkedin && (
+            <a
+              href={content.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${styles.textColor} hover:opacity-80 transition-opacity`}
+              style={{ backgroundColor: portfolio?.primary_color ? `${portfolio.primary_color}20` : undefined }}
+            >
+              <span>💼</span> LinkedIn
+            </a>
+          )}
+          {content.github && (
+            <a
+              href={content.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${styles.textColor} hover:opacity-80 transition-opacity`}
+              style={{ backgroundColor: portfolio?.primary_color ? `${portfolio.primary_color}20` : undefined }}
+            >
+              <span>🐙</span> GitHub
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Message de succes */}
+      {status === 'success' && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          Votre message a bien ete envoye ! Merci pour votre contact.
+        </div>
+      )}
+
+      {/* Message d'erreur */}
+      {status === 'error' && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {errorMsg}
+        </div>
+      )}
+
+      {/* Formulaire */}
+      {portfolio.owner_email ? (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${styles.textColor}`}>
+              Votre nom
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:outline-none text-gray-900"
+              style={{ focusRingColor: portfolio?.primary_color }}
+              placeholder="Jean Dupont"
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${styles.textColor}`}>
+              Votre email
+            </label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:outline-none text-gray-900"
+              placeholder="jean@exemple.com"
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${styles.textColor}`}>
+              Message
+            </label>
+            <textarea
+              required
+              rows={5}
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:outline-none text-gray-900 resize-vertical"
+              placeholder="Votre message..."
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={status === 'sending'}
+            className="w-full py-3 rounded-lg text-white font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: portfolio?.primary_color || '#3b82f6' }}
+          >
+            {status === 'sending' ? 'Envoi en cours...' : 'Envoyer le message'}
+          </button>
+        </form>
+      ) : (
+        <p className={`text-sm ${styles.textColor} opacity-60`}>
+          Le formulaire de contact n'est pas disponible pour ce portfolio.
+        </p>
+      )}
+    </div>
+  )
+}
