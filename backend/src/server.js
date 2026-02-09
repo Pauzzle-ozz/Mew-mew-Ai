@@ -9,6 +9,7 @@ const solutionsRoutes = require('./routes/solutions');
 const portfolioRoutes = require('./routes/portfolio');
 const portfolioStatsRoutes = require('./routes/portfolioStats');
 const contactRoutes = require('./routes/contact');
+const matcherRoutes = require('./routes/matcher');
 
 // Création de l'application Express
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/solutions', solutionsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/portfolio-stats', portfolioStatsRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/matcher', matcherRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {
