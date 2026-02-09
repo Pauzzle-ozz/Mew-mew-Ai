@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const bcrypt = require('bcryptjs');
 
 /**
  * Service de gestion des Portfolios
@@ -468,6 +469,96 @@ async updatePortfolio(portfolioId, userId, data) {
   }
 
   // ==========================================
+  // PROTECTION PAR MOT DE PASSE
+  // ==========================================
+
+  /**
+   * Définir ou modifier le mot de passe d'un portfolio
+   */
+  async setPortfolioPassword(portfolioId, userId, password) {
+    console.log('🔒 [PortfolioService] Définition mot de passe pour:', portfolioId);
+
+    // Vérifier que l'utilisateur possède le portfolio
+    await this.getPortfolioById(portfolioId, userId);
+
+    // Hasher le mot de passe
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const { data: portfolio, error } = await this.supabase
+      .from('portfolios')
+      .update({ password_hash: passwordHash })
+      .eq('id', portfolioId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ [PortfolioService] Erreur définition mot de passe:', error);
+      throw new Error('Impossible de définir le mot de passe');
+    }
+
+    console.log('✅ [PortfolioService] Mot de passe défini');
+    return { success: true, is_protected: true };
+  }
+
+  /**
+   * Supprimer la protection par mot de passe
+   */
+  async removePortfolioPassword(portfolioId, userId) {
+    console.log('🔓 [PortfolioService] Suppression mot de passe pour:', portfolioId);
+
+    // Vérifier que l'utilisateur possède le portfolio
+    await this.getPortfolioById(portfolioId, userId);
+
+    const { error } = await this.supabase
+      .from('portfolios')
+      .update({ password_hash: null })
+      .eq('id', portfolioId);
+
+    if (error) {
+      console.error('❌ [PortfolioService] Erreur suppression mot de passe:', error);
+      throw new Error('Impossible de supprimer le mot de passe');
+    }
+
+    console.log('✅ [PortfolioService] Mot de passe supprimé');
+    return { success: true, is_protected: false };
+  }
+
+  /**
+   * Vérifier le mot de passe d'un portfolio et retourner le contenu complet si correct
+   */
+  async verifyPortfolioPassword(slug, password) {
+    console.log('🔑 [PortfolioService] Vérification mot de passe pour slug:', slug);
+
+    // Récupérer le portfolio (incluant le hash)
+    const portfolio = await this.getPortfolioBySlug(slug);
+
+    if (!portfolio.password_hash) {
+      throw new Error('Ce portfolio n\'est pas protégé');
+    }
+
+    // Vérifier le mot de passe
+    const isValid = await bcrypt.compare(password, portfolio.password_hash);
+
+    if (!isValid) {
+      throw new Error('Mot de passe incorrect');
+    }
+
+    // Retourner le portfolio complet
+    const blocks = await this.getPortfolioBlocks(portfolio.id);
+    const media = await this.getPortfolioMedia(portfolio.id);
+
+    console.log('✅ [PortfolioService] Mot de passe vérifié, accès accordé');
+    return {
+      ...portfolio,
+      password_hash: undefined,
+      is_protected: true,
+      blocks,
+      media
+    };
+  }
+
+  // ==========================================
   // UTILITAIRES
   // ==========================================
 
@@ -531,6 +622,8 @@ async updatePortfolio(portfolioId, userId, data) {
 
     return {
       ...portfolio,
+      is_protected: !!portfolio.password_hash,
+      password_hash: undefined,
       blocks,
       media
     };
@@ -538,16 +631,33 @@ async updatePortfolio(portfolioId, userId, data) {
 
   /**
    * Récupérer un portfolio public complet par slug
+   * Si le portfolio est protégé par mot de passe, retourne seulement les infos de base
    */
   async getFullPortfolioBySlug(slug) {
     console.log('🌐 [PortfolioService] Récupération portfolio public complet:', slug);
 
     const portfolio = await this.getPortfolioBySlug(slug);
+
+    // Si le portfolio est protégé par mot de passe, ne pas retourner le contenu
+    if (portfolio.password_hash) {
+      return {
+        id: portfolio.id,
+        title: portfolio.title,
+        slug: portfolio.slug,
+        template: portfolio.template,
+        primary_color: portfolio.primary_color,
+        is_protected: true,
+        blocks: [],
+        media: []
+      };
+    }
+
     const blocks = await this.getPortfolioBlocks(portfolio.id);
     const media = await this.getPortfolioMedia(portfolio.id);
 
     return {
       ...portfolio,
+      is_protected: false,
       blocks,
       media
     };
