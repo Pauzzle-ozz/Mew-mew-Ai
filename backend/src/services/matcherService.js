@@ -13,6 +13,9 @@ const { buildPrompt: buildScraperCvPersoPrompt } = require('../prompts/scraperCv
 const { buildPrompt: buildScraperCvIdealPrompt } = require('../prompts/scraperCvIdeal');
 const { buildPrompt: buildScraperLettrePrompt } = require('../prompts/scraperLettre');
 
+// Prompt extraction candidat depuis PDF
+const { buildPrompt: buildExtractCandidatPrompt } = require('../prompts/extractCandidatFromCV');
+
 // Schemas JSON
 const { personalizedCVToJSON, idealCVToJSON, coverLetterToJSON } = require('../prompts/jsonSchemas');
 
@@ -328,6 +331,25 @@ class MatcherService {
       pdf: pdfBuffer.toString('base64'),
       filename: `Lettre_Motivation_${candidate.prenom}_${candidate.nom}_${offer.company}`.replace(/[^a-zA-Z0-9_-]/g, '_')
     };
+  }
+
+  /**
+   * Extraire le profil candidat depuis le texte brut d'un CV (mode rapide)
+   * @param {string} cvText - Texte brut extrait du PDF
+   * @returns {Object} Profil candidat structuré
+   */
+  async extractCandidateFromPDF(cvText) {
+    console.log('🔍 [MatcherService] Extraction du profil candidat depuis le CV PDF...');
+
+    const prompt = buildExtractCandidatPrompt(cvText);
+    const result = await aiService.generateJSON(prompt, { model: 'gpt-4.1-mini' });
+
+    if (!result.prenom && !result.nom) {
+      throw new Error('Impossible d\'extraire les informations du candidat depuis le CV');
+    }
+
+    console.log('✅ [MatcherService] Profil extrait :', result.prenom, result.nom);
+    return this.formatCandidateData(result);
   }
 
   /**

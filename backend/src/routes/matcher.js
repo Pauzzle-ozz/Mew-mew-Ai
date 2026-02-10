@@ -1,9 +1,21 @@
 const express = require('express');
+const multer = require('multer');
+const pdf = require('pdf-parse');
 const router = express.Router();
 
 // Import des services
 const matcherService = require('../services/matcherService');
 const scraperService = require('../services/scraperService');
+
+// Multer pour l'upload du CV PDF (mode rapide)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Seuls les fichiers PDF sont acceptés'));
+  }
+});
 
 /**
  * ========================================
@@ -206,6 +218,84 @@ router.post('/analyser-scraper', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible de générer les documents depuis l\'URL scrapée',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Mode Rapide : CV PDF + URL de l'offre → génère tous les documents automatiquement
+ * POST /api/matcher/generer-complet
+ *
+ * Body (multipart/form-data):
+ *   cv       : fichier PDF du candidat (max 2 Mo)
+ *   offerUrl : URL de l'offre d'emploi
+ *   options  : JSON stringifié { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
+ */
+router.post('/generer-complet', upload.single('cv'), async (req, res) => {
+  try {
+    const { offerUrl, options: optionsRaw } = req.body;
+    const cvFile = req.file;
+
+    console.log('🚀 [MATCHER] Mode Rapide - Démarrage...');
+
+    if (!cvFile) {
+      return res.status(400).json({ success: false, error: 'Fichier CV (PDF) manquant' });
+    }
+
+    if (!offerUrl) {
+      return res.status(400).json({ success: false, error: 'URL de l\'offre manquante' });
+    }
+
+    let options = { generatePersonalizedCV: true, generateIdealCV: true, generateCoverLetter: true };
+    if (optionsRaw) {
+      try { options = JSON.parse(optionsRaw); } catch (_) {}
+    }
+
+    // Étape 1 : extraction du texte du CV PDF
+    console.log('📄 [MATCHER] Extraction du texte du CV...');
+    const pdfData = await pdf(cvFile.buffer);
+    const cvText = pdfData.text;
+
+    if (!cvText || cvText.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Impossible de lire le texte du CV. Vérifiez que le PDF n\'est pas une image scannée.'
+      });
+    }
+
+    // Étape 2 : extraction du profil candidat via IA
+    console.log('🤖 [MATCHER] Extraction du profil candidat via IA...');
+    const candidate = await matcherService.extractCandidateFromPDF(cvText);
+
+    // Étape 3 : scraping de l'offre
+    console.log('🔗 [MATCHER] Scraping de l\'offre:', offerUrl);
+    const scraped = await scraperService.scrapeOffer(offerUrl);
+
+    // Étape 4 : génération des documents
+    console.log('📝 [MATCHER] Génération des documents...');
+    const result = await matcherService.scrapeAndGenerate(scraped.rawText, offerUrl, candidate, options);
+
+    console.log('✅ [MATCHER] Mode Rapide terminé avec succès');
+
+    res.json({ success: true, data: result });
+
+  } catch (error) {
+    console.error('❌ [MATCHER] Erreur mode rapide:', error.message);
+
+    if (error.code === 'AUTH_REQUIRED') {
+      return res.status(422).json({ success: false, error: error.message, code: 'AUTH_REQUIRED' });
+    }
+    if (error.code === 'SCRAPING_FAILED') {
+      return res.status(422).json({ success: false, error: error.message, code: 'SCRAPING_FAILED' });
+    }
+    if (error.status === 429) {
+      return res.status(503).json({ success: false, error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.' });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible de générer les documents',
       details: error.message
     });
   }

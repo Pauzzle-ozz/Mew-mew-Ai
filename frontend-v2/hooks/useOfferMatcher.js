@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { analyzeOffer, analyzeScrapedOffer } from '@/lib/api/matcherApi';
+import { analyzeOffer, analyzeScrapedOffer, generateComplete as generateCompleteApi } from '@/lib/api/matcherApi';
 
 /**
  * Hook pour gérer le matching candidat-offre
@@ -124,6 +124,57 @@ export function useOfferMatcher() {
     }
   };
 
+  /**
+   * Mode Rapide : CV PDF + URL → tout est fait automatiquement par l'IA
+   */
+  const generateComplete = async (cvFile, offerUrl, options = {}) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setResults(null);
+      setProgress(0);
+
+      if (!cvFile) throw new Error('Veuillez uploader votre CV en PDF');
+      if (!offerUrl || !offerUrl.startsWith('http')) throw new Error('Veuillez saisir une URL valide (commence par http)');
+
+      const { generatePersonalizedCV, generateIdealCV, generateCoverLetter } = options;
+      if (!generatePersonalizedCV && !generateIdealCV && !generateCoverLetter) {
+        throw new Error('Veuillez sélectionner au moins un document à générer');
+      }
+
+      setCurrentStep('Upload du CV en cours...');
+      setProgress(10);
+
+      setCurrentStep('Extraction de votre profil depuis le CV...');
+      setProgress(25);
+
+      setCurrentStep('Analyse de l\'offre d\'emploi...');
+      setProgress(45);
+
+      const response = await generateCompleteApi(cvFile, offerUrl, options);
+
+      setCurrentStep('Génération des documents...');
+      setProgress(80);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setCurrentStep('Finalisation...');
+      setProgress(95);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setResults(response.data);
+      setProgress(100);
+      setCurrentStep('Documents générés avec succès !');
+
+    } catch (err) {
+      console.error('❌ [useOfferMatcher] Erreur mode rapide:', err);
+      setError(err.message || 'Une erreur est survenue lors de la génération');
+      setProgress(0);
+      setCurrentStep('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const reset = () => {
     setResults(null);
     setError(null);
@@ -139,6 +190,7 @@ export function useOfferMatcher() {
     currentStep,
     analyze,
     analyzeScraper,
+    generateComplete,
     reset
   };
 }

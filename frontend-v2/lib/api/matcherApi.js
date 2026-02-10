@@ -119,6 +119,44 @@ export async function analyzeScrapedOffer(rawText, url, candidateProfile, option
 }
 
 /**
+ * Mode Rapide : envoyer le CV PDF + URL de l'offre pour tout générer automatiquement
+ * @param {File} cvFile - Fichier PDF du CV
+ * @param {string} offerUrl - URL de l'offre d'emploi
+ * @param {Object} options - Options de génération { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
+ * @returns {Promise} - Résultat avec les PDFs demandés
+ */
+export async function generateComplete(cvFile, offerUrl, options = {}) {
+  try {
+    console.log('🚀 [matcherApi] Mode Rapide - Envoi CV + URL...');
+
+    const formData = new FormData();
+    formData.append('cv', cvFile);
+    formData.append('offerUrl', offerUrl);
+    formData.append('options', JSON.stringify(options));
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/generer-complet`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.error || 'Erreur lors de la génération des documents');
+      error.code = data.code || 'UNKNOWN';
+      throw error;
+    }
+
+    console.log('✅ [matcherApi] Mode Rapide terminé avec succès');
+    return data;
+
+  } catch (error) {
+    console.error('❌ [matcherApi] Erreur mode rapide:', error);
+    throw error;
+  }
+}
+
+/**
  * Télécharger tous les documents en ZIP
  * @param {Array} documents - Liste des documents [{pdf: base64, filename: string}]
  * @param {string} zipFilename - Nom du fichier ZIP
