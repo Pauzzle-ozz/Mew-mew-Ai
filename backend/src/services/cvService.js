@@ -1,18 +1,15 @@
-const axios = require('axios');
+const aiService = require('./aiService');
+const { buildPrompt: buildAnalyseFormPrompt } = require('../prompts/analyseCvForm');
+const { buildPrompt: buildAnalysePdfPrompt } = require('../prompts/analyseCvPdf');
+const { buildPrompt: buildOptimiseFormPrompt } = require('../prompts/optimiseCvForm');
+const { buildPrompt: buildOptimisePdfPrompt } = require('../prompts/optimiseCvPdf');
+const { analysisToJSON, cvToJSON } = require('../prompts/jsonSchemas');
 
 /**
  * Service de gestion des CV
  * Centralise toute la logique métier liée aux CV
  */
 class CVService {
-  constructor() {
-    this.n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    this.n8nWebhookPdfUrl = process.env.N8N_WEBHOOK_PDF_URL;
-    this.n8nWebhookOptiUrl = process.env.N8N_WEBHOOK_OPTIMISER_URL;
-    this.n8nSecret = process.env.N8N_SECRET_KEY;
-    this.timeout = 60000; // 60 secondes
-  }
-
   /**
    * Valider les données d'un CV
    */
@@ -34,19 +31,27 @@ class CVService {
   async analyzeCV(cvData) {
     console.log('🔍 [CVService] Analyse du CV:', cvData.prenom, cvData.nom);
 
-    const response = await axios.post(
-      this.n8nWebhookUrl,
-      cvData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
-      }
-    );
+    // Etape 1 : analyse par l'IA
+    const analysisPrompt = buildAnalyseFormPrompt(cvData);
+    const analysisText = await aiService.generate(analysisPrompt, { model: 'gpt-4.1-mini' });
 
-    return response.data;
+    // Etape 2 : conversion en JSON
+    const jsonPrompt = analysisToJSON(analysisText);
+    const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
+
+    // Formatage de la reponse (identique a ce que n8n retournait)
+    return {
+      success: true,
+      profil: {
+        prenom: cvData.prenom || 'Non spécifié',
+        nom: cvData.nom || 'Non spécifié',
+        niveau_experience: cvData.niveau_experience || 'Non spécifié',
+        type_poste: cvData.type_poste || 'Non spécifié'
+      },
+      metiers_proposes: parsed.metiers || [],
+      message: 'Analyse terminée avec succès',
+      nombre_metiers: (parsed.metiers || []).length
+    };
   }
 
   /**
@@ -55,50 +60,70 @@ class CVService {
   async analyzePDF(cvText, numPages, userId) {
     console.log('🔍 [CVService] Analyse PDF, pages:', numPages);
 
-    const response = await axios.post(
-      this.n8nWebhookPdfUrl,
-      {
-        userId,
-        cv_texte_complet: cvText,
-        nombre_pages: numPages
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
-      }
-    );
+    // Etape 1 : analyse par l'IA
+    const analysisPrompt = buildAnalysePdfPrompt(cvText, numPages);
+    const analysisText = await aiService.generate(analysisPrompt, { model: 'gpt-4.1-mini' });
 
-    return response.data;
+    // Etape 2 : conversion en JSON
+    const jsonPrompt = analysisToJSON(analysisText);
+    const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
+
+    return {
+      success: true,
+      profil: {
+        prenom: 'Extrait du CV',
+        nom: 'PDF',
+        niveau_experience: 'Analysé automatiquement',
+        type_poste: 'Identifié par l\'IA'
+      },
+      metiers_proposes: parsed.metiers || [],
+      message: 'Analyse terminée avec succès',
+      nombre_metiers: (parsed.metiers || []).length
+    };
   }
 
   /**
-   * Optimiser un CV avec l'IA
+   * Optimiser un CV via formulaire structuré
    */
-  async optimizeCV(cvData) {
-    console.log('🤖 [CVService] Optimisation du CV:', cvData.prenom, cvData.nom);
+  async optimizeCVForm(cvData, userId) {
+    console.log('🤖 [CVService] Optimisation CV formulaire:', cvData.prenom, cvData.nom);
 
     this.validateCVData(cvData);
 
-    const response = await axios.post(
-      this.n8nWebhookOptiUrl,
-      { cvData },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
-      }
-    );
+    // Etape 1 : optimisation par l'IA
+    const optimPrompt = buildOptimiseFormPrompt(cvData);
+    const optimizedText = await aiService.generate(optimPrompt, { model: 'gpt-4.1-mini' });
 
-    if (!response.data.success || !response.data.cvData_optimise) {
-      throw new Error('n8n n\'a pas retourné de données optimisées valides');
-    }
+    // Etape 2 : conversion en JSON
+    const jsonPrompt = cvToJSON(optimizedText);
+    const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
 
-    return response.data;
+    return {
+      success: true,
+      cvData_optimise: parsed,
+      message: 'CV optimisé avec succès (formulaire)'
+    };
+  }
+
+  /**
+   * Optimiser un CV via PDF
+   */
+  async optimizeCVPdf(cvText, numPages, userId) {
+    console.log('🤖 [CVService] Optimisation CV PDF, pages:', numPages);
+
+    // Etape 1 : extraction + optimisation par l'IA
+    const optimPrompt = buildOptimisePdfPrompt(cvText, numPages);
+    const optimizedText = await aiService.generate(optimPrompt, { model: 'gpt-4.1-mini' });
+
+    // Etape 2 : conversion en JSON
+    const jsonPrompt = cvToJSON(optimizedText);
+    const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
+
+    return {
+      success: true,
+      cvData_optimise: parsed,
+      message: 'CV optimisé avec succès (PDF)'
+    };
   }
 }
 

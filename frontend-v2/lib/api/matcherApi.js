@@ -45,6 +45,80 @@ export async function analyzeOffer(offerData, candidateProfile, options = {}) {
 }
 
 /**
+ * Scraper une URL d'offre d'emploi pour extraire les données automatiquement
+ * @param {string} url - URL de l'offre d'emploi
+ * @returns {Promise} - Données structurées de l'offre { title, company, location, ... }
+ */
+export async function scrapeOfferUrl(url) {
+  try {
+    console.log('🔗 [matcherApi] Scraping URL:', url);
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/scraper-url`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const error = new Error(data.error || 'Impossible d\'analyser cette URL');
+      error.code = data.code || 'UNKNOWN';
+      throw error;
+    }
+
+    console.log('✅ [matcherApi] Scraping terminé');
+    return data;
+
+  } catch (error) {
+    console.error('❌ [matcherApi] Erreur scraping:', error);
+    throw error;
+  }
+}
+
+/**
+ * Générer les documents à partir du texte brut scrapé (mode URL)
+ * @param {string} rawText - Texte brut de la page web
+ * @param {string} url - URL source
+ * @param {Object} candidateProfile - Profil du candidat
+ * @param {Object} options - Options de génération
+ * @returns {Promise} - Résultat avec les PDFs demandés
+ */
+export async function analyzeScrapedOffer(rawText, url, candidateProfile, options = {}) {
+  try {
+    console.log('🔗 [matcherApi] Envoi du texte scrapé pour génération...');
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/analyser-scraper`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        rawText,
+        url,
+        candidate: candidateProfile,
+        options,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erreur lors de la génération des documents');
+    }
+
+    console.log('✅ [matcherApi] Documents générés (mode scraper)');
+    return data;
+
+  } catch (error) {
+    console.error('❌ [matcherApi] Erreur scraper:', error);
+    throw error;
+  }
+}
+
+/**
  * Télécharger tous les documents en ZIP
  * @param {Array} documents - Liste des documents [{pdf: base64, filename: string}]
  * @param {string} zipFilename - Nom du fichier ZIP

@@ -14,7 +14,7 @@
 4. [Extensions VS Code recommandees](#extensions-vs-code-recommandees)
 5. [Guide de demarrage](#guide-de-demarrage)
 6. [Architecture technique](#architecture-technique)
-7. [Integration n8n (workflows IA)](#integration-n8n-workflows-ia)
+7. [Integration OpenAI (IA directe)](#integration-openai-ia-directe)
 8. [Explication detaillee du code](#explication-detaillee-du-code)
 9. [Base de donnees Supabase](#base-de-donnees-supabase)
 10. [API et Routes](#api-et-routes)
@@ -52,7 +52,8 @@
 #### Backend (Serveur)
 - **Express.js 5.2.1** - Framework Node.js pour creer des APIs
 - **Node.js** - Environnement JavaScript cote serveur
-- **Axios** - Client HTTP pour appeler les webhooks n8n
+- **OpenAI SDK** - Client officiel pour appeler l'API OpenAI (GPT-4o, GPT-4.1-mini)
+- **Axios** - Client HTTP pour le scraping d'URLs
 - **Multer 2** - Gestion de l'upload de fichiers (PDF, images, videos)
 - **pdf-parse** - Extraction de texte depuis les fichiers PDF
 - **Puppeteer 24** - Generation de PDF a partir de HTML (headless Chrome)
@@ -62,8 +63,8 @@
 - **dotenv** - Variables d'environnement
 
 #### Services externes
+- **OpenAI API** - Intelligence artificielle (GPT-4o pour la generation, GPT-4.1-mini pour l'analyse et conversion JSON)
 - **Supabase** - Base de donnees PostgreSQL + Auth + Storage (medias portfolio)
-- **n8n** - Plateforme d'automatisation qui orchestre les workflows IA (analyse CV, optimisation)
 - **Resend** - API d'envoi d'emails
 
 #### Outils de developpement
@@ -102,24 +103,18 @@ https://git-scm.com/
 git --version   # git version 2.x.x
 ```
 
-### Etape 4 : Installer n8n (IMPORTANT - Workflows IA)
+### Etape 4 : Obtenir une cle API OpenAI (IMPORTANT - IA)
 
-n8n est la plateforme qui orchestre tous les traitements IA (analyse de CV, optimisation). Sans n8n, les fonctionnalites d'analyse et d'optimisation ne fonctionneront pas.
+OpenAI fournit les modeles d'IA utilises par la plateforme. Sans cle API, les fonctionnalites d'analyse et d'optimisation ne fonctionneront pas.
 
-```bash
-# Installation globale
-npm install n8n -g
+1. Aller sur https://platform.openai.com/
+2. Creer un compte ou se connecter
+3. Aller dans API Keys et creer une nouvelle cle
+4. Noter : `OPENAI_API_KEY` (commence par `sk-...`)
 
-# Demarrer n8n
-n8n start
-# Accessible sur http://localhost:5678
-```
-
-Les workflows n8n doivent etre configures pour exposer les webhooks suivants :
-- `POST /webhook/analyse-cv` - Analyse de CV par formulaire
-- `POST /webhook/analyse-cv-pdf` - Analyse de CV par PDF
-- `POST /webhook/optimiser-cv-formulaire` - Optimisation de CV par formulaire
-- `POST /webhook/optimiser-cv-pdf` - Optimisation de CV par PDF
+**Modeles utilises** :
+- **GPT-4o** : Generation de CV personnalises, CV ideaux, lettres de motivation
+- **GPT-4.1-mini** : Analyse de CV, optimisation, conversion JSON
 
 ### Etape 5 : Creer un compte Supabase
 
@@ -168,13 +163,31 @@ Mew-mew-Ai/
 |       |   |-- contact.js               # Route envoi d'email de contact
 |       |
 |       |-- services/                    # Logique metier
-|       |   |-- cvService.js             # Service d'analyse/optimisation CV (appels n8n)
+|       |   |-- aiService.js             # Client OpenAI centralise (generate, generateJSON, generateThenConvert)
+|       |   |-- cvService.js             # Service d'analyse/optimisation CV (appels OpenAI)
+|       |   |-- matcherService.js        # Service de matching offres + generation documents
+|       |   |-- scraperService.js        # Service de scraping d'URLs (Axios + Puppeteer)
 |       |   |-- portfolioService.js      # Service CRUD portfolios + blocs + medias (Supabase)
 |       |   |-- emailService.js          # Service d'envoi d'emails (Resend)
 |       |   |-- pdfService.js            # Service de generation de PDF (Puppeteer)
 |       |
+|       |-- prompts/                     # Prompts IA (un fichier par workflow)
+|       |   |-- helpers.js               # Fonctions de formatage partagees (offre, candidat, CV)
+|       |   |-- jsonSchemas.js           # 5 prompts de conversion JSON
+|       |   |-- analyseCvForm.js         # Prompt analyse CV formulaire
+|       |   |-- analyseCvPdf.js          # Prompt analyse CV PDF
+|       |   |-- optimiseCvForm.js        # Prompt optimisation CV formulaire
+|       |   |-- optimiseCvPdf.js         # Prompt optimisation CV PDF
+|       |   |-- matcherCvPersonnalise.js # Prompt matcher CV personnalise
+|       |   |-- matcherCvIdeal.js        # Prompt matcher CV ideal
+|       |   |-- matcherLettre.js         # Prompt matcher lettre de motivation
+|       |   |-- scraperCvPersonnalise.js # Prompt scraper CV personnalise
+|       |   |-- scraperCvIdeal.js        # Prompt scraper CV ideal
+|       |   |-- scraperLettre.js         # Prompt scraper lettre de motivation
+|       |
 |       |-- templates/                   # Templates HTML pour CV
 |       |   |-- templateFactory.js       # Factory avec 6 templates (moderne, classique, creatif, tech, executive, minimal)
+|       |   |-- letterTemplateFactory.js # Factory pour lettres de motivation
 |       |
 |       |-- config/                      # (vide - reserve pour future config)
 |       |-- utils/                       # (vide - reserve pour futurs utilitaires)
@@ -323,14 +336,8 @@ npm install
 ```env
 PORT=5000
 
-# Webhooks n8n
-N8N_WEBHOOK_URL=http://localhost:5678/webhook/analyse-cv
-N8N_WEBHOOK_PDF_URL=http://localhost:5678/webhook/analyse-cv-pdf
-N8N_WEBHOOK_OPTIMISER_FORM_URL=http://localhost:5678/webhook/optimiser-cv-formulaire
-N8N_WEBHOOK_OPTIMISER_PDF_URL=http://localhost:5678/webhook/optimiser-cv-pdf
-
-# Securite n8n
-N8N_SECRET_KEY=votre_cle_secrete_n8n
+# OpenAI
+OPENAI_API_KEY=sk-votre_cle_api_openai
 
 # Supabase
 SUPABASE_URL=https://votre-projet.supabase.co
@@ -347,18 +354,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_publique_anon
 ```
 
-**Note** : Le frontend appelle le backend directement sur `http://localhost:5000` (l'URL est codee en dur dans `lib/api/cvApi.js` et `lib/api/portfolioApi.js`).
+**Note** : Le frontend appelle le backend directement sur `http://localhost:5000` (l'URL est codee en dur dans `lib/api/cvApi.js`, `lib/api/portfolioApi.js` et `lib/api/matcherApi.js`).
 
-### Demarrer l'application (3 terminaux)
+### Demarrer l'application (2 terminaux)
 
-#### Terminal 1 : n8n (workflows IA)
-
-```bash
-n8n start
-# Accessible sur http://localhost:5678
-```
-
-#### Terminal 2 : Backend
+#### Terminal 1 : Backend
 
 ```bash
 cd backend
@@ -366,7 +366,7 @@ npm run dev     # Utilise nodemon pour le rechargement auto
 # Accessible sur http://localhost:5000
 ```
 
-#### Terminal 3 : Frontend
+#### Terminal 2 : Frontend
 
 ```bash
 cd frontend-v2
@@ -379,7 +379,6 @@ npm run dev
 - Backend : http://localhost:5000 doit afficher `{"message":"Backend fonctionne !","status":"OK"}`
 - Backend health : http://localhost:5000/api/health
 - Frontend : http://localhost:3000 affiche la landing page
-- n8n : http://localhost:5678 affiche l'interface n8n
 
 ---
 
@@ -402,11 +401,12 @@ FRONTEND (Next.js 16 - Port 3000)
       | fetch() vers http://localhost:5000/api/...
       v
 BACKEND (Express 5 - Port 5000)
-  |-- Routes (routes/solutions, portfolio, portfolioStats, contact)
-  |-- Services (cvService, portfolioService, emailService, pdfService)
-  |-- Templates (templateFactory - 6 templates HTML)
+  |-- Routes (routes/solutions, matcher, portfolio, portfolioStats, contact)
+  |-- Services (aiService, cvService, matcherService, scraperService, portfolioService, emailService, pdfService)
+  |-- Prompts (prompts/ - 13 fichiers de prompts IA)
+  |-- Templates (templateFactory + letterTemplateFactory - templates HTML)
       |
-      |-- axios --> n8n (Port 5678) --> IA (analyse/optimisation CV)
+      |-- OpenAI SDK --> API OpenAI (GPT-4o, GPT-4.1-mini)
       |-- supabase-js --> Supabase (BDD + Storage)
       |-- Resend --> Emails transactionnels
       |-- Puppeteer --> Generation PDF
@@ -419,11 +419,10 @@ BACKEND (Express 5 - Port 5000)
 2. Hook useCVAnalyzer.js appelle cvApi.analyzeCV(cvData)
 3. Frontend POST http://localhost:5000/api/solutions/analyse-cv
 4. Backend route solutions.js recoit la requete
-5. cvService.analyzeCV() envoie les donnees a n8n via webhook
-6. n8n execute le workflow IA (OpenAI/Claude via n8n)
-7. n8n retourne le resultat au backend
-8. Backend retourne le resultat au frontend
-9. ResultsDisplay.jsx affiche les metiers recommandes
+5. cvService.analyzeCV() construit le prompt et appelle OpenAI (2 etapes)
+6. OpenAI retourne l'analyse structuree en JSON
+7. Backend retourne le resultat au frontend
+8. ResultsDisplay.jsx affiche les metiers recommandes
 ```
 
 ### Flux de donnees : Generer un CV PDF
@@ -454,38 +453,47 @@ BACKEND (Express 5 - Port 5000)
 
 ---
 
-## Integration n8n (workflows IA)
+## Integration OpenAI (IA directe)
 
-### Qu'est-ce que n8n ?
+### Architecture IA
 
-n8n est une plateforme d'automatisation open-source qui orchestre les traitements IA du projet. Au lieu d'appeler directement l'API OpenAI depuis le backend, le backend envoie les donnees a n8n via des webhooks, et n8n execute les workflows IA.
+Le backend appelle directement l'API OpenAI via le SDK officiel (`openai` npm package). Aucun intermediaire (n8n, LangChain, etc.) n'est utilise.
 
-### Pourquoi n8n ?
+### Service centralise : aiService.js
 
-- Separation des preoccupations : le backend reste simple
-- Flexibilite : on peut changer le modele IA (OpenAI, Claude, etc.) sans toucher au code
-- Visualisation : les workflows sont visuels et faciles a debugger
-- Retry automatique et gestion d'erreurs integree
+Fichier : `backend/src/services/aiService.js`
 
-### Webhooks utilises
+Singleton qui encapsule toutes les interactions avec OpenAI :
+- `generate(prompt, options)` : generation de texte libre
+- `generateJSON(prompt, options)` : generation JSON avec `response_format: { type: "json_object" }` + retry auto
+- `generateThenConvert(genPrompt, jsonPrompt, genOptions, convOptions)` : pipeline 2 etapes (texte creatif puis conversion JSON)
 
-| Variable d'env | URL par defaut | Fonction |
+### Modeles utilises
+
+| Modele | Utilisation | Temperature |
 |---|---|---|
-| `N8N_WEBHOOK_URL` | `http://localhost:5678/webhook/analyse-cv` | Analyse CV formulaire |
-| `N8N_WEBHOOK_PDF_URL` | `http://localhost:5678/webhook/analyse-cv-pdf` | Analyse CV PDF |
-| `N8N_WEBHOOK_OPTIMISER_FORM_URL` | `http://localhost:5678/webhook/optimiser-cv-formulaire` | Optimisation CV formulaire |
-| `N8N_WEBHOOK_OPTIMISER_PDF_URL` | `http://localhost:5678/webhook/optimiser-cv-pdf` | Optimisation CV PDF |
+| `gpt-4.1-mini` | Analyse CV, optimisation CV, conversion JSON | Defaut |
+| `gpt-4o` | Generation CV personnalise, CV ideal, lettre de motivation | 0.7 |
 
-### Communication backend -> n8n
+### Organisation des prompts
 
-Tous les appels utilisent :
-- **Methode** : POST
-- **Headers** : `Content-Type: application/json` + `Authorization: Bearer <N8N_SECRET_KEY>`
-- **Timeout** : 60 secondes (les workflows IA prennent du temps)
+Tous les prompts sont dans `backend/src/prompts/` :
+- Un fichier par workflow (10 fichiers de generation)
+- `jsonSchemas.js` contient les 5 prompts de conversion JSON
+- `helpers.js` contient les fonctions de formatage partagees
+- Chaque fichier exporte une fonction `buildPrompt(data) => string`
 
-### Gestion des erreurs n8n
+### Pipeline IA (2 etapes)
 
-Si n8n est inaccessible (code `ECONNREFUSED`), le backend retourne un HTTP 503 avec le message : "Service d'optimisation indisponible (n8n non accessible)".
+La plupart des workflows suivent ce pattern :
+1. **Etape 1** : generation de texte creatif/analytique (GPT-4o ou GPT-4.1-mini)
+2. **Etape 2** : conversion du texte en JSON structure (GPT-4.1-mini avec JSON mode)
+
+### Gestion des erreurs OpenAI
+
+- **Rate limit (429)** : retourne HTTP 503 "Service IA temporairement surcharge"
+- **Timeout (60s)** : retourne HTTP 500
+- **JSON invalide** : retry automatique une fois avec instruction stricte
 
 ---
 
@@ -515,9 +523,10 @@ Fichier : `backend/src/services/cvService.js`
 
 Classe `CVService` qui centralise :
 - `validateCVData(cvData)` : verifie que prenom, nom et titre_poste sont presents
-- `analyzeCV(cvData)` : envoie les donnees au webhook n8n pour analyse
-- `analyzePDF(cvText, numPages, userId)` : envoie le texte extrait du PDF a n8n
-- `optimizeCV(cvData)` : envoie les donnees a n8n pour optimisation
+- `analyzeCV(cvData)` : construit le prompt et appelle OpenAI pour analyse (2 etapes)
+- `analyzePDF(cvText, numPages, userId)` : analyse le texte extrait du PDF via OpenAI
+- `optimizeCVForm(cvData, userId)` : optimise un CV depuis un formulaire via OpenAI
+- `optimizeCVPdf(cvText, numPages, userId)` : optimise un CV depuis un PDF via OpenAI
 
 ### Backend : portfolioService.js
 
@@ -752,7 +761,7 @@ Content-Type: application/json
 
 Body: { prenom, nom, type_poste, ...autres_champs }
 
-Response: { success: true, data: { ...resultat_analyse_n8n } }
+Response: { success: true, data: { ...resultat_analyse_ia } }
 ```
 
 #### Extraire le texte d'un PDF
@@ -772,7 +781,7 @@ Content-Type: multipart/form-data
 
 Body: cv (fichier PDF), userId
 
-Response: { success: true, data: { ...resultat_analyse_n8n } }
+Response: { success: true, data: { ...resultat_analyse_ia } }
 ```
 
 #### Optimiser un CV (formulaire)
@@ -782,7 +791,7 @@ Content-Type: application/json
 
 Body: { cvData: { prenom, nom, titre_poste, ... }, userId }
 
-Response: { success: true, data: { ...resultat_optimisation_n8n } }
+Response: { success: true, data: { ...resultat_optimisation_ia } }
 ```
 
 #### Optimiser un CV (PDF)
@@ -792,7 +801,7 @@ Content-Type: multipart/form-data
 
 Body: cv (fichier PDF), userId
 
-Response: { success: true, data: { ...resultat_optimisation_n8n } }
+Response: { success: true, data: { ...resultat_optimisation_ia } }
 ```
 
 #### Generer un CV (PDF)
@@ -943,14 +952,6 @@ npm start          # Demarrer le build de production
 npm run lint       # Verifier les erreurs ESLint
 ```
 
-### n8n
-
-```bash
-n8n start                    # Demarrer n8n
-n8n start --tunnel           # Demarrer avec tunnel (acces externe)
-N8N_PORT=5679 n8n start      # Demarrer sur un port different
-```
-
 ### Git
 
 ```bash
@@ -972,11 +973,7 @@ git log --oneline            # Historique compact
 | Variable | Description | Obligatoire |
 |---|---|---|
 | `PORT` | Port du serveur (defaut: 5000) | Non |
-| `N8N_WEBHOOK_URL` | URL webhook n8n pour analyse CV formulaire | Oui |
-| `N8N_WEBHOOK_PDF_URL` | URL webhook n8n pour analyse CV PDF | Oui |
-| `N8N_WEBHOOK_OPTIMISER_FORM_URL` | URL webhook n8n pour optimisation CV formulaire | Oui |
-| `N8N_WEBHOOK_OPTIMISER_PDF_URL` | URL webhook n8n pour optimisation CV PDF | Oui |
-| `N8N_SECRET_KEY` | Cle secrete pour authentifier les appels a n8n | Oui |
+| `OPENAI_API_KEY` | Cle API OpenAI (commence par `sk-...`) | Oui |
 | `SUPABASE_URL` | URL du projet Supabase | Oui |
 | `SUPABASE_SERVICE_KEY` | Cle service_role Supabase (SECRETE) | Oui |
 | `RESEND_API_KEY` | Cle API Resend pour l'envoi d'emails | Oui |
@@ -1031,12 +1028,12 @@ kill -9 $(lsof -ti:5000)
 2. Pas d'espaces autour du `=` dans le `.env`
 3. Redemarrez le serveur apres modification
 
-### "Service d'optimisation indisponible (n8n non accessible)"
+### "Service IA temporairement surcharge" ou erreur OpenAI
 
-n8n n'est pas demarre. Lancez-le :
-```bash
-n8n start
-```
+1. Verifiez que votre `OPENAI_API_KEY` est valide dans `backend/src/.env`
+2. Verifiez votre solde de credits sur https://platform.openai.com/usage
+3. Si erreur 429 (rate limit), attendez quelques secondes et reessayez
+4. Verifiez que la cle commence par `sk-...`
 
 ### Supabase "Invalid JWT" ou "Invalid API key"
 
@@ -1075,7 +1072,7 @@ sudo apt-get install -y libx11-xcb1 libxcomposite1 libxdamage1 libxfixes3 libxra
 - [ ] Tables Supabase creees avec RLS active
 - [ ] Fonction SQL `increment_portfolio_views` creee
 - [ ] URLs du backend dans `lib/api/cvApi.js` et `lib/api/portfolioApi.js` mises a jour pour la production
-- [ ] n8n deploye et webhooks accessibles
+- [ ] `OPENAI_API_KEY` configuree pour la production
 
 ### Frontend sur Vercel
 
@@ -1099,13 +1096,6 @@ sudo apt-get install -y libx11-xcb1 libxcomposite1 libxdamage1 libxfixes3 libxra
    - Start Command : `node src/server.js`
 4. Ajouter toutes les variables d'env du `.env`
 5. Mettre a jour les URLs dans le frontend pour pointer vers l'URL Railway
-
-### n8n en production
-
-Options :
-- **n8n Cloud** : https://n8n.io/cloud (heberge)
-- **Self-hosted** sur Railway/Render avec une base de donnees PostgreSQL
-- Mettre a jour les URLs des webhooks dans le `.env` du backend
 
 ### Points d'attention pour la production
 
@@ -1156,7 +1146,7 @@ git commit -m "docs: mise a jour claude.md"
 - Validation des entrees (multer pour les fichiers, verification des champs requis)
 - CORS active cote backend
 - RLS active sur Supabase
-- Authentification par n8n avec `N8N_SECRET_KEY`
+- Cle API OpenAI stockee uniquement dans le `.env` backend (jamais cote frontend)
 
 ---
 

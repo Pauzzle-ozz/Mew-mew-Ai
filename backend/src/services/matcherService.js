@@ -1,23 +1,26 @@
-const axios = require('axios');
+const aiService = require('./aiService');
 const pdfService = require('./pdfService');
 const templateFactory = require('../templates/templateFactory');
 const letterTemplateFactory = require('../templates/letterTemplateFactory');
+
+// Prompts matcher (formulaire structure)
+const { buildPrompt: buildMatcherCvPersoPrompt } = require('../prompts/matcherCvPersonnalise');
+const { buildPrompt: buildMatcherCvIdealPrompt } = require('../prompts/matcherCvIdeal');
+const { buildPrompt: buildMatcherLettrePrompt } = require('../prompts/matcherLettre');
+
+// Prompts scraper (texte brut depuis URL)
+const { buildPrompt: buildScraperCvPersoPrompt } = require('../prompts/scraperCvPersonnalise');
+const { buildPrompt: buildScraperCvIdealPrompt } = require('../prompts/scraperCvIdeal');
+const { buildPrompt: buildScraperLettrePrompt } = require('../prompts/scraperLettre');
+
+// Schemas JSON
+const { personalizedCVToJSON, idealCVToJSON, coverLetterToJSON } = require('../prompts/jsonSchemas');
 
 /**
  * Service de matching d'offres d'emploi
  * Centralise la logique d'analyse et de génération de documents personnalisés
  */
 class MatcherService {
-  constructor() {
-    // Webhooks séparés (nouveaux)
-    this.n8nWebhookCVPersonnalise = process.env.N8N_WEBHOOK_MATCHER_CV_PERSONNALISE;
-    this.n8nWebhookCVIdeal = process.env.N8N_WEBHOOK_MATCHER_CV_IDEAL;
-    this.n8nWebhookLettre = process.env.N8N_WEBHOOK_MATCHER_LETTRE;
-
-    this.n8nSecret = process.env.N8N_SECRET_KEY;
-    this.timeout = 60000; // 60 secondes par webhook
-  }
-
   /**
    * Analyser une offre et générer les documents sélectionnés
    * @param {Object} offer - Données de l'offre d'emploi
@@ -42,7 +45,7 @@ class MatcherService {
       const results = {};
       const promises = [];
 
-      // Appels n8n en parallèle (uniquement ceux demandés)
+      // Appels IA en parallèle (uniquement ceux demandés)
       if (generatePersonalizedCV) {
         console.log('📄 [MatcherService] Génération CV personnalisé...');
         promises.push(
@@ -81,32 +84,183 @@ class MatcherService {
   }
 
   /**
-   * Générer le CV personnalisé via n8n
+   * Générer les documents à partir du texte brut scrapé (mode URL)
+   * @param {string} rawText - Texte brut extrait de la page web
+   * @param {string} url - URL source de l'offre
+   * @param {Object} candidate - Données du candidat
+   * @param {Object} options - Options de génération
+   * @returns {Object} Les PDFs en base64 (uniquement ceux demandés)
    */
-  async generatePersonalizedCVWorkflow(offer, candidate) {
-    console.log('📡 [MatcherService] Appel webhook CV personnalisé:', this.n8nWebhookCVPersonnalise);
+  async scrapeAndGenerate(rawText, url, candidate, options = {}) {
+    const {
+      generatePersonalizedCV = true,
+      generateIdealCV = true,
+      generateCoverLetter = true
+    } = options;
 
-    const response = await axios.post(
-      this.n8nWebhookCVPersonnalise,
-      {
-        offer: this.formatOfferData(offer),
-        candidate: this.formatCandidateData(candidate)
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
+    console.log('🔗 [MatcherService] Mode scraper - Options:', {
+      personalizedCV: generatePersonalizedCV,
+      idealCV: generateIdealCV,
+      coverLetter: generateCoverLetter,
+      textLength: rawText.length
+    });
+
+    try {
+      const results = {};
+      const promises = [];
+
+      if (generatePersonalizedCV) {
+        console.log('📄 [MatcherService] Scraper → CV personnalisé...');
+        promises.push(
+          this.scraperPersonalizedCVWorkflow(rawText, url, candidate)
+            .then(data => { results.personalizedCV = data; })
+        );
       }
+
+      if (generateIdealCV) {
+        console.log('📄 [MatcherService] Scraper → CV idéal...');
+        promises.push(
+          this.scraperIdealCVWorkflow(rawText, url)
+            .then(data => { results.idealCV = data; })
+        );
+      }
+
+      if (generateCoverLetter) {
+        console.log('📄 [MatcherService] Scraper → Lettre de motivation...');
+        promises.push(
+          this.scraperCoverLetterWorkflow(rawText, url, candidate)
+            .then(data => { results.coverLetter = data; })
+        );
+      }
+
+      await Promise.all(promises);
+
+      console.log('✅ [MatcherService] Tous les documents générés (mode scraper)');
+      return results;
+
+    } catch (error) {
+      console.error('❌ [MatcherService] Erreur scraper:', error.message);
+      throw error;
+    }
+  }
+
+  // ========================================
+  // WORKFLOWS SCRAPER (texte brut depuis URL)
+  // ========================================
+
+  /**
+   * Scraper → CV personnalisé via IA
+   */
+  async scraperPersonalizedCVWorkflow(rawText, url, candidate) {
+    console.log('📡 [MatcherService] IA scraper CV personnalisé');
+
+    const formattedCandidate = this.formatCandidateData(candidate);
+    const genPrompt = buildScraperCvPersoPrompt(rawText, url, formattedCandidate);
+    const jsonPrompt = personalizedCVToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 2000 },
+      { model: 'gpt-4.1-mini' }
     );
 
-    if (!response.data || !response.data.personalizedCV) {
-      throw new Error('n8n n\'a pas retourné le CV personnalisé');
+    if (!result.personalizedCV) {
+      throw new Error('L\'IA n\'a pas retourné le CV personnalisé (scraper)');
+    }
+
+    const html = templateFactory.getTemplate('moderne', result.personalizedCV);
+    const pdfBuffer = await pdfService.generatePDF(html);
+
+    return {
+      pdf: pdfBuffer.toString('base64'),
+      filename: `CV_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
+    };
+  }
+
+  /**
+   * Scraper → CV idéal via IA
+   */
+  async scraperIdealCVWorkflow(rawText, url) {
+    console.log('📡 [MatcherService] IA scraper CV idéal');
+
+    const genPrompt = buildScraperCvIdealPrompt(rawText, url);
+    const jsonPrompt = idealCVToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 2000 },
+      { model: 'gpt-4.1-mini' }
+    );
+
+    if (!result.idealCV) {
+      throw new Error('L\'IA n\'a pas retourné le CV idéal (scraper)');
+    }
+
+    const html = templateFactory.getTemplate('moderne', result.idealCV);
+    const pdfBuffer = await pdfService.generatePDF(html);
+
+    return {
+      pdf: pdfBuffer.toString('base64'),
+      filename: `CV_Ideal_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
+    };
+  }
+
+  /**
+   * Scraper → Lettre de motivation via IA
+   */
+  async scraperCoverLetterWorkflow(rawText, url, candidate) {
+    console.log('📡 [MatcherService] IA scraper lettre');
+
+    const formattedCandidate = this.formatCandidateData(candidate);
+    const genPrompt = buildScraperLettrePrompt(rawText, url, formattedCandidate);
+    const jsonPrompt = coverLetterToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 1500 },
+      { model: 'gpt-4.1-mini' }
+    );
+
+    if (!result.coverLetter) {
+      throw new Error('L\'IA n\'a pas retourné la lettre de motivation (scraper)');
+    }
+
+    const html = letterTemplateFactory.getTemplate(result.coverLetter, candidate, {});
+    const pdfBuffer = await pdfService.generatePDF(html);
+
+    return {
+      pdf: pdfBuffer.toString('base64'),
+      filename: `Lettre_Motivation_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
+    };
+  }
+
+  // ========================================
+  // WORKFLOWS MATCHER (formulaire structure)
+  // ========================================
+
+  /**
+   * Générer le CV personnalisé via IA
+   */
+  async generatePersonalizedCVWorkflow(offer, candidate) {
+    console.log('📡 [MatcherService] IA CV personnalisé');
+
+    const formattedOffer = this.formatOfferData(offer);
+    const formattedCandidate = this.formatCandidateData(candidate);
+    const genPrompt = buildMatcherCvPersoPrompt(formattedOffer, formattedCandidate);
+    const jsonPrompt = personalizedCVToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 2000 },
+      { model: 'gpt-4.1-mini' }
+    );
+
+    if (!result.personalizedCV) {
+      throw new Error('L\'IA n\'a pas retourné le CV personnalisé');
     }
 
     // Générer le PDF
-    const html = templateFactory.getTemplate('moderne', response.data.personalizedCV);
+    const html = templateFactory.getTemplate('moderne', result.personalizedCV);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
@@ -116,31 +270,27 @@ class MatcherService {
   }
 
   /**
-   * Générer le CV idéal via n8n
+   * Générer le CV idéal via IA
    */
   async generateIdealCVWorkflow(offer) {
-    console.log('📡 [MatcherService] Appel webhook CV idéal:', this.n8nWebhookCVIdeal);
+    console.log('📡 [MatcherService] IA CV idéal');
 
-    const response = await axios.post(
-      this.n8nWebhookCVIdeal,
-      {
-        offer: this.formatOfferData(offer)
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
-      }
+    const formattedOffer = this.formatOfferData(offer);
+    const genPrompt = buildMatcherCvIdealPrompt(formattedOffer);
+    const jsonPrompt = idealCVToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 2000 },
+      { model: 'gpt-4.1-mini' }
     );
 
-    if (!response.data || !response.data.idealCV) {
-      throw new Error('n8n n\'a pas retourné le CV idéal');
+    if (!result.idealCV) {
+      throw new Error('L\'IA n\'a pas retourné le CV idéal');
     }
 
     // Générer le PDF
-    const html = templateFactory.getTemplate('moderne', response.data.idealCV);
+    const html = templateFactory.getTemplate('moderne', result.idealCV);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
@@ -150,32 +300,28 @@ class MatcherService {
   }
 
   /**
-   * Générer la lettre de motivation via n8n
+   * Générer la lettre de motivation via IA
    */
   async generateCoverLetterWorkflow(offer, candidate) {
-    console.log('📡 [MatcherService] Appel webhook lettre:', this.n8nWebhookLettre);
+    console.log('📡 [MatcherService] IA lettre de motivation');
 
-    const response = await axios.post(
-      this.n8nWebhookLettre,
-      {
-        offer: this.formatOfferData(offer),
-        candidate: this.formatCandidateData(candidate)
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.n8nSecret}`
-        },
-        timeout: this.timeout
-      }
+    const formattedOffer = this.formatOfferData(offer);
+    const formattedCandidate = this.formatCandidateData(candidate);
+    const genPrompt = buildMatcherLettrePrompt(formattedOffer, formattedCandidate);
+    const jsonPrompt = coverLetterToJSON('{{GENERATED_TEXT}}');
+
+    const result = await aiService.generateThenConvert(
+      genPrompt, jsonPrompt,
+      { model: 'gpt-4o', temperature: 0.7, maxTokens: 1500 },
+      { model: 'gpt-4.1-mini' }
     );
 
-    if (!response.data || !response.data.coverLetter) {
-      throw new Error('n8n n\'a pas retourné la lettre de motivation');
+    if (!result.coverLetter) {
+      throw new Error('L\'IA n\'a pas retourné la lettre de motivation');
     }
 
     // Générer le PDF
-    const html = letterTemplateFactory.getTemplate(response.data.coverLetter, candidate, offer);
+    const html = letterTemplateFactory.getTemplate(result.coverLetter, candidate, offer);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {

@@ -6,6 +6,7 @@ import { useOfferMatcher } from '@/hooks/useOfferMatcher';
 import OfferForm from '@/components/matcher/OfferForm';
 import CandidateProfileForm from '@/components/matcher/CandidateProfileForm';
 import MatcherResults from '@/components/matcher/MatcherResults';
+import UrlScraper from '@/components/matcher/UrlScraper';
 
 /**
  * Page Matcher d'Offres
@@ -18,6 +19,9 @@ export default function MatcherOffresPage() {
 
   // État du formulaire
   const [currentTab, setCurrentTab] = useState('offer'); // 'offer' ou 'profile'
+  const [offerInputMode, setOfferInputMode] = useState('url'); // 'url' ou 'manual'
+  const [scrapedFields, setScrapedFields] = useState(null); // champs pré-remplis par le scraping
+  const [scraperData, setScraperData] = useState(null); // { rawText, url } stocké après scraping
 
   // Options de génération des documents
   const [generateOptions, setGenerateOptions] = useState({
@@ -53,18 +57,47 @@ export default function MatcherOffresPage() {
   });
 
   // Hook de matching
-  const { isLoading, results, error, progress, currentStep, analyze, reset } = useOfferMatcher();
+  const { isLoading, results, error, progress, currentStep, analyze, analyzeScraper, reset } = useOfferMatcher();
 
-  // Soumettre le formulaire
+  // Soumettre le formulaire (mode formulaire OU mode scraper)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await analyze(offerData, candidateData, generateOptions);
+    if (scraperData) {
+      // Mode scraper : envoyer le rawText aux workflows scraper
+      await analyzeScraper(scraperData.rawText, scraperData.url, candidateData, generateOptions);
+    } else {
+      // Mode formulaire : envoyer les données structurées aux workflows matcher
+      await analyze(offerData, candidateData, generateOptions);
+    }
   };
 
   // Recommencer
   const handleReset = () => {
     reset();
     setCurrentTab('offer');
+    setScrapedFields(null);
+    setScraperData(null);
+  };
+
+  // Callback quand le scraping est terminé → stocker rawText + pré-remplir le formulaire
+  const handleScrapingComplete = (data) => {
+    // Stocker le rawText pour l'envoyer aux workflows scraper lors du submit
+    setScraperData({ rawText: data.rawText, url: data.url });
+
+    // Pré-remplir le formulaire avec les données basiques extraites localement
+    const basic = data.basicOffer || {};
+    setOfferData(prev => ({
+      title: basic.title || prev.title,
+      company: basic.company || prev.company,
+      location: basic.location || prev.location,
+      contract_type: basic.contract_type || prev.contract_type,
+      salary: basic.salary || prev.salary,
+      description: basic.description || prev.description,
+    }));
+
+    setScrapedFields(basic);
+    // Basculer en saisie manuelle pour que l'utilisateur voie le formulaire pré-rempli
+    setOfferInputMode('manual');
   };
 
   // Si résultats affichés
@@ -215,7 +248,49 @@ export default function MatcherOffresPage() {
           {/* Contenu des onglets */}
           <div className="bg-gray-900 rounded-lg p-8">
             {currentTab === 'offer' && (
-              <OfferForm offerData={offerData} setOfferData={setOfferData} />
+              <div className="space-y-6">
+                {/* Sous-onglets : Lien / Manuel */}
+                <div className="flex items-center gap-2 bg-gray-800 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setOfferInputMode('url')}
+                    className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                      offerInputMode === 'url'
+                        ? 'bg-pink-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🔗 Coller un lien
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOfferInputMode('manual')}
+                    className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                      offerInputMode === 'manual'
+                        ? 'bg-pink-600 text-white'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    ✏️ Saisie manuelle
+                  </button>
+                </div>
+
+                {/* Badge données extraites */}
+                {scrapedFields && offerInputMode === 'manual' && (
+                  <div className="flex items-center gap-2 p-3 bg-pink-900/20 border border-pink-600/30 rounded-lg text-sm text-pink-400">
+                    <span>✨</span>
+                    <span>Donn\u00e9es extraites automatiquement — V\u00e9rifiez et compl\u00e9tez si besoin</span>
+                  </div>
+                )}
+
+                {/* Contenu selon le mode */}
+                {offerInputMode === 'url' && (
+                  <UrlScraper onScrapingComplete={handleScrapingComplete} />
+                )}
+                {offerInputMode === 'manual' && (
+                  <OfferForm offerData={offerData} setOfferData={setOfferData} />
+                )}
+              </div>
             )}
 
             {currentTab === 'profile' && (

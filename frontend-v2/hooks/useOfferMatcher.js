@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { analyzeOffer } from '@/lib/api/matcherApi';
+import { analyzeOffer, analyzeScrapedOffer } from '@/lib/api/matcherApi';
 
 /**
  * Hook pour gérer le matching candidat-offre
- * Gère les états de chargement, résultats et erreurs
+ * Supporte 2 modes : formulaire (offer structurée) et scraper (rawText)
  */
 export function useOfferMatcher() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,59 +13,51 @@ export function useOfferMatcher() {
   const [currentStep, setCurrentStep] = useState('');
 
   /**
-   * Analyser l'offre et générer les documents
+   * Mode formulaire : analyser l'offre structurée et générer les documents
    */
   const analyze = async (offerData, candidateProfile, options = {}) => {
     try {
-      // Reset
       setIsLoading(true);
       setError(null);
       setResults(null);
       setProgress(0);
 
-      // Validation
+      // Validation offre
       if (!offerData.title || !offerData.company || !offerData.description) {
         throw new Error('Veuillez remplir tous les champs obligatoires de l\'offre');
       }
 
+      // Validation candidat
       if (!candidateProfile.prenom || !candidateProfile.nom || !candidateProfile.titre_poste) {
         throw new Error('Veuillez remplir tous les champs obligatoires du profil');
       }
 
-      // Validation options (au moins un document doit être sélectionné)
+      // Validation options
       const { generatePersonalizedCV, generateIdealCV, generateCoverLetter } = options;
       if (!generatePersonalizedCV && !generateIdealCV && !generateCoverLetter) {
         throw new Error('Veuillez sélectionner au moins un document à générer');
       }
 
-      // Étapes de progression
       setCurrentStep('Envoi des données au serveur...');
       setProgress(10);
-
       await new Promise(resolve => setTimeout(resolve, 300));
 
       setCurrentStep('Analyse de l\'offre par l\'IA...');
       setProgress(30);
 
-      // Appel API avec options
       const response = await analyzeOffer(offerData, candidateProfile, options);
 
       setCurrentStep('Génération des documents...');
       setProgress(60);
-
       await new Promise(resolve => setTimeout(resolve, 300));
 
       setCurrentStep('Finalisation...');
       setProgress(95);
-
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      // Succès
       setResults(response.data);
       setProgress(100);
       setCurrentStep('Documents générés avec succès !');
-
-      console.log('✅ [useOfferMatcher] Analyse terminée:', response.data);
 
     } catch (err) {
       console.error('❌ [useOfferMatcher] Erreur:', err);
@@ -78,8 +70,60 @@ export function useOfferMatcher() {
   };
 
   /**
-   * Reset les résultats
+   * Mode scraper : générer les documents à partir du texte brut scrapé
    */
+  const analyzeScraper = async (rawText, url, candidateProfile, options = {}) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setResults(null);
+      setProgress(0);
+
+      // Validation
+      if (!rawText) {
+        throw new Error('Texte de l\'offre manquant. Veuillez scraper une URL d\'abord.');
+      }
+
+      if (!candidateProfile.prenom || !candidateProfile.nom || !candidateProfile.titre_poste) {
+        throw new Error('Veuillez remplir tous les champs obligatoires du profil');
+      }
+
+      const { generatePersonalizedCV, generateIdealCV, generateCoverLetter } = options;
+      if (!generatePersonalizedCV && !generateIdealCV && !generateCoverLetter) {
+        throw new Error('Veuillez sélectionner au moins un document à générer');
+      }
+
+      setCurrentStep('Envoi du texte scrapé au serveur...');
+      setProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setCurrentStep('Extraction de l\'offre et génération par l\'IA...');
+      setProgress(25);
+
+      const response = await analyzeScrapedOffer(rawText, url, candidateProfile, options);
+
+      setCurrentStep('Génération des documents...');
+      setProgress(60);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setCurrentStep('Finalisation...');
+      setProgress(95);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      setResults(response.data);
+      setProgress(100);
+      setCurrentStep('Documents générés avec succès !');
+
+    } catch (err) {
+      console.error('❌ [useOfferMatcher] Erreur scraper:', err);
+      setError(err.message || 'Une erreur est survenue lors de la génération');
+      setProgress(0);
+      setCurrentStep('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const reset = () => {
     setResults(null);
     setError(null);
@@ -94,6 +138,7 @@ export function useOfferMatcher() {
     progress,
     currentStep,
     analyze,
+    analyzeScraper,
     reset
   };
 }

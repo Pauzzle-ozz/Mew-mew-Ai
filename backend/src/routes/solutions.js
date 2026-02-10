@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const pdf = require('pdf-parse');
-const axios = require('axios');
 const router = express.Router();
 
 // Import des services
@@ -11,7 +10,7 @@ const templateFactory = require('../templates/templateFactory');
 
 // Configuration multer
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
@@ -89,7 +88,7 @@ router.post('/analyse-cv-pdf', upload.single('cv'), async (req, res) => {
 });
 
 /**
- * Analyser un CV PDF complet (extraction + analyse n8n)
+ * Analyser un CV PDF complet (extraction + analyse IA)
  */
 router.post('/analyse-cv-pdf-complete', upload.single('cv'), async (req, res) => {
   try {
@@ -135,33 +134,23 @@ router.post('/optimiser-cv-formulaire', async (req, res) => {
     // Validation
     cvService.validateCVData(cvData);
 
-    // Appel au workflow n8n formulaire
-    const response = await axios.post(
-      process.env.N8N_WEBHOOK_OPTIMISER_FORM_URL,
-      { cvData, userId },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.N8N_SECRET_KEY}`
-        },
-        timeout: 60000
-      }
-    );
+    // Appel au service
+    const result = await cvService.optimizeCVForm(cvData, userId);
 
     console.log('✅ [OPTIMISEUR-FORM] CV optimisé avec succès');
 
     res.json({
       success: true,
-      data: response.data
+      data: result
     });
 
   } catch (error) {
     console.error('❌ [OPTIMISEUR-FORM] Erreur:', error.message);
-    
-    if (error.code === 'ECONNREFUSED') {
+
+    if (error.status === 429) {
       return res.status(503).json({
         success: false,
-        error: 'Service d\'optimisation indisponible (n8n non accessible)'
+        error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.'
       });
     }
 
@@ -193,37 +182,23 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
 
     console.log('📝 [OPTIMISEUR-PDF] Texte extrait, longueur:', pdfData.text.length);
 
-    // Appel au workflow n8n PDF
-    const response = await axios.post(
-      process.env.N8N_WEBHOOK_OPTIMISER_PDF_URL,
-      {
-        userId,
-        cv_texte_complet: pdfData.text,
-        nombre_pages: pdfData.numpages
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.N8N_SECRET_KEY}`
-        },
-        timeout: 60000
-      }
-    );
+    // Appel au service
+    const result = await cvService.optimizeCVPdf(pdfData.text, pdfData.numpages, userId);
 
     console.log('✅ [OPTIMISEUR-PDF] CV optimisé avec succès');
 
     res.json({
       success: true,
-      data: response.data
+      data: result
     });
 
   } catch (error) {
     console.error('❌ [OPTIMISEUR-PDF] Erreur:', error.message);
 
-    if (error.code === 'ECONNREFUSED') {
+    if (error.status === 429) {
       return res.status(503).json({
         success: false,
-        error: 'Service d\'optimisation indisponible (n8n non accessible)'
+        error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.'
       });
     }
 
