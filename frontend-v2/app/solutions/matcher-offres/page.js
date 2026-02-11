@@ -25,6 +25,9 @@ import { cvApi } from '@/lib/api/cvApi';
 import { createApplication } from '@/lib/api/applicationsApi';
 import { downloadGeneratedCV } from '@/lib/utils/fileHelpers';
 
+// Constantes
+import { CV_SHAPES, CV_STYLES } from '@/lib/constants/cvBuilder';
+
 // ── Étapes ───────────────────────────────────────────────────────────
 const STEPS = [
   { n: 1, label: 'Saisie' },
@@ -84,8 +87,8 @@ export default function MatcherOffresPage() {
   const [matchResults, setMatchResults] = useState(null); // { idealCV, coverLetter }
 
   // ── Step 3 : Design ───────────────────────────────────────────────
-  const [selectedShape, setSelectedShape] = useState('classique');
-  const [selectedStyle, setSelectedStyle] = useState('anthracite');
+  const [selectedShape, setSelectedShape] = useState(() => CV_SHAPES.find(s => s.id === 'classique'));
+  const [selectedStyle, setSelectedStyle] = useState(() => CV_STYLES.find(s => s.id === 'anthracite'));
 
   // ── Step 4 : Blocs ────────────────────────────────────────────────
   const [blockStyles, setBlockStyles] = useState({});
@@ -237,7 +240,7 @@ export default function MatcherOffresPage() {
   const handleGenerateCV = async () => {
     setGeneratingCV(true);
     try {
-      const buildConfig = { shape: selectedShape, style: selectedStyle, blockStyles };
+      const buildConfig = { shape: selectedShape?.id, style: selectedStyle?.id, blockStyles };
       const result = await cvApi.generateCV(cvDataOptimized, buildConfig);
       setGeneratedConfig({ cvData: cvDataOptimized, buildConfig });
       downloadGeneratedCV(result);
@@ -270,7 +273,7 @@ export default function MatcherOffresPage() {
   // RENDU
   // ════════════════════════════════════════════════════════════════════
 
-  const buildConfig = { shape: selectedShape, style: selectedStyle, blockStyles };
+  const buildConfig = { shape: selectedShape?.id, style: selectedStyle?.id, blockStyles };
 
   // ── Indicateur d'étapes ───────────────────────────────────────────
   const StepIndicator = () => step > 0 && matcherMode === 'matching' ? (
