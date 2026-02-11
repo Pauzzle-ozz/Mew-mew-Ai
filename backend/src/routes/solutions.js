@@ -7,6 +7,7 @@ const router = express.Router();
 const cvService = require('../services/cvService');
 const pdfService = require('../services/pdfService');
 const templateFactory = require('../templates/templateFactory');
+const cvBuilderFactory = require('../templates/cvBuilderFactory');
 
 // Configuration multer
 const storage = multer.memoryStorage();
@@ -127,7 +128,7 @@ router.post('/analyse-cv-pdf-complete', upload.single('cv'), async (req, res) =>
  */
 router.post('/optimiser-cv-formulaire', async (req, res) => {
   try {
-    const { cvData, userId } = req.body;
+    const { cvData, userId, posteCible } = req.body;
 
     console.log('🤖 [OPTIMISEUR-FORM] Début optimisation formulaire...');
 
@@ -135,7 +136,7 @@ router.post('/optimiser-cv-formulaire', async (req, res) => {
     cvService.validateCVData(cvData);
 
     // Appel au service
-    const result = await cvService.optimizeCVForm(cvData, userId);
+    const result = await cvService.optimizeCVForm(cvData, userId, posteCible);
 
     console.log('✅ [OPTIMISEUR-FORM] CV optimisé avec succès');
 
@@ -173,7 +174,7 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
       });
     }
 
-    const { userId } = req.body;
+    const { userId, posteCible } = req.body;
 
     console.log('📄 [OPTIMISEUR-PDF] Début optimisation PDF...');
 
@@ -183,7 +184,7 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
     console.log('📝 [OPTIMISEUR-PDF] Texte extrait, longueur:', pdfData.text.length);
 
     // Appel au service
-    const result = await cvService.optimizeCVPdf(pdfData.text, pdfData.numpages, userId);
+    const result = await cvService.optimizeCVPdf(pdfData.text, pdfData.numpages, userId, posteCible);
 
     console.log('✅ [OPTIMISEUR-PDF] CV optimisé avec succès');
 
@@ -215,21 +216,24 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
  */
 router.post('/generer-cv', async (req, res) => {
   try {
-    const { cvData, template } = req.body;
+    const { cvData, template, buildConfig } = req.body;
 
     // Validation
     cvService.validateCVData(cvData);
 
-    if (!template) {
-      return res.status(400).json({
-        error: 'Template requis'
-      });
-    }
-
     console.log('🚀 [GENERATION] Début génération CV (PDF uniquement)...');
 
-    // Génération du HTML
-    const html = templateFactory.getTemplate(template, cvData);
+    let html;
+    if (buildConfig) {
+      // Nouveau système : type + forme + style + blocs
+      html = cvBuilderFactory.generate(cvData, buildConfig);
+    } else {
+      // Ancien système (compatibilité)
+      if (!template) {
+        return res.status(400).json({ error: 'Template ou buildConfig requis' });
+      }
+      html = templateFactory.getTemplate(template, cvData);
+    }
 
     // Génération PDF uniquement
     const pdfBuffer = await pdfService.generatePDF(html);

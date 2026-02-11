@@ -12,7 +12,7 @@ const API_BASE_URL = 'http://localhost:5000';
  * @param {Object} options - Options de génération { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
  * @returns {Promise} - Résultat avec les PDFs demandés
  */
-export async function analyzeOffer(offerData, candidateProfile, options = {}) {
+export async function analyzeOffer(offerData, candidateProfile, options = {}, buildConfig = {}) {
   try {
     console.log('🔍 [matcherApi] Envoi de l\'offre pour analyse...');
     console.log('⚙️ [matcherApi] Options:', options);
@@ -25,7 +25,8 @@ export async function analyzeOffer(offerData, candidateProfile, options = {}) {
       body: JSON.stringify({
         offer: offerData,
         candidate: candidateProfile,
-        options: options
+        options,
+        buildConfig
       }),
     });
 
@@ -86,7 +87,7 @@ export async function scrapeOfferUrl(url) {
  * @param {Object} options - Options de génération
  * @returns {Promise} - Résultat avec les PDFs demandés
  */
-export async function analyzeScrapedOffer(rawText, url, candidateProfile, options = {}) {
+export async function analyzeScrapedOffer(rawText, url, candidateProfile, options = {}, buildConfig = {}) {
   try {
     console.log('🔗 [matcherApi] Envoi du texte scrapé pour génération...');
 
@@ -100,6 +101,7 @@ export async function analyzeScrapedOffer(rawText, url, candidateProfile, option
         url,
         candidate: candidateProfile,
         options,
+        buildConfig
       }),
     });
 
@@ -125,7 +127,7 @@ export async function analyzeScrapedOffer(rawText, url, candidateProfile, option
  * @param {Object} options - Options de génération { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
  * @returns {Promise} - Résultat avec les PDFs demandés
  */
-export async function generateComplete(cvFile, offerUrl, options = {}) {
+export async function generateComplete(cvFile, offerUrl, options = {}, buildConfig = {}) {
   try {
     console.log('🚀 [matcherApi] Mode Rapide - Envoi CV + URL...');
 
@@ -133,6 +135,7 @@ export async function generateComplete(cvFile, offerUrl, options = {}) {
     formData.append('cv', cvFile);
     formData.append('offerUrl', offerUrl);
     formData.append('options', JSON.stringify(options));
+    formData.append('buildConfig', JSON.stringify(buildConfig));
 
     const response = await fetch(`${API_BASE_URL}/api/matcher/generer-complet`, {
       method: 'POST',
@@ -174,6 +177,38 @@ export function downloadAllDocuments(documents, zipFilename = 'Candidature_Compl
       link.click();
     }, index * 500); // Délai de 500ms entre chaque téléchargement
   });
+}
+
+/**
+ * Mode Découverte : analyser le CV pour trouver les offres correspondantes
+ * @param {File} cvFile - Fichier PDF du CV
+ * @returns {Promise} - { metiers, offres }
+ */
+export async function discoverJobs(cvFile) {
+  try {
+    console.log('🔍 [matcherApi] Mode Découverte - Envoi CV...');
+
+    const formData = new FormData();
+    formData.append('cv', cvFile);
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/decouvrir-offres`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erreur lors de la découverte d\'offres');
+    }
+
+    console.log('✅ [matcherApi] Découverte terminée');
+    return data;
+
+  } catch (error) {
+    console.error('❌ [matcherApi] Erreur découverte:', error);
+    throw error;
+  }
 }
 
 /**

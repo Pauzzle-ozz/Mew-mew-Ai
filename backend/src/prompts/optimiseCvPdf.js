@@ -1,14 +1,17 @@
 /**
  * Prompt d'optimisation CV par PDF
- * Extrait du workflow n8n "Optimiseur CV - PDF"
  */
-function buildPrompt(cvText, numPages) {
+function buildPrompt(cvText, numPages, posteCible) {
+  const posteSection = posteCible
+    ? `\n=== POSTE CIBLÉ ===\n${posteCible}\n\nOptimise le CV SPÉCIFIQUEMENT pour ce poste : utilise les mots-clés exacts, adapte le résumé, met en avant les expériences les plus pertinentes.\n`
+    : '';
   return `Tu es un expert en rédaction de CV et optimisation ATS (Applicant Tracking Systems).
 
 === CV EXTRAIT D'UN PDF ===
 ${cvText}
 
 Nombre de pages : ${numPages}
+${posteSection}
 
 === MISSION ===
 1. EXTRAIRE les informations du CV PDF
@@ -71,7 +74,12 @@ Nombre de pages : ${numPages}
 - TOUT DOIT TENIR SUR 1 PAGE au format A4
 
 === FORMAT DE RÉPONSE ===
-Extrais et optimise le CV en te concentrant sur l'optimisation ATS et la contrainte 1 page.`;
+Commence par :
+SCORE ATS: [nombre entre 0 et 100 représentant le niveau d'optimisation ATS atteint]
+POINTS FORTS: [liste de 3 à 5 points forts conservés ou améliorés, un par ligne avec "• "]
+AMÉLIORATIONS: [liste de 3 à 5 changements clés effectués, un par ligne avec "• "]
+
+Puis extrais et optimise le CV complet.`;
 }
 
 module.exports = { buildPrompt };

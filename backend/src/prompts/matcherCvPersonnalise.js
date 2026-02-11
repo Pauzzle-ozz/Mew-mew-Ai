@@ -12,7 +12,13 @@ function buildPrompt(offer, candidate) {
 
 Tu vas analyser une offre d'emploi et un profil candidat, puis générer un **CV personnalisé optimisé** pour cette offre.
 
-## CV Personnalisé
+## Étape 1 : Évaluation du matching
+
+Avant de générer le CV, évalue le niveau de correspondance entre le profil et l'offre :
+- Donne un SCORE_MATCHING entre 0 et 100 (ex: SCORE_MATCHING: 72)
+- Liste les MODIFICATIONS apportées au CV, une par ligne (ex: MODIFICATION: Titre reformulé de "Développeur" vers "Lead Developer Full-Stack")
+
+## Étape 2 : CV Personnalisé
 
 Optimise le CV du candidat pour l'offre :
 - Réorganise les expériences pour mettre en avant celles qui correspondent le mieux
@@ -31,7 +37,14 @@ ${candidateText}
 
 ---
 
-Génère le CV personnalisé de manière détaillée et professionnelle, en gardant toutes les informations de contact du candidat.`;
+Commence ta réponse par :
+SCORE_MATCHING: [nombre 0-100]
+MODIFICATIONS:
+- [modification 1]
+- [modification 2]
+...
+
+Puis génère le CV personnalisé de manière détaillée et professionnelle.`;
 }
 
 module.exports = { buildPrompt };

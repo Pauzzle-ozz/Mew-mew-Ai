@@ -35,8 +35,8 @@ export function useCVOptimizer() {
       
       let errorMessage = 'Une erreur est survenue lors de l\'optimisation';
       
-      if (err.message.includes('indisponible')) {
-        errorMessage = '⚠️ Service d\'optimisation indisponible. Vérifiez que n8n est démarré.';
+      if (err.message.includes('indisponible') || err.message.includes('surchargé')) {
+        errorMessage = '⚠️ Service d\'optimisation temporairement indisponible. Réessayez dans quelques instants.';
       } else if (err.message.includes('timeout')) {
         errorMessage = '⏱️ L\'optimisation a pris trop de temps. Réessayez.';
       } else if (err.message.includes('Failed to fetch')) {

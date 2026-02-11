@@ -85,13 +85,13 @@ class CVService {
   /**
    * Optimiser un CV via formulaire structuré
    */
-  async optimizeCVForm(cvData, userId) {
+  async optimizeCVForm(cvData, userId, posteCible) {
     console.log('🤖 [CVService] Optimisation CV formulaire:', cvData.prenom, cvData.nom);
 
     this.validateCVData(cvData);
 
     // Etape 1 : optimisation par l'IA
-    const optimPrompt = buildOptimiseFormPrompt(cvData);
+    const optimPrompt = buildOptimiseFormPrompt(cvData, posteCible);
     const optimizedText = await aiService.generate(optimPrompt, { model: 'gpt-4.1-mini' });
 
     // Etape 2 : conversion en JSON
@@ -101,6 +101,9 @@ class CVService {
     return {
       success: true,
       cvData_optimise: parsed,
+      score_ats: parsed.score_ats || null,
+      points_forts: parsed.points_forts || [],
+      ameliorations: parsed.ameliorations || [],
       message: 'CV optimisé avec succès (formulaire)'
     };
   }
@@ -108,11 +111,11 @@ class CVService {
   /**
    * Optimiser un CV via PDF
    */
-  async optimizeCVPdf(cvText, numPages, userId) {
+  async optimizeCVPdf(cvText, numPages, userId, posteCible) {
     console.log('🤖 [CVService] Optimisation CV PDF, pages:', numPages);
 
     // Etape 1 : extraction + optimisation par l'IA
-    const optimPrompt = buildOptimisePdfPrompt(cvText, numPages);
+    const optimPrompt = buildOptimisePdfPrompt(cvText, numPages, posteCible);
     const optimizedText = await aiService.generate(optimPrompt, { model: 'gpt-4.1-mini' });
 
     // Etape 2 : conversion en JSON
@@ -122,6 +125,9 @@ class CVService {
     return {
       success: true,
       cvData_optimise: parsed,
+      score_ats: parsed.score_ats || null,
+      points_forts: parsed.points_forts || [],
+      ameliorations: parsed.ameliorations || [],
       message: 'CV optimisé avec succès (PDF)'
     };
   }

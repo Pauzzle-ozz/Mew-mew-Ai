@@ -1,6 +1,7 @@
 const aiService = require('./aiService');
 const pdfService = require('./pdfService');
 const templateFactory = require('../templates/templateFactory');
+const cvBuilderFactory = require('../templates/cvBuilderFactory');
 const letterTemplateFactory = require('../templates/letterTemplateFactory');
 
 // Prompts matcher (formulaire structure)
@@ -29,9 +30,10 @@ class MatcherService {
    * @param {Object} offer - Données de l'offre d'emploi
    * @param {Object} candidate - Données du candidat
    * @param {Object} options - Options de génération { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
+   * @param {Object} buildConfig - Config CV Builder { shape, style, blockStyles }
    * @returns {Object} Les PDFs en base64 (uniquement ceux demandés)
    */
-  async analyzeAndGenerate(offer, candidate, options = {}) {
+  async analyzeAndGenerate(offer, candidate, options = {}, buildConfig = {}) {
     const {
       generatePersonalizedCV = true,
       generateIdealCV = true,
@@ -52,7 +54,7 @@ class MatcherService {
       if (generatePersonalizedCV) {
         console.log('📄 [MatcherService] Génération CV personnalisé...');
         promises.push(
-          this.generatePersonalizedCVWorkflow(offer, candidate)
+          this.generatePersonalizedCVWorkflow(offer, candidate, buildConfig)
             .then(data => { results.personalizedCV = data; })
         );
       }
@@ -60,7 +62,7 @@ class MatcherService {
       if (generateIdealCV) {
         console.log('📄 [MatcherService] Génération CV idéal...');
         promises.push(
-          this.generateIdealCVWorkflow(offer)
+          this.generateIdealCVWorkflow(offer, buildConfig)
             .then(data => { results.idealCV = data; })
         );
       }
@@ -92,9 +94,10 @@ class MatcherService {
    * @param {string} url - URL source de l'offre
    * @param {Object} candidate - Données du candidat
    * @param {Object} options - Options de génération
+   * @param {Object} buildConfig - Config CV Builder { shape, style, blockStyles }
    * @returns {Object} Les PDFs en base64 (uniquement ceux demandés)
    */
-  async scrapeAndGenerate(rawText, url, candidate, options = {}) {
+  async scrapeAndGenerate(rawText, url, candidate, options = {}, buildConfig = {}) {
     const {
       generatePersonalizedCV = true,
       generateIdealCV = true,
@@ -115,7 +118,7 @@ class MatcherService {
       if (generatePersonalizedCV) {
         console.log('📄 [MatcherService] Scraper → CV personnalisé...');
         promises.push(
-          this.scraperPersonalizedCVWorkflow(rawText, url, candidate)
+          this.scraperPersonalizedCVWorkflow(rawText, url, candidate, buildConfig)
             .then(data => { results.personalizedCV = data; })
         );
       }
@@ -123,7 +126,7 @@ class MatcherService {
       if (generateIdealCV) {
         console.log('📄 [MatcherService] Scraper → CV idéal...');
         promises.push(
-          this.scraperIdealCVWorkflow(rawText, url)
+          this.scraperIdealCVWorkflow(rawText, url, buildConfig)
             .then(data => { results.idealCV = data; })
         );
       }
@@ -154,7 +157,7 @@ class MatcherService {
   /**
    * Scraper → CV personnalisé via IA
    */
-  async scraperPersonalizedCVWorkflow(rawText, url, candidate) {
+  async scraperPersonalizedCVWorkflow(rawText, url, candidate, buildConfig = {}) {
     console.log('📡 [MatcherService] IA scraper CV personnalisé');
 
     const formattedCandidate = this.formatCandidateData(candidate);
@@ -171,19 +174,23 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV personnalisé (scraper)');
     }
 
-    const html = templateFactory.getTemplate('moderne', result.personalizedCV);
+    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
+    const html = cvBuilderFactory.generate(result.personalizedCV, config);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
       pdf: pdfBuffer.toString('base64'),
-      filename: `CV_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
+      filename: `CV_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+      score_matching: result.score_matching || 0,
+      modifications_apportees: result.modifications_apportees || [],
+      cvData: result.personalizedCV
     };
   }
 
   /**
    * Scraper → CV idéal via IA
    */
-  async scraperIdealCVWorkflow(rawText, url) {
+  async scraperIdealCVWorkflow(rawText, url, buildConfig = {}) {
     console.log('📡 [MatcherService] IA scraper CV idéal');
 
     const genPrompt = buildScraperCvIdealPrompt(rawText, url);
@@ -199,12 +206,14 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV idéal (scraper)');
     }
 
-    const html = templateFactory.getTemplate('moderne', result.idealCV);
+    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
+    const html = cvBuilderFactory.generate(result.idealCV, config);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
       pdf: pdfBuffer.toString('base64'),
-      filename: `CV_Ideal_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
+      filename: `CV_Ideal_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+      cvData: result.idealCV
     };
   }
 
@@ -244,7 +253,7 @@ class MatcherService {
   /**
    * Générer le CV personnalisé via IA
    */
-  async generatePersonalizedCVWorkflow(offer, candidate) {
+  async generatePersonalizedCVWorkflow(offer, candidate, buildConfig = {}) {
     console.log('📡 [MatcherService] IA CV personnalisé');
 
     const formattedOffer = this.formatOfferData(offer);
@@ -262,20 +271,24 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV personnalisé');
     }
 
-    // Générer le PDF
-    const html = templateFactory.getTemplate('moderne', result.personalizedCV);
+    // Générer le PDF avec CV Builder
+    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
+    const html = cvBuilderFactory.generate(result.personalizedCV, config);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
       pdf: pdfBuffer.toString('base64'),
-      filename: `CV_${candidate.prenom}_${candidate.nom}_${offer.company}`.replace(/[^a-zA-Z0-9_-]/g, '_')
+      filename: `CV_${candidate.prenom}_${candidate.nom}_${offer.company}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+      score_matching: result.score_matching || 0,
+      modifications_apportees: result.modifications_apportees || [],
+      cvData: result.personalizedCV
     };
   }
 
   /**
    * Générer le CV idéal via IA
    */
-  async generateIdealCVWorkflow(offer) {
+  async generateIdealCVWorkflow(offer, buildConfig = {}) {
     console.log('📡 [MatcherService] IA CV idéal');
 
     const formattedOffer = this.formatOfferData(offer);
@@ -292,13 +305,15 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV idéal');
     }
 
-    // Générer le PDF
-    const html = templateFactory.getTemplate('moderne', result.idealCV);
+    // Générer le PDF avec CV Builder
+    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
+    const html = cvBuilderFactory.generate(result.idealCV, config);
     const pdfBuffer = await pdfService.generatePDF(html);
 
     return {
       pdf: pdfBuffer.toString('base64'),
-      filename: `CV_Ideal_${offer.company}_${offer.title}`.replace(/[^a-zA-Z0-9_-]/g, '_')
+      filename: `CV_Ideal_${offer.company}_${offer.title}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+      cvData: result.idealCV
     };
   }
 

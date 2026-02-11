@@ -6,6 +6,7 @@ const router = express.Router();
 // Import des services
 const matcherService = require('../services/matcherService');
 const scraperService = require('../services/scraperService');
+const jobDiscoveryService = require('../services/jobDiscoveryService');
 
 // Multer pour l'upload du CV PDF (mode rapide)
 const upload = multer({
@@ -66,8 +67,10 @@ router.post('/analyser', async (req, res) => {
       });
     }
 
+    const { buildConfig } = req.body;
+
     // Appel au service pour analyser + générer les documents (avec options)
-    const result = await matcherService.analyzeAndGenerate(offer, candidate, options);
+    const result = await matcherService.analyzeAndGenerate(offer, candidate, options, buildConfig || {});
 
     console.log('✅ [MATCHER] Analyse et génération terminées avec succès');
 
@@ -167,7 +170,7 @@ router.post('/scraper-url', async (req, res) => {
  */
 router.post('/analyser-scraper', async (req, res) => {
   try {
-    const { rawText, url, candidate, options } = req.body;
+    const { rawText, url, candidate, options, buildConfig } = req.body;
 
     console.log('🔗 [MATCHER] Mode scraper - Génération documents...');
     console.log('👤 Candidat:', candidate?.prenom, candidate?.nom);
@@ -196,7 +199,7 @@ router.post('/analyser-scraper', async (req, res) => {
       });
     }
 
-    const result = await matcherService.scrapeAndGenerate(rawText, url, candidate, options);
+    const result = await matcherService.scrapeAndGenerate(rawText, url, candidate, options, buildConfig || {});
 
     console.log('✅ [MATCHER] Documents générés (mode scraper)');
 
@@ -234,7 +237,7 @@ router.post('/analyser-scraper', async (req, res) => {
  */
 router.post('/generer-complet', upload.single('cv'), async (req, res) => {
   try {
-    const { offerUrl, options: optionsRaw } = req.body;
+    const { offerUrl, options: optionsRaw, buildConfig: buildConfigRaw } = req.body;
     const cvFile = req.file;
 
     console.log('🚀 [MATCHER] Mode Rapide - Démarrage...');
@@ -250,6 +253,11 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
     let options = { generatePersonalizedCV: true, generateIdealCV: true, generateCoverLetter: true };
     if (optionsRaw) {
       try { options = JSON.parse(optionsRaw); } catch (_) {}
+    }
+
+    let buildConfig = {};
+    if (buildConfigRaw) {
+      try { buildConfig = JSON.parse(buildConfigRaw); } catch (_) {}
     }
 
     // Étape 1 : extraction du texte du CV PDF
@@ -274,7 +282,7 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
 
     // Étape 4 : génération des documents
     console.log('📝 [MATCHER] Génération des documents...');
-    const result = await matcherService.scrapeAndGenerate(scraped.rawText, offerUrl, candidate, options);
+    const result = await matcherService.scrapeAndGenerate(scraped.rawText, offerUrl, candidate, options, buildConfig);
 
     console.log('✅ [MATCHER] Mode Rapide terminé avec succès');
 
@@ -296,6 +304,55 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible de générer les documents',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * Mode Découverte : analyser un CV et trouver des offres correspondantes
+ * POST /api/matcher/decouvrir-offres
+ *
+ * Body (multipart/form-data):
+ *   cv : fichier PDF du candidat (max 2 Mo)
+ */
+router.post('/decouvrir-offres', upload.single('cv'), async (req, res) => {
+  try {
+    const cvFile = req.file;
+
+    console.log('🔍 [MATCHER] Mode Découverte - Démarrage...');
+
+    if (!cvFile) {
+      return res.status(400).json({ success: false, error: 'Fichier CV (PDF) manquant' });
+    }
+
+    // Extraction du texte du CV
+    const pdfData = await pdf(cvFile.buffer);
+    const cvText = pdfData.text;
+
+    if (!cvText || cvText.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Impossible de lire le texte du CV. Vérifiez que le PDF n\'est pas une image scannée.'
+      });
+    }
+
+    const result = await jobDiscoveryService.discoverJobs(cvText);
+
+    console.log('✅ [MATCHER] Découverte terminée:', result.metiers?.length, 'métiers,', result.offres?.length, 'offres');
+
+    res.json({ success: true, data: result });
+
+  } catch (error) {
+    console.error('❌ [MATCHER] Erreur découverte:', error.message);
+
+    if (error.status === 429) {
+      return res.status(503).json({ success: false, error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.' });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible de rechercher des offres',
       details: error.message
     });
   }

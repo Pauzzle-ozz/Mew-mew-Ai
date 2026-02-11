@@ -84,11 +84,14 @@ export const cvApi = {
 /**
    * Générer un CV (PDF uniquement)
    */
-  async generateCV(cvData, template) {
+  async generateCV(cvData, templateOrConfig) {
+    const body = typeof templateOrConfig === 'string'
+      ? { cvData, template: templateOrConfig }
+      : { cvData, buildConfig: templateOrConfig };
     const response = await fetch(`${API_BASE_URL}/generer-cv`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cvData, template })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {
@@ -101,11 +104,11 @@ export const cvApi = {
   /**
    * Optimiser un CV via formulaire structuré
    */
-  async optimizeCVForm(cvData, userId) {
+  async optimizeCVForm(cvData, userId, posteCible) {
     const response = await fetch(`${API_BASE_URL}/optimiser-cv-formulaire`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cvData, userId })
+      body: JSON.stringify({ cvData, userId, posteCible: posteCible || undefined })
     });
 
     if (!response.ok) {
@@ -119,10 +122,11 @@ export const cvApi = {
   /**
    * Optimiser un CV via upload PDF
    */
-  async optimizeCVPDF(file, userId) {
+  async optimizeCVPDF(file, userId, posteCible) {
     const formData = new FormData();
     formData.append('cv', file);
     formData.append('userId', userId);
+    if (posteCible) formData.append('posteCible', posteCible);
 
     const response = await fetch(`${API_BASE_URL}/optimiser-cv-pdf`, {
       method: 'POST',

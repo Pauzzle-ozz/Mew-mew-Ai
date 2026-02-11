@@ -61,15 +61,19 @@ ${generatedText}`;
  * Utilise par optimiseCvForm et optimiseCvPdf
  */
 function cvToJSON(generatedText) {
-  return `Tu vas recevoir un CV optimisé. Transforme-le en JSON STRICT.
+  return `Tu vas recevoir un texte contenant un score ATS, des points forts, des améliorations, et un CV optimisé. Transforme tout cela en JSON STRICT.
 
 RÈGLES :
 - JSON valide uniquement
 - Aucun texte avant/après
 - Pas de \`\`\`json
+- Extrais le score ATS (nombre), les points forts (tableau), les améliorations (tableau) en PLUS du CV
 - Structure EXACTE :
 
 {
+  "score_ats": 85,
+  "points_forts": ["point 1", "point 2", "point 3"],
+  "ameliorations": ["amélioration 1", "amélioration 2", "amélioration 3"],
   "prenom": "",
   "nom": "",
   "titre_poste": "",
@@ -82,7 +86,9 @@ RÈGLES :
     {
       "poste": "",
       "entreprise": "",
-      "periode": "",
+      "localisation": "",
+      "date_debut": "",
+      "date_fin": "",
       "description": ""
     }
   ],
@@ -90,7 +96,8 @@ RÈGLES :
     {
       "diplome": "",
       "etablissement": "",
-      "annee": "",
+      "localisation": "",
+      "date_fin": "",
       "description": ""
     }
   ],
@@ -100,16 +107,20 @@ RÈGLES :
   "interets": ""
 }
 
-CV optimisé :
+Texte à transformer :
 ${generatedText}`;
 }
 
 /**
  * Conversion CV personnalise → JSON structure
  * Utilise par matcherCvPersonnalise et scraperCvPersonnalise
+ * Extrait aussi le score_matching et les modifications_apportees
  */
 function personalizedCVToJSON(generatedText) {
-  return `Tu vas recevoir un CV personnalisé optimisé pour une offre d'emploi.
+  return `Tu vas recevoir un texte qui contient :
+1. Un SCORE_MATCHING (nombre 0-100)
+2. Une liste de MODIFICATIONS apportées
+3. Un CV personnalisé optimisé
 
 Ta mission est de transformer ce contenu en **JSON STRICT**, exploitable par un workflow automatisé.
 
@@ -119,10 +130,14 @@ Règles obligatoires :
 - Aucun Markdown (pas de \`\`\`json)
 - Aucun commentaire
 - Toutes les clés doivent être présentes
+- score_matching doit être un nombre entier (0-100)
+- modifications_apportees doit être un tableau de strings
 
 Structure JSON attendue :
 
 {
+  "score_matching": 0,
+  "modifications_apportees": [],
   "personalizedCV": {
     "prenom": "",
     "nom": "",

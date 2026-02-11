@@ -1,0 +1,258 @@
+'use client';
+import { useState, useRef } from 'react';
+import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
+import { discoverJobs } from '@/lib/api/matcherApi';
+
+/**
+ * OfferDiscovery — Mode découverte du matcher
+ * Upload CV → Analyse IA → Affiche métiers + offres trouvées
+ * @param {Function} onSelectOffer - Callback quand l'utilisateur clique "Adapter mon CV" sur une offre
+ */
+export default function OfferDiscovery({ onSelectOffer }) {
+  const [subStep, setSubStep] = useState(0); // 0: upload, 1: métiers, 2: offres
+  const [cvFile, setCvFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState(null); // { metiers, offres, niveau_experience, resume_profil }
+  const [filtreMetier, setFiltreMetier] = useState('');
+  const fileRef = useRef();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file?.type === 'application/pdf') setCvFile(file);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file?.type === 'application/pdf') setCvFile(file);
+  };
+
+  const handleAnalyse = async () => {
+    if (!cvFile) return;
+    setLoading(true);
+    setError('');
+    try {
+      const data = await discoverJobs(cvFile);
+      setResult(data.data);
+      setSubStep(1);
+    } catch (err) {
+      setError(err.message || 'Erreur lors de l\'analyse');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const offresFiltered = result?.offres?.filter(o =>
+    !filtreMetier || o.metier_correspondant === filtreMetier
+  ) || [];
+
+  const sourceColors = {
+    'WTTJ': 'text-green-400 bg-green-900/20 border-green-800',
+    'France Travail': 'text-blue-400 bg-blue-900/20 border-blue-800'
+  };
+
+  // ── SubStep 0 : Upload CV ──────────────────────────────────────────
+  if (subStep === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-white mb-1">Mode Découverte</h2>
+          <p className="text-sm text-slate-400">On analyse votre CV et on trouve les offres qui vous correspondent</p>
+        </div>
+
+        {/* Zone drag & drop */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
+          onClick={() => fileRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
+            isDragging ? 'border-primary bg-primary/5' :
+            cvFile ? 'border-green-500 bg-green-900/10' : 'border-slate-600 hover:border-slate-400 bg-slate-800/30'
+          }`}
+        >
+          <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
+          {cvFile ? (
+            <div className="space-y-2">
+              <div className="text-3xl">📄</div>
+              <p className="text-green-400 font-medium">{cvFile.name}</p>
+              <p className="text-xs text-slate-500">{(cvFile.size / 1024).toFixed(0)} Ko · Cliquer pour changer</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="text-4xl">📎</div>
+              <p className="text-slate-300 font-medium">Glissez votre CV PDF ici</p>
+              <p className="text-sm text-slate-500">ou cliquez pour sélectionner · Max 2 Mo</p>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-4">
+            <CatLoadingAnimation label="Analyse de votre profil en cours..." />
+          </div>
+        ) : (
+          <button
+            onClick={handleAnalyse}
+            disabled={!cvFile}
+            className="w-full py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            Analyser mon profil →
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ── SubStep 1 : Métiers identifiés ────────────────────────────────
+  if (subStep === 1) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <button onClick={() => setSubStep(0)} className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1">← Retour</button>
+          <h2 className="text-xl font-semibold text-white">Votre profil analysé</h2>
+          {result?.resume_profil && <p className="text-sm text-slate-400 mt-1">{result.resume_profil}</p>}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          {result?.metiers?.map((metier, idx) => (
+            <div
+              key={idx}
+              className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 capitalize">
+                      {metier.niveau}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-white">{metier.titre}</h3>
+                  {metier.description_courte && (
+                    <p className="text-xs text-slate-400 mt-1">{metier.description_courte}</p>
+                  )}
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {metier.mots_cles?.slice(0, 4).map((kw, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                        {kw}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setSubStep(2)}
+          className="w-full py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all"
+        >
+          Voir les offres trouvées ({result?.offres?.length || 0}) →
+        </button>
+      </div>
+    );
+  }
+
+  // ── SubStep 2 : Liste des offres ───────────────────────────────────
+  return (
+    <div className="space-y-5">
+      <div>
+        <button onClick={() => setSubStep(1)} className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1">← Retour</button>
+        <h2 className="text-xl font-semibold text-white">Offres trouvées pour vous</h2>
+        <p className="text-sm text-slate-400 mt-1">{offresFiltered.length} offres · Cliquez sur une offre pour adapter votre CV</p>
+      </div>
+
+      {/* Filtre par métier */}
+      {result?.metiers?.length > 1 && (
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setFiltreMetier('')}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+              !filtreMetier ? 'bg-primary text-slate-900 border-primary' : 'border-slate-600 text-slate-400 hover:border-slate-400'
+            }`}
+          >
+            Tous
+          </button>
+          {result.metiers.map((m, i) => (
+            <button
+              key={i}
+              onClick={() => setFiltreMetier(m.titre)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                filtreMetier === m.titre ? 'bg-primary text-slate-900 border-primary' : 'border-slate-600 text-slate-400 hover:border-slate-400'
+              }`}
+            >
+              {m.titre}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {offresFiltered.length === 0 ? (
+        <div className="text-center py-12 text-slate-500">
+          <div className="text-4xl mb-3">🔍</div>
+          <p>Aucune offre trouvée pour ce filtre.</p>
+          <p className="text-sm mt-1">Essayez sans filtre ou relancez une recherche.</p>
+        </div>
+      ) : (
+        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+          {offresFiltered.map((offre, idx) => (
+            <div
+              key={idx}
+              className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${sourceColors[offre.source] || 'text-slate-400 bg-slate-800 border-slate-700'}`}>
+                      {offre.source}
+                    </span>
+                    {offre.contrat && (
+                      <span className="text-xs text-slate-500">{offre.contrat}</span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-white text-sm truncate">{offre.titre}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {offre.entreprise && <span>{offre.entreprise}</span>}
+                    {offre.lieu && <span> · {offre.lieu}</span>}
+                  </p>
+                  {offre.description && (
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{offre.description}</p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  {offre.url && (
+                    <a
+                      href={offre.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs px-2 py-1 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Voir ↗
+                    </a>
+                  )}
+                  <button
+                    onClick={() => onSelectOffer(offre)}
+                    className="text-xs px-2 py-1 rounded-lg bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all whitespace-nowrap"
+                  >
+                    Adapter CV
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

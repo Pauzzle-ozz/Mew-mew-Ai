@@ -2,14 +2,16 @@ const { formatCvFormText } = require('./helpers');
 
 /**
  * Prompt d'optimisation CV par formulaire
- * Extrait du workflow n8n "Optimiseur CV - Formulaire"
  */
-function buildPrompt(cvData) {
+function buildPrompt(cvData, posteCible) {
   const cvText = formatCvFormText(cvData);
+  const posteSection = posteCible
+    ? `\n=== POSTE CIBLÉ ===\n${posteCible}\n\nOptimise le CV SPÉCIFIQUEMENT pour ce poste : utilise les mots-clés exacts, adapte le résumé, met en avant les expériences les plus pertinentes.\n`
+    : '';
 
   return `Tu es un expert en rédaction de CV et optimisation ATS (Applicant Tracking Systems).
 
-${cvText}
+${cvText}${posteSection}
 
 === MISSION ===
 Optimiser ce CV pour MAXIMISER les chances de passer les ATS et attirer l'attention des recruteurs.
@@ -71,7 +73,12 @@ Optimiser ce CV pour MAXIMISER les chances de passer les ATS et attirer l'attent
 - TOUT DOIT TENIR SUR 1 PAGE au format A4
 
 === FORMAT DE RÉPONSE ===
-Réponds de manière concise et directe, en te concentrant sur l'optimisation pour les ATS et la contrainte 1 page.`;
+Commence par :
+SCORE ATS: [nombre entre 0 et 100 représentant le niveau d'optimisation ATS atteint]
+POINTS FORTS: [liste de 3 à 5 points forts conservés ou améliorés, un par ligne avec "• "]
+AMÉLIORATIONS: [liste de 3 à 5 changements clés effectués, un par ligne avec "• "]
+
+Puis donne le CV optimisé complet.`;
 }
 
 module.exports = { buildPrompt };
