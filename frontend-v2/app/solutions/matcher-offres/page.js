@@ -123,8 +123,8 @@ export default function MatcherOffresPage() {
     setScoreMatching(0);
     setModifications([]);
     setMatchResults(null);
-    setSelectedShape('classique');
-    setSelectedStyle('anthracite');
+    setSelectedShape(CV_SHAPES.find(s => s.id === 'classique'));
+    setSelectedStyle(CV_STYLES.find(s => s.id === 'anthracite'));
     setBlockStyles({});
     setActiveBlock('identity');
     setBlockOrder(['identity', 'resume', 'experiences', 'formations', 'skills']);
@@ -615,7 +615,7 @@ export default function MatcherOffresPage() {
                 <div className="bg-slate-900 rounded-xl p-5 flex items-center gap-4">
                   <div className="flex-1">
                     <p className="text-xs text-slate-400 mb-1">Design</p>
-                    <p className="font-semibold text-white capitalize">{selectedShape} · <span className="text-primary">{selectedStyle}</span></p>
+                    <p className="font-semibold text-white capitalize">{selectedShape?.label} · <span className="text-primary">{selectedStyle?.label}</span></p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold" style={{ color: scoreMatching >= 75 ? '#22c55e' : scoreMatching >= 50 ? '#f59e0b' : '#ef4444' }}>
