@@ -3,7 +3,7 @@
  * Centralise tous les appels backend pour le matching candidat-offre
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Analyser une offre d'emploi et générer les documents sélectionnés

@@ -3,7 +3,7 @@
  * Toutes les requêtes HTTP passent par ici
  */
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/solutions`;
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/solutions`;
 
 export const cvApi = {
   /**

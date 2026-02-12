@@ -1,75 +1,111 @@
 'use client'
 
+// ── Pixel art cat — each "pixel" is a SZ×SZ rect ──────────────────────────
+const SZ = 4  // pixels per grid cell
+
+const B = '#64748b'  // body (slate-500)
+const P = '#fb7185'  // pink (ears, nose, tongue)
+const Y = '#fbbf24'  // amber (eyes)
+const K = '#0f172a'  // black (pupils)
+
+// 10-wide × 13-tall grid
+// _ = transparent, B = body, P = pink, Y = amber, K = black/pupil
+const GRID = [
+  '__B____B__',  // 0  ear tips
+  '_BPB__BPB_',  // 1  ears with pink inner
+  '_BBBBBBBB_',  // 2  head top
+  'BBBBBBBBBB',  // 3  head full
+  'BBYYBBYYBB',  // 4  eyes (amber)
+  'BBYKBBYKBB',  // 5  pupils (black)
+  'BBBBBBBBBB',  // 6  cheeks
+  'BBBBPPBBBB',  // 7  nose (pink)
+  'BBBBBBBBBB',  // 8  chin
+  '_BBBBBBBB_',  // 9  body top
+  'BBBBBBBBBB',  // 10 body
+  'BBBBBBBBBB',  // 11 body
+  'BBB____BBB',  // 12 feet (right paw cols 7-9 = animated)
+]
+
+const COLORS = { B, P, Y, K }
+
+// Pixels handled separately (animated groups)
+const SKIP = new Set([
+  '2-4','3-4','2-5','3-5',   // left eye
+  '6-4','7-4','6-5','7-5',   // right eye
+  '7-12','8-12','9-12',      // right paw
+])
+
+const W = 10 * SZ   // 40
+const H = 13 * SZ   // 52
+
 const CSS = `
-@keyframes lick-arm {
-  0%,100%{transform:translateY(0) rotate(0deg)}
-  35%,65%{transform:translateY(-14px) rotate(-32deg)}
-}
-@keyframes tongue-show {
-  0%,28%,78%,100%{opacity:0;transform:scaleY(0)}
-  42%,62%{opacity:1;transform:scaleY(1)}
-}
-@keyframes eye-blink {
-  0%,88%,100%{transform:scaleY(1)}
-  92%{transform:scaleY(0.08)}
-}
-@keyframes d1 { 0%,70%,100%{opacity:0.2} 20%,50%{opacity:1} }
-@keyframes d2 { 0%,20%,90%,100%{opacity:0.2} 40%,70%{opacity:1} }
-@keyframes d3 { 0%,40%,100%{opacity:0.2} 60%,90%{opacity:1} }
+@keyframes _paw { 0%,100%{transform:translateY(0)} 35%,65%{transform:translateY(-${SZ * 3}px)} }
+@keyframes _tongue { 0%,32%,80%,100%{opacity:0;transform:scaleY(0)} 44%,68%{opacity:1;transform:scaleY(1)} }
+@keyframes _blink { 0%,88%,100%{transform:scaleY(1)} 92%{transform:scaleY(0.1)} }
+@keyframes _d1 { 0%,70%,100%{opacity:.2} 20%,50%{opacity:1} }
+@keyframes _d2 { 0%,20%,90%,100%{opacity:.2} 40%,70%{opacity:1} }
+@keyframes _d3 { 0%,40%,100%{opacity:.2} 60%,90%{opacity:1} }
 `
 
 export default function CatLoadingAnimation({ label = 'Optimisation en cours' }) {
   return (
-    <div className="flex items-center gap-4 py-8 select-none justify-center">
+    <div className="flex items-center gap-4 py-4 select-none justify-center">
       <style>{CSS}</style>
 
-      {/* Chat pixel art — se lèche la patte */}
-      <svg viewBox="0 0 38 46" width="56" height="68" xmlns="http://www.w3.org/2000/svg">
-        {/* Oreilles */}
-        <polygon points="5,13 8,4 13,13" fill="#374151"/>
-        <polygon points="25,13 30,4 33,13" fill="#374151"/>
-        <polygon points="6.5,13 8,8 11,13" fill="#f87171"/>
-        <polygon points="26.5,13 30,8 31.5,13" fill="#f87171"/>
-        {/* Tête */}
-        <circle cx="19" cy="19" r="12" fill="#374151"/>
-        {/* Yeux gauche */}
-        <ellipse cx="13.5" cy="18" rx="2.5" ry="3" fill="#fbbf24"
-          style={{transformOrigin:'13.5px 18px', animation:'eye-blink 3.5s ease-in-out infinite'}}/>
-        <ellipse cx="13.5" cy="18" rx="1" ry="2.2" fill="#111"/>
-        <circle cx="14.2" cy="16.5" r="0.7" fill="white"/>
-        {/* Yeux droit */}
-        <ellipse cx="24.5" cy="18" rx="2.5" ry="3" fill="#fbbf24"
-          style={{transformOrigin:'24.5px 18px', animation:'eye-blink 3.5s ease-in-out 0.4s infinite'}}/>
-        <ellipse cx="24.5" cy="18" rx="1" ry="2.2" fill="#111"/>
-        <circle cx="25.2" cy="16.5" r="0.7" fill="white"/>
-        {/* Nez */}
-        <ellipse cx="19" cy="23.5" rx="1.8" ry="1.3" fill="#f87171"/>
-        {/* Moustaches */}
-        <line x1="3" y1="22" x2="12" y2="23.5" stroke="#9ca3af" strokeWidth="0.7"/>
-        <line x1="3" y1="25" x2="12" y2="25" stroke="#9ca3af" strokeWidth="0.7"/>
-        <line x1="26" y1="23.5" x2="35" y2="22" stroke="#9ca3af" strokeWidth="0.7"/>
-        <line x1="26" y1="25" x2="35" y2="25" stroke="#9ca3af" strokeWidth="0.7"/>
-        {/* Corps */}
-        <ellipse cx="19" cy="37" rx="11" ry="8.5" fill="#374151"/>
-        {/* Patte gauche (statique) */}
-        <ellipse cx="10" cy="44.5" rx="4.5" ry="2.5" fill="#2d3748"/>
-        {/* Langue (apparaît quand la patte monte) */}
-        <ellipse cx="22" cy="27" rx="1.8" ry="2.8" fill="#ec4899"
-          style={{transformOrigin:'22px 25px', animation:'tongue-show 2.4s ease-in-out infinite'}}/>
-        {/* Patte droite qui se lève (animation léchage) */}
-        <g style={{transformOrigin:'27px 40px', animation:'lick-arm 2.4s ease-in-out infinite'}}>
-          <rect x="23" y="33" width="7" height="11" rx="3.5" fill="#374151"/>
-          <ellipse cx="26.5" cy="43" rx="4" ry="2.5" fill="#2d3748"/>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width={W} height={H}
+        style={{ imageRendering: 'pixelated', shapeRendering: 'crispEdges' }}
+      >
+        {/* ── Static body pixels ── */}
+        {GRID.map((row, y) =>
+          row.split('').map((ch, x) => {
+            if (ch === '_') return null
+            if (SKIP.has(`${x}-${y}`)) return null
+            const fill = COLORS[ch]
+            if (!fill) return null
+            return <rect key={`${x}-${y}`} x={x * SZ} y={y * SZ} width={SZ} height={SZ} fill={fill} />
+          })
+        )}
+
+        {/* ── Left eye (blink) ── */}
+        <g style={{ transformOrigin: `${2.5 * SZ}px ${4.5 * SZ}px`, animation: '_blink 3.5s ease-in-out infinite' }}>
+          <rect x={2 * SZ} y={4 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={3 * SZ} y={4 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={2 * SZ} y={5 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={3 * SZ} y={5 * SZ} width={SZ} height={SZ} fill={K} />
+        </g>
+
+        {/* ── Right eye (blink, offset) ── */}
+        <g style={{ transformOrigin: `${6.5 * SZ}px ${4.5 * SZ}px`, animation: '_blink 3.5s ease-in-out 0.4s infinite' }}>
+          <rect x={6 * SZ} y={4 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={7 * SZ} y={4 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={6 * SZ} y={5 * SZ} width={SZ} height={SZ} fill={Y} />
+          <rect x={7 * SZ} y={5 * SZ} width={SZ} height={SZ} fill={K} />
+        </g>
+
+        {/* ── Tongue (appears during lick) ── */}
+        <rect
+          x={4 * SZ} y={8 * SZ} width={SZ * 2} height={SZ}
+          fill={P}
+          style={{ transformOrigin: `${5 * SZ}px ${8.5 * SZ}px`, animation: '_tongue 2.4s ease-in-out infinite' }}
+        />
+
+        {/* ── Right paw (lifts up to lick) ── */}
+        <g style={{ animation: '_paw 2.4s ease-in-out infinite' }}>
+          <rect x={7 * SZ} y={12 * SZ} width={SZ} height={SZ} fill={B} />
+          <rect x={8 * SZ} y={12 * SZ} width={SZ} height={SZ} fill={B} />
+          <rect x={9 * SZ} y={12 * SZ} width={SZ} height={SZ} fill={B} />
         </g>
       </svg>
 
-      {/* Texte */}
+      {/* ── Text ── */}
       <div>
         <p className="text-text-primary font-semibold text-sm">
           {label}
-          <span style={{animation:'d1 1.4s ease-in-out infinite'}} className="text-primary">.</span>
-          <span style={{animation:'d2 1.4s ease-in-out infinite'}} className="text-primary">.</span>
-          <span style={{animation:'d3 1.4s ease-in-out infinite'}} className="text-primary">.</span>
+          <span style={{ animation: '_d1 1.4s ease-in-out infinite' }} className="text-primary">.</span>
+          <span style={{ animation: '_d2 1.4s ease-in-out infinite' }} className="text-primary">.</span>
+          <span style={{ animation: '_d3 1.4s ease-in-out infinite' }} className="text-primary">.</span>
         </p>
         <p className="text-text-muted text-xs mt-1">Analyse ATS · Réécriture · Optimisation des mots-clés</p>
       </div>
