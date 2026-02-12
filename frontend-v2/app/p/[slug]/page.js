@@ -7,7 +7,7 @@ import { portfolioApi } from '@/lib/api/portfolioApi'
 // ✅ FONCTION pour incrémenter les vues
 async function incrementViews(portfolioId) {
   try {
-    await fetch('http://localhost:5001/api/portfolio-stats/increment-views', {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/portfolio-stats/increment-views`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ portfolioId })
@@ -642,7 +642,7 @@ function ContactForm({ content, styles, portfolio }) {
     setErrorMsg('')
 
     try {
-      const res = await fetch('http://localhost:5001/api/contact/send', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
