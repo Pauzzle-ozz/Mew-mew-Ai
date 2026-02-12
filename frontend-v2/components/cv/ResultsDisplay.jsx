@@ -45,9 +45,9 @@ export default function ResultsDisplay({ result }) {
     <div className="space-y-6">
 
       {/* Header resultats */}
-      <div className="bg-gradient-to-r from-primary to-amber-400 text-gray-900 rounded-xl p-6">
+      <div className="bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl p-6">
         <h2 className="text-2xl font-bold mb-2">Analyse terminee !</h2>
-        <p className="text-gray-900/70">
+        <p className="text-primary-foreground/70">
           Voici {result.metiers_proposes?.length || 0} metiers recommandes pour toi
         </p>
       </div>
@@ -126,7 +126,7 @@ export default function ResultsDisplay({ result }) {
       <div className="text-center pt-6">
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-primary text-gray-900 rounded-lg hover:bg-primary-hover font-medium transition-colors cursor-pointer"
+          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-medium transition-colors cursor-pointer"
         >
           Faire une nouvelle analyse
         </button>

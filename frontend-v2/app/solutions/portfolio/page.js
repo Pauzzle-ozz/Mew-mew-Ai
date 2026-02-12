@@ -121,7 +121,7 @@ export default function PortfolioListPage() {
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-primary text-gray-900 rounded-lg font-semibold hover:bg-primary-hover shadow-lg shadow-black/20"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-hover shadow-lg shadow-black/20"
           >
             + Nouveau Portfolio
           </button>
@@ -147,7 +147,7 @@ export default function PortfolioListPage() {
             <p className="text-text-muted mb-6">Créez votre premier site web personnel !</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-primary text-gray-900 rounded-lg font-semibold hover:bg-primary-hover"
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-hover"
             >
               Créer mon premier portfolio
             </button>
@@ -207,7 +207,7 @@ export default function PortfolioListPage() {
                   <div className="flex gap-2 mt-4">
                     <Link
                       href={`/solutions/portfolio/${portfolio.id}/edit`}
-                      className="flex-1 px-3 py-2 bg-primary text-gray-900 text-center rounded-lg text-sm font-medium hover:bg-primary-hover"
+                      className="flex-1 px-3 py-2 bg-primary text-primary-foreground text-center rounded-lg text-sm font-medium hover:bg-primary-hover"
                     >
                       ✏️ Éditer
                     </Link>
@@ -280,7 +280,7 @@ export default function PortfolioListPage() {
                 <button
                   type="submit"
                   disabled={creating || !newTitle.trim()}
-                  className="flex-1 px-4 py-3 bg-primary text-gray-900 rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50"
+                  className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50"
                 >
                   {creating ? '⏳ Création...' : 'Créer'}
                 </button>

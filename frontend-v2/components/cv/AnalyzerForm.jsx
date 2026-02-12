@@ -148,7 +148,7 @@ export default function AnalyzerForm({ formData, onChange, onSubmit, processing 
       <button
         type="submit"
         disabled={processing}
-        className="w-full px-6 py-4 bg-primary text-gray-900 rounded-lg hover:bg-primary-hover font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {processing ? 'Analyse en cours...' : 'Analyser mon profil'}
       </button>

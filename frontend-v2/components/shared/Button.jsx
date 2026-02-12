@@ -14,7 +14,7 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background cursor-pointer';
 
   const variants = {
-    primary: 'bg-primary text-gray-900 hover:bg-primary-hover focus:ring-primary/50',
+    primary: 'bg-primary text-primary-foreground hover:bg-primary-hover focus:ring-primary/50',
     secondary: 'bg-secondary text-white hover:bg-secondary-hover focus:ring-secondary/50',
     outline: 'border border-border-light text-text-secondary hover:bg-surface-elevated hover:text-text-primary focus:ring-primary/50',
     ghost: 'text-text-muted hover:text-text-primary hover:bg-surface focus:ring-primary/50',

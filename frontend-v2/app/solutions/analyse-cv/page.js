@@ -10,7 +10,7 @@ import ErrorMessage from '@/components/shared/ErrorMessage'
 import ResultsDisplay from '@/components/cv/ResultsDisplay'
 import AnalyzerForm from '@/components/cv/AnalyzerForm'
 import Header from '@/components/shared/Header'
-import CatMascot from '@/components/shared/CatMascot'
+import Logo from '@/components/shared/Logo'
 
 export default function AnalyseCVPage() {
   const { user, loading } = useAuth()
@@ -90,7 +90,7 @@ export default function AnalyseCVPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <CatMascot size="lg" animate={true} />
+        <Logo size="lg" link={false} />
         <p className="text-text-muted">Chargement...</p>
       </div>
     )
@@ -201,7 +201,7 @@ export default function AnalyseCVPage() {
                 <button
                   type="submit"
                   disabled={!cvFile || processing}
-                  className="w-full px-6 py-4 bg-primary text-gray-900 rounded-lg hover:bg-primary-hover font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {processing ? '🔄 Analyse en cours...' : '🚀 Analyser mon CV'}
                 </button>

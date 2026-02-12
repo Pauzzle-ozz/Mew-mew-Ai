@@ -31,7 +31,7 @@ function Stepper({ current }) {
       {STEPS.map((s, i) => (
         <div key={s.n} className="flex items-center">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-            s.n === current ? 'bg-primary text-gray-900 shadow-md shadow-primary/30'
+            s.n === current ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
             : s.n < current ? 'bg-primary/20 text-primary'
             : 'bg-surface text-text-muted'
           }`}>
@@ -354,7 +354,7 @@ export default function OptimiseurCVPage() {
                   </div>
                 </div>
 
-                <button type="submit" disabled={processing} className="w-full px-6 py-4 bg-primary text-gray-900 rounded-lg font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 hover:bg-primary-hover transition-colors">
+                <button type="submit" disabled={processing} className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 hover:bg-primary-hover transition-colors">
                   Optimiser mon CV avec l'IA
                 </button>
               </form>
@@ -369,7 +369,7 @@ export default function OptimiseurCVPage() {
                   <p className="mt-2 text-xs text-text-muted">Format PDF uniquement, maximum 2 Mo</p>
                 </div>
                 {cvFile && <div className="mb-4 p-3 bg-success/10 border border-success/20 rounded-lg"><p className="text-sm text-success">✓ Fichier : <strong>{cvFile.name}</strong></p></div>}
-                <button type="submit" disabled={!cvFile || processing} className="w-full px-6 py-4 bg-primary text-gray-900 rounded-lg font-bold text-lg disabled:opacity-50 hover:bg-primary-hover transition-colors">
+                <button type="submit" disabled={!cvFile || processing} className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg disabled:opacity-50 hover:bg-primary-hover transition-colors">
                   Optimiser mon CV avec l'IA
                 </button>
               </form>
@@ -442,7 +442,7 @@ export default function OptimiseurCVPage() {
 
             <div className="flex justify-between">
               <button onClick={() => setStep(1)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier</button>
-              <button onClick={() => setStep(3)} className="px-8 py-3 bg-primary text-gray-900 rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover">
+              <button onClick={() => setStep(3)} className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover">
                 Construire mon CV →
               </button>
             </div>
@@ -463,11 +463,11 @@ export default function OptimiseurCVPage() {
               <div className="flex-1 min-w-0 space-y-5">
                 <div className="flex gap-2 p-1 bg-surface rounded-lg w-fit">
                   <button onClick={() => setDesignMode('library')}
-                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'library' ? 'bg-primary text-gray-900 shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
+                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'library' ? 'bg-primary text-primary-foreground shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
                     ✨ Bibliothèque
                   </button>
                   <button onClick={() => setDesignMode('custom')}
-                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'custom' ? 'bg-primary text-gray-900 shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
+                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'custom' ? 'bg-primary text-primary-foreground shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
                     🎛️ Personnalisé
                   </button>
                 </div>
@@ -486,7 +486,7 @@ export default function OptimiseurCVPage() {
                                    dangerouslySetInnerHTML={{ __html: preset.preview }} />
                               {isSelected && (
                                 <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-gray-900 font-bold text-lg">✓</div>
+                                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg">✓</div>
                                 </div>
                               )}
                             </div>
@@ -507,7 +507,7 @@ export default function OptimiseurCVPage() {
                       {[{ n: 0, label: 'Domaine' }, { n: 1, label: 'Mise en page' }, { n: 2, label: 'Style' }].map((s, i) => (
                         <div key={s.n} className="flex items-center">
                           <button onClick={() => setSubStep(s.n)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${s.n === subStep ? 'bg-primary text-gray-900' : s.n < subStep ? 'bg-primary/20 text-primary cursor-pointer' : 'bg-surface text-text-muted cursor-pointer hover:text-text-secondary'}`}>
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${s.n === subStep ? 'bg-primary text-primary-foreground' : s.n < subStep ? 'bg-primary/20 text-primary cursor-pointer' : 'bg-surface text-text-muted cursor-pointer hover:text-text-secondary'}`}>
                             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${s.n < subStep ? 'bg-primary/40' : s.n === subStep ? 'bg-black/15' : 'bg-border'}`}>
                               {s.n < subStep ? '✓' : s.n + 1}
                             </span>
@@ -550,7 +550,7 @@ export default function OptimiseurCVPage() {
                 <div className="flex justify-between pt-2">
                   <button onClick={() => setStep(2)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Retour</button>
                   <button onClick={() => setStep(4)} disabled={!canProceedStep3}
-                    className="px-8 py-3 bg-primary text-gray-900 rounded-lg font-bold disabled:opacity-50 shadow-lg shadow-primary/20 hover:bg-primary-hover">
+                    className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold disabled:opacity-50 shadow-lg shadow-primary/20 hover:bg-primary-hover">
                     Éditer mon CV →
                   </button>
                 </div>
@@ -632,7 +632,7 @@ export default function OptimiseurCVPage() {
                 {/* Navigation */}
                 <div className="flex justify-between pt-1">
                   <button onClick={() => setStep(3)} className="px-5 py-2.5 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium text-sm">← Retour</button>
-                  <button onClick={() => setStep(5)} className="px-6 py-2.5 bg-primary text-gray-900 rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover text-sm">
+                  <button onClick={() => setStep(5)} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover text-sm">
                     Générer PDF →
                   </button>
                 </div>
@@ -738,7 +738,7 @@ export default function OptimiseurCVPage() {
                     🔄 Recommencer
                   </button>
                 )}
-                <button onClick={handleGenerateCV} disabled={generatingCV} className="px-10 py-4 bg-primary text-gray-900 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                <button onClick={handleGenerateCV} disabled={generatingCV} className="px-10 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg shadow-lg shadow-primary/20 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                   {generatingCV ? <span className="flex items-center gap-2"><span className="inline-block animate-spin">⟳</span> Génération en cours...</span> : generatedConfig ? '⬇ Re-télécharger' : 'Télécharger mon CV (PDF)'}
                 </button>
               </div>

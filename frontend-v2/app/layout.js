@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,13 +18,32 @@ export const metadata = {
   keywords: "IA, intelligence artificielle, CV, recherche emploi, fiscalité, comptabilité, marketing, communication",
 };
 
+// Script anti-flash : s'execute avant le premier paint
+const themeScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('mew-theme');
+    var d = (!t || t === 'system')
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : t === 'dark';
+    if (d) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  } catch(e) {}
+})()
+`;
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr" className="bg-background" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import CatMascot from './CatMascot';
+import Logo from './Logo';
 
 export default function Footer() {
   return (
@@ -8,12 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <CatMascot size="sm" animate={false} />
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-amber-400 bg-clip-text text-transparent">
-                Mew-mew-Ai
-              </span>
-            </div>
+            <Logo size="sm" link={false} />
             <p className="text-sm text-text-muted">
               L&apos;IA qui propulse votre carriere.
             </p>

@@ -7,7 +7,7 @@ export default function ProgressBar({ currentStep, steps }) {
             <div key={s.num} className="flex items-center flex-1">
               <div className={`flex items-center ${i < steps.length - 1 ? 'flex-1' : ''}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  currentStep >= s.num ? 'bg-primary text-gray-900' : 'bg-surface-elevated text-text-muted'
+                  currentStep >= s.num ? 'bg-primary text-primary-foreground' : 'bg-surface-elevated text-text-muted'
                 }`}>
                   {s.num}
                 </div>

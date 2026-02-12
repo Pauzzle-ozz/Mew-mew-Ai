@@ -610,7 +610,7 @@ const handleTogglePublish = async () => {
                       navigator.clipboard.writeText(`${window.location.origin}/p/${portfolio.slug}`)
                       alert('Lien copié !')
                     }}
-                    className="px-3 py-2 bg-primary text-gray-900 rounded-lg text-sm font-medium hover:bg-primary-hover"
+                    className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary-hover"
                   >
                     📋 Copier
                   </button>
@@ -694,7 +694,7 @@ const handleTogglePublish = async () => {
                     <button
                       onClick={handleSetPassword}
                       disabled={passwordSaving}
-                      className="px-4 py-2 bg-primary text-gray-900 rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
                     >
                       {passwordSaving ? '...' : 'Changer'}
                     </button>
@@ -723,7 +723,7 @@ const handleTogglePublish = async () => {
               <button
                 onClick={handleSetPassword}
                 disabled={passwordSaving}
-                className="px-4 py-2 bg-warning text-gray-900 rounded-lg text-sm font-medium hover:bg-warning/80 disabled:opacity-50"
+                className="px-4 py-2 bg-warning text-primary-foreground rounded-lg text-sm font-medium hover:bg-warning/80 disabled:opacity-50"
               >
                 {passwordSaving ? '...' : '🔒 Activer la protection'}
               </button>
@@ -1015,7 +1015,7 @@ function BlockEditor({
           {isEditing ? (
             <button
               onClick={handleSave}
-              className="px-3 py-1 bg-primary text-gray-900 text-sm rounded hover:bg-primary-hover"
+              className="px-3 py-1 bg-primary text-primary-foreground text-sm rounded hover:bg-primary-hover"
             >
               ✅ Sauvegarder
             </button>
@@ -1092,7 +1092,7 @@ function BlockEditor({
                 <div className="p-3 bg-surface-elevated rounded-lg space-y-2">
                   <p className="text-sm font-medium text-text-secondary">Image de fond :</p>
                   <label className="block cursor-pointer">
-                    <div className="px-4 py-2 bg-primary text-gray-900 text-center rounded-lg hover:bg-primary-hover font-medium text-sm">
+                    <div className="px-4 py-2 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary-hover font-medium text-sm">
                       {uploading ? '⏳ Upload...' : '📤 Choisir une image de fond'}
                     </div>
                     <input
@@ -1199,7 +1199,7 @@ function BlockEditor({
                 {/* Bouton Upload */}
                 <div className="flex items-center gap-4">
                   <label className="flex-1 cursor-pointer">
-                    <div className="px-4 py-3 bg-primary text-gray-900 text-center rounded-lg hover:bg-primary-hover font-medium">
+                    <div className="px-4 py-3 bg-primary text-primary-foreground text-center rounded-lg hover:bg-primary-hover font-medium">
                       {uploading ? '⏳ Upload en cours...' : '📤 Choisir une image'}
                     </div>
                     <input

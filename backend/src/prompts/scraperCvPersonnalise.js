@@ -26,16 +26,21 @@ Ignore tout le contenu parasite (navigation, publicités, mentions légales, coo
 
 ## Étape 2 : Évaluation du matching
 Évalue la correspondance entre le profil candidat et l'offre extraite :
-- Donne un SCORE_MATCHING entre 0 et 100 (ex: SCORE_MATCHING: 72)
+- Donne un SCORE_MATCHING entre 0 et 100 (ex: SCORE_MATCHING: 85)
 - Liste les MODIFICATIONS apportées au CV, une par ligne (ex: MODIFICATION: Titre reformulé pour correspondre au poste)
 
 ## Étape 3 : Générer un CV personnalisé
+
+**OBJECTIF : le CV optimisé doit atteindre un score de concordance MINIMUM de 80/100.**
+
 En utilisant l'offre extraite et le profil candidat :
+- Reformule agressivement le titre du poste pour correspondre exactement à l'intitulé de l'offre
+- Réécrire le résumé professionnel en intégrant les mots-clés exacts de l'offre
 - Réorganise les expériences pour mettre en avant celles qui correspondent le mieux à l'offre
-- Reformule le résumé professionnel pour coller à l'offre
-- Met en avant les compétences clés mentionnées dans l'offre
-- Adapte les descriptions d'expériences pour utiliser le vocabulaire de l'offre
-- Garde les données exactes du candidat (prenom, nom, email, téléphone, etc.)
+- Adapte les descriptions d'expériences pour utiliser le vocabulaire et les compétences de l'offre
+- Met en avant toutes les compétences clés mentionnées dans l'offre (même si implicites dans le profil)
+- Garde les données exactes du candidat (prenom, nom, email, téléphone, etc.) — ne les invente pas
+- Si le profil est éloigné de l'offre, mets en avant les compétences transversales pour maximiser la pertinence
 
 ---
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import CatMascot from '@/components/shared/CatMascot'
+import Logo from '@/components/shared/Logo'
 import Button from '@/components/shared/Button'
 import Alert from '@/components/shared/Alert'
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      router.push('/')
     }
   }
 
@@ -38,7 +38,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 p-8 bg-surface rounded-xl border border-border">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <CatMascot size="md" />
+            <Logo size="md" link={false} />
           </div>
           <h2 className="text-3xl font-bold text-text-primary">
             Connexion

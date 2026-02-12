@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/shared/Header'
-import CatMascot from '@/components/shared/CatMascot'
+import Logo from '@/components/shared/Logo'
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-        <CatMascot size="md" />
+        <Logo size="md" link={false} />
         <p className="text-text-muted">Chargement...</p>
       </div>
     )
