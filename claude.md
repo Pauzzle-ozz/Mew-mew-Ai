@@ -350,11 +350,13 @@ RESEND_API_KEY=re_votre_cle_resend
 #### Frontend : `frontend-v2/.env.local`
 
 ```env
+NEXT_PUBLIC_API_URL=http://localhost:5000   # Windows
+# NEXT_PUBLIC_API_URL=http://localhost:5001  # Mac (port 5000 bloque par AirPlay)
 NEXT_PUBLIC_SUPABASE_URL=https://votre-projet.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_publique_anon
 ```
 
-**Note** : Le frontend appelle le backend directement sur `http://localhost:5000` (l'URL est codee en dur dans `lib/api/cvApi.js`, `lib/api/portfolioApi.js` et `lib/api/matcherApi.js`).
+**Note** : `NEXT_PUBLIC_API_URL` est obligatoire — elle definit le port du backend. Chaque machine garde son propre `.env.local` (gitignore). Le frontend lit cette variable dans tous les clients API (`cvApi.js`, `portfolioApi.js`, `matcherApi.js`, `applicationsApi.js`).
 
 ### Demarrer l'application (2 terminaux)
 
@@ -982,6 +984,7 @@ git log --oneline            # Historique compact
 
 | Variable | Description | Obligatoire |
 |---|---|---|
+| `NEXT_PUBLIC_API_URL` | URL du backend (`http://localhost:5000` Windows, `http://localhost:5001` Mac) | Oui |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL du projet Supabase (meme que backend) | Oui |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cle publique anon Supabase | Oui |
 
