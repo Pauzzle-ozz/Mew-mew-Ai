@@ -2,7 +2,7 @@
  * Client API pour le suivi de candidatures
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5001';
 
 /**
  * Créer une nouvelle candidature

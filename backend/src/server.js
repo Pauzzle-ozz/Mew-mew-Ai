@@ -4,7 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 
 // Chargement des variables d'environnement
-dotenv.config({ path: './src/.env' });
+dotenv.config({ path: './src/.env', override: true });
 const solutionsRoutes = require('./routes/solutions');
 const portfolioRoutes = require('./routes/portfolio');
 const portfolioStatsRoutes = require('./routes/portfolioStats');
