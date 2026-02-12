@@ -161,7 +161,7 @@ export default function OptimiseurCVPage() {
       formData.append('cv', cvFile)
       formData.append('userId', user.id)
       if (posteCible) formData.append('posteCible', posteCible)
-      const response = await fetch('http://localhost:5001/api/solutions/optimiser-cv-pdf', { method: 'POST', body: formData })
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/solutions/optimiser-cv-pdf`, { method: 'POST', body: formData })
       const data = await response.json()
       if (data.success) { _goToStep2(data.data) }
       else throw new Error(data.error || 'Erreur lors de l\'optimisation')
