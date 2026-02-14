@@ -11,6 +11,22 @@ const { analysisToJSON, cvToJSON } = require('../prompts/jsonSchemas');
  */
 class CVService {
   /**
+   * Normaliser le nom de categorie retourne par l'IA
+   * Evite les problemes d'accents ou de casse
+   */
+  normalizeCategorie(categorie) {
+    if (!categorie) return 'Correspond a mes competences';
+    const normalized = categorie
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // retire les accents
+      .toLowerCase()
+      .trim();
+    if (normalized.includes('pourrais tenter') || normalized.includes('pourrait tenter')) {
+      return 'Je pourrais tenter';
+    }
+    return 'Correspond a mes competences';
+  }
+
+  /**
    * Valider les données d'un CV
    */
   validateCVData(cvData) {
@@ -39,7 +55,12 @@ class CVService {
     const jsonPrompt = analysisToJSON(analysisText);
     const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
 
-    // Formatage de la reponse (identique a ce que n8n retournait)
+    // Formatage de la reponse
+    const metiers = (parsed.metiers || []).map(m => ({
+      ...m,
+      categorie: this.normalizeCategorie(m.categorie)
+    }));
+
     return {
       success: true,
       profil: {
@@ -48,9 +69,11 @@ class CVService {
         niveau_experience: cvData.niveau_experience || 'Non spécifié',
         type_poste: cvData.type_poste || 'Non spécifié'
       },
-      metiers_proposes: parsed.metiers || [],
+      metiers_proposes: metiers,
+      competences_cles: parsed.competences_cles || [],
+      mots_cles_recherche: parsed.mots_cles_recherche || [],
       message: 'Analyse terminée avec succès',
-      nombre_metiers: (parsed.metiers || []).length
+      nombre_metiers: metiers.length
     };
   }
 
@@ -68,6 +91,11 @@ class CVService {
     const jsonPrompt = analysisToJSON(analysisText);
     const parsed = await aiService.generateJSON(jsonPrompt, { model: 'gpt-4.1-mini' });
 
+    const metiers = (parsed.metiers || []).map(m => ({
+      ...m,
+      categorie: this.normalizeCategorie(m.categorie)
+    }));
+
     return {
       success: true,
       profil: {
@@ -76,9 +104,11 @@ class CVService {
         niveau_experience: 'Analysé automatiquement',
         type_poste: 'Identifié par l\'IA'
       },
-      metiers_proposes: parsed.metiers || [],
+      metiers_proposes: metiers,
+      competences_cles: parsed.competences_cles || [],
+      mots_cles_recherche: parsed.mots_cles_recherche || [],
       message: 'Analyse terminée avec succès',
-      nombre_metiers: (parsed.metiers || []).length
+      nombre_metiers: metiers.length
     };
   }
 

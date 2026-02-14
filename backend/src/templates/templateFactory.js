@@ -78,67 +78,69 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
-            font-size: 10pt;
-            line-height: 1.5;
+            font-size: 9.5pt;
+            line-height: 1.4;
             color: #111827;
             background: white;
             -webkit-font-smoothing: antialiased;
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 20mm 22mm;
+            padding: 12mm 16mm;
           }
 
           /* Header - Style carte d'identité moderne */
           .header {
-            margin-bottom: 16pt;
-            padding: 14pt 16pt;
+            margin-bottom: 10pt;
+            padding: 10pt 14pt;
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             border-radius: 8pt;
             border-left: 4pt solid #0ea5e9;
           }
           .name {
-            font-size: 24pt;
+            font-size: 20pt;
             font-weight: 700;
             color: #0c4a6e;
-            margin-bottom: 4pt;
+            margin-bottom: 2pt;
             letter-spacing: -0.5pt;
           }
           .title {
-            font-size: 13pt;
+            font-size: 11pt;
             color: #0369a1;
-            margin-bottom: 8pt;
+            margin-bottom: 4pt;
             font-weight: 500;
           }
           .contact {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #475569;
-            line-height: 1.6;
+            line-height: 1.4;
           }
           .contact span {
-            margin-right: 12pt;
+            margin-right: 10pt;
             white-space: nowrap;
           }
 
           /* Sections - Titres avec accent subtle */
           h2 {
-            font-size: 12pt;
+            font-size: 11pt;
             color: #0c4a6e;
             font-weight: 600;
-            margin-top: 14pt;
-            margin-bottom: 8pt;
-            padding-bottom: 4pt;
-            border-bottom: 2pt solid #e0f2fe;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            padding-bottom: 2pt;
+            border-bottom: 1.5pt solid #e0f2fe;
           }
 
           /* Resume - Encadré léger */
           .resume {
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #374151;
-            margin-bottom: 10pt;
-            padding: 10pt;
+            margin-bottom: 6pt;
+            padding: 6pt 8pt;
             background: #fafafa;
             border-radius: 4pt;
             border-left: 3pt solid #0ea5e9;
@@ -146,67 +148,67 @@ getTemplate(template, cvData) {
 
           /* Experience - Cards légères */
           .experience-item {
-            margin-bottom: 12pt;
-            padding: 8pt 0;
+            margin-bottom: 6pt;
+            padding: 4pt 0;
             page-break-inside: avoid;
           }
           .experience-header {
-            margin-bottom: 4pt;
+            margin-bottom: 2pt;
           }
           .job-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #0c4a6e;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #64748b;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .company {
             font-weight: 500;
             color: #475569;
           }
           .period {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #94a3b8;
             font-weight: 400;
           }
           .description {
-            font-size: 9.5pt;
-            line-height: 1.5;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #475569;
-            margin-top: 4pt;
+            margin-top: 2pt;
             white-space: pre-line;
           }
 
           /* Formation - Épurée */
           .formation-item {
-            margin-bottom: 8pt;
-            padding: 6pt 0;
+            margin-bottom: 4pt;
+            padding: 2pt 0;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 10.5pt;
+            font-size: 9.5pt;
             font-weight: 600;
             color: #0c4a6e;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #64748b;
           }
 
           /* Skills - Style badges */
           .skills {
-            font-size: 10pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #374151;
           }
           .skill-category {
-            margin-bottom: 6pt;
-            padding: 6pt 10pt;
+            margin-bottom: 3pt;
+            padding: 4pt 8pt;
             background: #f8fafc;
             border-radius: 4pt;
           }
@@ -318,43 +320,45 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Georgia', 'Crimson Text', serif;
-            font-size: 10.5pt;
-            line-height: 1.5;
+            font-size: 10pt;
+            line-height: 1.4;
             color: #1a1a1a;
             background: white;
             -webkit-font-smoothing: antialiased;
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 22mm 24mm;
+            padding: 14mm 16mm;
           }
 
           /* Header - Centré et élégant */
           .header {
             text-align: center;
-            margin-bottom: 18pt;
-            padding-bottom: 10pt;
+            margin-bottom: 10pt;
+            padding-bottom: 7pt;
             border-bottom: 1pt solid #2c2c2c;
           }
           .name {
-            font-size: 26pt;
+            font-size: 22pt;
             font-weight: 600;
             color: #1a1a1a;
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             letter-spacing: 2pt;
           }
           .title {
-            font-size: 13pt;
+            font-size: 11pt;
             color: #4a4a4a;
-            margin-bottom: 8pt;
+            margin-bottom: 4pt;
             font-style: italic;
             font-weight: 400;
           }
           .contact {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #666;
-            line-height: 1.6;
+            line-height: 1.4;
             font-family: -apple-system, sans-serif;
           }
           .contact span {
@@ -363,30 +367,30 @@ getTemplate(template, cvData) {
 
           /* Sections - Titres élégants */
           h2 {
-            font-size: 12pt;
+            font-size: 11pt;
             color: #1a1a1a;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 2pt;
-            margin-top: 16pt;
-            margin-bottom: 10pt;
-            padding-bottom: 4pt;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            padding-bottom: 2pt;
             border-bottom: 0.5pt solid #2c2c2c;
           }
 
           /* Resume */
           .resume {
-            font-size: 10.5pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #2c2c2c;
-            margin-bottom: 12pt;
+            margin-bottom: 6pt;
             text-align: justify;
           }
 
           /* Experience */
           .experience-item {
-            margin-bottom: 12pt;
-            padding-bottom: 8pt;
+            margin-bottom: 6pt;
+            padding-bottom: 4pt;
             border-bottom: 0.5pt solid #e5e5e5;
             page-break-inside: avoid;
           }
@@ -394,15 +398,15 @@ getTemplate(template, cvData) {
             border-bottom: none;
           }
           .job-title {
-            font-size: 11.5pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #1a1a1a;
-            margin-bottom: 3pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #666;
-            margin-bottom: 4pt;
+            margin-bottom: 1pt;
             font-family: -apple-system, sans-serif;
           }
           .company {
@@ -410,43 +414,44 @@ getTemplate(template, cvData) {
             color: #4a4a4a;
           }
           .period {
+            font-size: 8.5pt;
             color: #888;
             font-style: italic;
           }
           .description {
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #3a3a3a;
-            margin-top: 4pt;
+            margin-top: 2pt;
             white-space: pre-line;
           }
 
           /* Formation */
           .formation-item {
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 11pt;
+            font-size: 9.5pt;
             font-weight: 600;
             color: #1a1a1a;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 10pt;
+            font-size: 8.5pt;
             color: #666;
             font-family: -apple-system, sans-serif;
           }
 
           /* Skills */
           .skills {
-            font-size: 10pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #2c2c2c;
             font-family: -apple-system, sans-serif;
           }
           .skill-category {
-            margin-bottom: 6pt;
+            margin-bottom: 3pt;
           }
           .skill-label {
             font-weight: 600;
@@ -554,43 +559,45 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 10pt;
-            line-height: 1.5;
+            font-size: 9.5pt;
+            line-height: 1.4;
             color: #1e1e2e;
             background: white;
             -webkit-font-smoothing: antialiased;
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 18mm 20mm;
+            padding: 12mm 16mm;
           }
 
           /* Header - Gradient moderne et vibrant */
           .header {
-            margin-bottom: 14pt;
-            padding: 16pt 18pt;
+            margin-bottom: 8pt;
+            padding: 10pt 14pt;
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 25%, #c44569 75%, #a855f7 100%);
             border-radius: 12pt;
             box-shadow: 0 4pt 12pt rgba(168, 85, 247, 0.15);
           }
           .name {
-            font-size: 22pt;
+            font-size: 20pt;
             font-weight: 700;
             color: white;
-            margin-bottom: 4pt;
+            margin-bottom: 2pt;
             letter-spacing: -0.3pt;
           }
           .title {
-            font-size: 12.5pt;
+            font-size: 10.5pt;
             color: rgba(255, 255, 255, 0.95);
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             font-weight: 500;
           }
           .contact {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: rgba(255, 255, 255, 0.9);
-            line-height: 1.6;
+            line-height: 1.4;
           }
           .contact span {
             margin-right: 12pt;
@@ -598,24 +605,24 @@ getTemplate(template, cvData) {
 
           /* Sections - Titres colorés */
           h2 {
-            font-size: 11.5pt;
+            font-size: 10.5pt;
             color: #a855f7;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1pt;
-            margin-top: 14pt;
-            margin-bottom: 8pt;
-            padding-bottom: 4pt;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            padding-bottom: 2pt;
             border-bottom: 2.5pt solid #fae8ff;
           }
 
           /* Resume - Encadré gradient subtle */
           .resume {
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #374151;
-            margin-bottom: 10pt;
-            padding: 12pt;
+            margin-bottom: 6pt;
+            padding: 6pt 8pt;
             background: linear-gradient(135deg, #fef3f2 0%, #fae8ff 100%);
             border-radius: 8pt;
             border-left: 4pt solid #ff6b6b;
@@ -623,70 +630,70 @@ getTemplate(template, cvData) {
 
           /* Experience - Style moderne */
           .experience-item {
-            margin-bottom: 12pt;
-            padding: 10pt;
+            margin-bottom: 6pt;
+            padding: 5pt;
             background: #fafafa;
             border-radius: 6pt;
             border-left: 3pt solid #a855f7;
             page-break-inside: avoid;
           }
           .job-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #c026d3;
-            margin-bottom: 3pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #64748b;
-            margin-bottom: 4pt;
+            margin-bottom: 1pt;
           }
           .company {
             font-weight: 500;
             color: #475569;
           }
           .period {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #94a3b8;
             font-weight: 400;
           }
           .description {
-            font-size: 9.5pt;
-            line-height: 1.5;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #475569;
-            margin-top: 4pt;
+            margin-top: 2pt;
             white-space: pre-line;
           }
 
           /* Formation - Cards subtiles */
           .formation-item {
-            margin-bottom: 8pt;
-            padding: 8pt 10pt;
+            margin-bottom: 4pt;
+            padding: 4pt 6pt;
             background: #fafafa;
             border-radius: 6pt;
             border-left: 3pt solid #ff6b6b;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 10.5pt;
+            font-size: 9.5pt;
             font-weight: 600;
             color: #dc2626;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #64748b;
           }
 
           /* Skills - Style badges colorés */
           .skills {
-            font-size: 10pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #374151;
           }
           .skill-category {
-            margin-bottom: 6pt;
-            padding: 8pt 12pt;
+            margin-bottom: 3pt;
+            padding: 4pt 7pt;
             background: linear-gradient(135deg, #fef3f2 0%, #fae8ff 100%);
             border-radius: 6pt;
             border-left: 3pt solid #a855f7;
@@ -874,45 +881,47 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 10pt;
-            line-height: 1.5;
+            font-size: 9.5pt;
+            line-height: 1.4;
             color: #0d1117;
             background: white;
             -webkit-font-smoothing: antialiased;
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 18mm 20mm;
+            padding: 12mm 16mm;
           }
 
           /* Header - Style GitHub moderne */
           .header {
-            margin-bottom: 16pt;
-            padding: 14pt 16pt;
+            margin-bottom: 10pt;
+            padding: 10pt 12pt;
             background: #f6f8fa;
             border: 1pt solid #d0d7de;
             border-radius: 6pt;
             border-left: 4pt solid #2da44e;
           }
           .name {
-            font-size: 20pt;
+            font-size: 18pt;
             font-weight: 600;
             color: #24292f;
-            margin-bottom: 4pt;
+            margin-bottom: 2pt;
             letter-spacing: -0.3pt;
           }
           .title {
-            font-size: 12pt;
+            font-size: 10pt;
             color: #57606a;
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             font-weight: 400;
             font-family: -apple-system, sans-serif;
           }
           .contact {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #656d76;
-            line-height: 1.6;
+            line-height: 1.4;
             font-family: -apple-system, sans-serif;
           }
           .contact span {
@@ -921,12 +930,12 @@ getTemplate(template, cvData) {
 
           /* Sections - Style code comments */
           h2 {
-            font-size: 11pt;
+            font-size: 10pt;
             color: #2da44e;
             font-weight: 600;
-            margin-top: 14pt;
-            margin-bottom: 8pt;
-            padding: 6pt 10pt;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            padding: 3pt 8pt;
             background: #f6f8fa;
             border-left: 3pt solid #2da44e;
             border-radius: 4pt;
@@ -938,11 +947,11 @@ getTemplate(template, cvData) {
 
           /* Resume */
           .resume {
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #3a3a3a;
-            margin-bottom: 10pt;
-            padding: 10pt 12pt;
+            margin-bottom: 6pt;
+            padding: 6pt 8pt;
             background: #ffffff;
             border: 1pt solid #d0d7de;
             border-radius: 6pt;
@@ -951,23 +960,23 @@ getTemplate(template, cvData) {
 
           /* Experience - Style commits */
           .experience-item {
-            margin-bottom: 12pt;
-            padding: 10pt 12pt;
+            margin-bottom: 6pt;
+            padding: 5pt 8pt;
             background: #f6f8fa;
             border-radius: 6pt;
             border-left: 3pt solid #0969da;
             page-break-inside: avoid;
           }
           .job-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 600;
             color: #0969da;
-            margin-bottom: 3pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #656d76;
-            margin-bottom: 4pt;
+            margin-bottom: 1pt;
             font-family: -apple-system, sans-serif;
           }
           .company {
@@ -975,50 +984,50 @@ getTemplate(template, cvData) {
             color: #57606a;
           }
           .period {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #8b949e;
             font-weight: 400;
           }
           .description {
-            font-size: 9.5pt;
-            line-height: 1.5;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #3a3a3a;
-            margin-top: 4pt;
+            margin-top: 2pt;
             white-space: pre-line;
             font-family: -apple-system, sans-serif;
           }
 
           /* Formation */
           .formation-item {
-            margin-bottom: 8pt;
-            padding: 8pt 10pt;
+            margin-bottom: 4pt;
+            padding: 4pt 6pt;
             background: #ffffff;
             border: 1pt solid #d0d7de;
             border-radius: 6pt;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 10.5pt;
+            font-size: 9.5pt;
             font-weight: 600;
             color: #24292f;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #656d76;
             font-family: -apple-system, sans-serif;
           }
 
           /* Skills - Style badges GitHub */
           .skills {
-            font-size: 10pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #3a3a3a;
             font-family: -apple-system, sans-serif;
           }
           .skill-category {
-            margin-bottom: 6pt;
-            padding: 8pt 10pt;
+            margin-bottom: 3pt;
+            padding: 4pt 6pt;
             background: #dafbe1;
             border-radius: 6pt;
             border: 1pt solid #2da44e;
@@ -1129,46 +1138,48 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: 'Playfair Display', 'Georgia', serif;
-            font-size: 10.5pt;
-            line-height: 1.5;
+            font-size: 10pt;
+            line-height: 1.4;
             color: #1a1a1a;
             background: white;
             -webkit-font-smoothing: antialiased;
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 24mm 26mm;
+            padding: 14mm 16mm;
           }
 
           /* Header - Élégance premium */
           .header {
-            margin-bottom: 20pt;
-            padding-bottom: 12pt;
+            margin-bottom: 12pt;
+            padding-bottom: 8pt;
             border-bottom: 2pt solid #1a1a1a;
             border-top: 0.5pt solid #1a1a1a;
-            padding-top: 12pt;
+            padding-top: 8pt;
           }
           .name {
-            font-size: 28pt;
+            font-size: 22pt;
             font-weight: 700;
             color: #0a0a0a;
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             letter-spacing: 3pt;
             text-align: center;
           }
           .title {
-            font-size: 14pt;
+            font-size: 12pt;
             color: #3a3a3a;
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
             font-style: italic;
             font-weight: 400;
             text-align: center;
           }
           .contact {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #666;
-            line-height: 1.7;
+            line-height: 1.4;
             text-align: center;
             font-family: -apple-system, sans-serif;
           }
@@ -1178,33 +1189,33 @@ getTemplate(template, cvData) {
 
           /* Sections - Titres raffinés */
           h2 {
-            font-size: 13pt;
+            font-size: 12pt;
             color: #0a0a0a;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 3pt;
-            margin-top: 18pt;
-            margin-bottom: 10pt;
-            padding-bottom: 4pt;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            padding-bottom: 2pt;
             border-bottom: 1.5pt solid #1a1a1a;
             text-align: left;
           }
 
           /* Resume - Style quote */
           .resume {
-            font-size: 11pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #2c2c2c;
-            margin-bottom: 14pt;
-            padding: 12pt 16pt;
+            margin-bottom: 6pt;
+            padding: 6pt 10pt;
             border-left: 3pt solid #0a0a0a;
             font-style: italic;
           }
 
           /* Experience - Épuré et structuré */
           .experience-item {
-            margin-bottom: 14pt;
-            padding-bottom: 10pt;
+            margin-bottom: 6pt;
+            padding-bottom: 4pt;
             border-bottom: 0.5pt solid #d0d0d0;
             page-break-inside: avoid;
           }
@@ -1212,15 +1223,15 @@ getTemplate(template, cvData) {
             border-bottom: none;
           }
           .job-title {
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: 700;
             color: #0a0a0a;
-            margin-bottom: 4pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 10.5pt;
+            font-size: 9pt;
             color: #555;
-            margin-bottom: 6pt;
+            margin-bottom: 1pt;
             font-family: -apple-system, sans-serif;
           }
           .company {
@@ -1229,15 +1240,15 @@ getTemplate(template, cvData) {
             font-style: italic;
           }
           .period {
-            font-size: 10pt;
+            font-size: 8.5pt;
             color: #888;
             font-weight: 400;
           }
           .description {
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #3a3a3a;
-            margin-top: 6pt;
+            margin-top: 2pt;
             white-space: pre-line;
             font-family: -apple-system, sans-serif;
             text-align: justify;
@@ -1245,17 +1256,17 @@ getTemplate(template, cvData) {
 
           /* Formation */
           .formation-item {
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 11pt;
+            font-size: 9.5pt;
             font-weight: 700;
             color: #0a0a0a;
-            margin-bottom: 3pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 10pt;
+            font-size: 8.5pt;
             color: #555;
             font-family: -apple-system, sans-serif;
             font-style: italic;
@@ -1263,14 +1274,14 @@ getTemplate(template, cvData) {
 
           /* Skills */
           .skills {
-            font-size: 10.5pt;
-            line-height: 1.8;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #2c2c2c;
             font-family: -apple-system, sans-serif;
           }
           .skill-category {
-            margin-bottom: 6pt;
-            padding-left: 8pt;
+            margin-bottom: 3pt;
+            padding-left: 5pt;
           }
           .skill-label {
             font-weight: 700;
@@ -1385,8 +1396,8 @@ getTemplate(template, cvData) {
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-            font-size: 10pt;
-            line-height: 1.6;
+            font-size: 9.5pt;
+            line-height: 1.4;
             color: #0a0a0a;
             background: white;
             -webkit-font-smoothing: antialiased;
@@ -1394,32 +1405,34 @@ getTemplate(template, cvData) {
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
-            padding: 25mm 28mm;
+            padding: 14mm 16mm;
           }
 
           /* Header - Ultra clean */
           .header {
-            margin-bottom: 20pt;
+            margin-bottom: 12pt;
           }
           .name {
-            font-size: 32pt;
+            font-size: 26pt;
             font-weight: 300;
             color: #000;
-            margin-bottom: 6pt;
+            margin-bottom: 4pt;
             letter-spacing: -1pt;
           }
           .title {
-            font-size: 13pt;
+            font-size: 11pt;
             color: #666;
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
             font-weight: 400;
           }
           .contact {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #999;
-            line-height: 1.8;
-            margin-top: 8pt;
+            line-height: 1.4;
+            margin-top: 4pt;
           }
           .contact span {
             margin-right: 14pt;
@@ -1427,79 +1440,79 @@ getTemplate(template, cvData) {
 
           /* Sections - Minimaliste absolu */
           h2 {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #0a0a0a;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 2pt;
-            margin-top: 16pt;
-            margin-bottom: 10pt;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
           }
 
           /* Resume - Simple */
           .resume {
-            font-size: 10pt;
-            line-height: 1.7;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #3a3a3a;
-            margin-bottom: 12pt;
+            margin-bottom: 6pt;
           }
 
           /* Experience - Spacing parfait */
           .experience-item {
-            margin-bottom: 14pt;
+            margin-bottom: 6pt;
             page-break-inside: avoid;
           }
           .job-title {
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: 500;
             color: #0a0a0a;
-            margin-bottom: 3pt;
+            margin-bottom: 1pt;
           }
           .company-line {
-            font-size: 10pt;
+            font-size: 9pt;
             color: #666;
-            margin-bottom: 4pt;
+            margin-bottom: 1pt;
           }
           .company {
             font-weight: 400;
           }
           .period {
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #999;
             font-weight: 400;
           }
           .description {
-            font-size: 9.5pt;
-            line-height: 1.6;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #4a4a4a;
-            margin-top: 4pt;
+            margin-top: 2pt;
             white-space: pre-line;
           }
 
           /* Formation */
           .formation-item {
-            margin-bottom: 10pt;
+            margin-bottom: 4pt;
             page-break-inside: avoid;
           }
           .diploma {
-            font-size: 10.5pt;
+            font-size: 9.5pt;
             font-weight: 500;
             color: #0a0a0a;
-            margin-bottom: 2pt;
+            margin-bottom: 1pt;
           }
           .school-line {
-            font-size: 10pt;
+            font-size: 8.5pt;
             color: #666;
           }
 
           /* Skills */
           .skills {
-            font-size: 10pt;
-            line-height: 1.8;
+            font-size: 9pt;
+            line-height: 1.4;
             color: #3a3a3a;
           }
           .skill-category {
-            margin-bottom: 6pt;
+            margin-bottom: 3pt;
           }
           .skill-label {
             font-weight: 500;

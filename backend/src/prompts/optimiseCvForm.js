@@ -57,20 +57,24 @@ Optimiser ce CV pour MAXIMISER les chances de passer les ATS et attirer l'attent
    - Regrouper par catégories si possible
    - Inclure niveau d'expertise si pertinent
 
-8. CONTRAINTE ABSOLUE : 1 PAGE MAXIMUM
-   - Prioriser les 5 dernières années d'expérience
-   - Condenser sans perdre l'impact
-   - Supprimer les détails anciens ou peu pertinents
-   - Résumé : 3-4 phrases max
-   - Expériences : 3-5 bullets max par poste
-   - Formation : diplôme + établissement + année (pas de description)
+8. CONTRAINTE ABSOLUE : 1 PAGE A4 (CRITIQUE)
+   Le CV DOIT tenir sur 1 seule page A4. Pour y parvenir :
+   - Résumé : 2-3 phrases COURTES maximum (50 mots max)
+   - Expériences : maximum 3 postes, 2-3 bullets COURTS par poste (15 mots max par bullet)
+   - Chaque bullet : Verbe + Action + Résultat chiffré (pas de phrases longues)
+   - Formation : diplôme + établissement + année UNIQUEMENT (aucune description)
+   - Compétences : liste à virgules, pas de phrases
+   - Langues : liste simple (ex: "Français (natif), Anglais (B2)")
+   - Supprimer toute expérience de plus de 10 ans sauf si très pertinente
+   - Supprimer les détails peu pertinents et les répétitions
+   - Privilégier la concision à l'exhaustivité
 
 === RÈGLES STRICTES ===
 - NE JAMAIS inventer d'informations
 - NE PAS modifier les noms d'entreprises, dates, diplômes
 - Rester factuel et vérifiable
 - Si une information est vide, la laisser vide
-- TOUT DOIT TENIR SUR 1 PAGE au format A4
+- TOUT DOIT TENIR SUR 1 PAGE A4 - C'EST LA PRIORITE NUMERO 1
 
 === FORMAT DE RÉPONSE ===
 Commence par :

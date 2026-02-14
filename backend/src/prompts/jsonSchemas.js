@@ -10,11 +10,10 @@
  */
 function analysisToJSON(generatedText) {
   return `Tu vas recevoir une analyse détaillée de profil professionnel incluant :
-- des métiers proposés
-- une classification des postes
-- des compétences
-- des mots-clés
-- une évaluation marché avec une note sur 100 par métier
+- des métiers proposés classés en 2 catégories
+- un scoring multi-critères (3 notes par métier)
+- des compétences et mots-clés
+- des conseils par métier
 
 Ta mission est de transformer ce contenu en **JSON STRICT**, exploitable par un workflow automatisé.
 
@@ -24,7 +23,7 @@ Règles obligatoires (à respecter strictement) :
 - Aucun Markdown
 - Aucun commentaire
 - Toutes les clés doivent être présentes même si certaines valeurs sont vides
-- Les notes doivent être des nombres entre 0 et 100
+- Les notes doivent être des nombres entiers entre 0 et 100
 
 Structure JSON attendue :
 
@@ -32,10 +31,24 @@ Structure JSON attendue :
   "metiers": [
     {
       "intitule": "",
-      "categorie": "Ce que je veux | Correspond à mes compétences | Je pourrais tenter",
+      "categorie": "Correspond a mes competences",
       "priorite": 1,
-      "note_marche": 0,
-      "justification_note": "",
+      "scores": {
+        "adequation_profil": 0,
+        "marche_emploi": 0,
+        "potentiel_evolution": 0,
+        "global": 0
+      },
+      "justifications": {
+        "adequation_profil": "",
+        "marche_emploi": "",
+        "potentiel_evolution": ""
+      },
+      "conseils": {
+        "points_forts": [],
+        "lacunes": [],
+        "conseil_actionnable": ""
+      },
       "mots_cles": []
     }
   ],
@@ -45,9 +58,16 @@ Structure JSON attendue :
 
 Consignes spécifiques :
 - Chaque métier identifié dans l'analyse doit apparaître dans le tableau "metiers"
+- "categorie" doit être EXACTEMENT "Correspond a mes competences" ou "Je pourrais tenter" (sans accents, tel quel)
 - "priorite" doit être un entier (1 = priorité la plus élevée)
-- "note_marche" doit refléter principalement l'équilibre offre / demande du marché
-- "justification_note" doit être une phrase courte expliquant la note
+- "scores.adequation_profil" : correspondance compétences/expérience du candidat avec le métier (0-100)
+- "scores.marche_emploi" : conditions du marché de l'emploi pour ce métier (0-100)
+- "scores.potentiel_evolution" : perspectives d'évolution carrière/salaire (0-100)
+- "scores.global" : moyenne pondérée des 3 scores (adequation_profil x 0.4 + marche_emploi x 0.35 + potentiel_evolution x 0.25), arrondie à l'entier
+- Chaque justification doit être une phrase courte expliquant la note
+- "conseils.points_forts" : tableau de 2-3 compétences que le candidat possède déjà pour ce métier
+- "conseils.lacunes" : tableau de 1-3 compétences/certifications/formations manquantes
+- "conseils.conseil_actionnable" : une phrase de conseil concret pour le candidat
 - Les mots-clés doivent être normalisés (minuscules, sans phrases)
 - Ne jamais inventer de catégories hors de celles définies
 
@@ -97,8 +117,7 @@ RÈGLES :
       "diplome": "",
       "etablissement": "",
       "localisation": "",
-      "date_fin": "",
-      "description": ""
+      "date_fin": ""
     }
   ],
   "competences_techniques": "",
@@ -106,6 +125,16 @@ RÈGLES :
   "langues": "",
   "interets": ""
 }
+
+CONTRAINTES 1 PAGE A4 (TRES IMPORTANT) :
+- "resume" : 50 mots MAXIMUM (2-3 phrases courtes)
+- "experiences" : MAXIMUM 3 postes
+- "description" de chaque expérience : MAXIMUM 3 bullets courts séparés par des retours à la ligne, chaque bullet de 15 mots max
+- "formations" : PAS de champ "description", uniquement diplôme + établissement + date
+- "competences_techniques" : liste à virgules, pas de phrases (ex: "JavaScript, React, Node.js, Python")
+- "competences_soft" : liste à virgules (ex: "Leadership, Communication, Gestion de projet")
+- "langues" : format court (ex: "Français (natif), Anglais (B2)")
+- Si le texte source contient plus de 3 expériences, garder uniquement les 3 plus récentes/pertinentes
 
 Texte à transformer :
 ${generatedText}`;
