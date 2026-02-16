@@ -42,6 +42,8 @@ class LetterTemplateFactory {
           }
           .container {
             max-width: 210mm;
+            max-height: 297mm;
+            overflow: hidden;
             margin: 0 auto;
             padding: 20mm 25mm;
           }
@@ -170,7 +172,7 @@ class LetterTemplateFactory {
 
           <!-- OBJET -->
           <div class="subject">
-            <span class="subject-label">Objet :</span> Candidature au poste de ${offer.title}
+            <span class="subject-label">Objet :</span> Candidature au poste de ${offer.title || candidate.titre_poste || 'votre offre'}
           </div>
 
           <!-- FORMULE D'APPEL -->

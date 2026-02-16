@@ -95,14 +95,14 @@ class CVBuilderFactory {
     return experiences.map((exp, i) => {
       const bsoStr = this._bso(blockStyles, `exp_${i}`, s);
       return `
-        <div style="margin-bottom:10pt; padding-bottom:8pt; border-bottom:0.5pt solid ${s.lineColor}; page-break-inside:avoid; ${bsoStr}">
-          <div style="font-weight:700; font-size:11pt; color:${s.text}; margin-bottom:2pt;">${exp.poste || ''}</div>
-          <div style="font-size:9.5pt; color:${s.subtext}; margin-bottom:3pt;">
+        <div style="margin-bottom:9pt; padding-bottom:7pt; border-bottom:0.5pt solid ${s.lineColor}; page-break-inside:avoid; ${bsoStr}">
+          <div style="font-weight:700; font-size:10.5pt; color:${s.text}; margin-bottom:1.5pt;">${exp.poste || ''}</div>
+          <div style="font-size:9pt; color:${s.subtext}; margin-bottom:2pt;">
             ${exp.entreprise ? `<strong style="color:${s.accent}">${exp.entreprise}</strong>` : ''}
             ${exp.localisation ? ` &bull; ${exp.localisation}` : ''}
             ${(exp.date_debut || exp.date_fin) ? ` &bull; <em>${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</em>` : ''}
           </div>
-          ${exp.description ? `<div style="font-size:9.5pt; line-height:1.5; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
+          ${exp.description ? `<div style="font-size:9pt; line-height:1.4; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
         </div>`;
     }).join('');
   }
@@ -110,12 +110,12 @@ class CVBuilderFactory {
   _formItems(formations, s) {
     if (!formations || formations.length === 0) return '';
     return formations.map(f => `
-      <div style="margin-bottom:8pt; page-break-inside:avoid;">
-        <div style="font-weight:600; font-size:10.5pt; color:${s.text};">${f.diplome || ''}</div>
-        <div style="font-size:9.5pt; color:${s.subtext};">
+      <div style="margin-bottom:6pt; page-break-inside:avoid;">
+        <div style="font-weight:600; font-size:10pt; color:${s.text};">${f.diplome || ''}</div>
+        <div style="font-size:9pt; color:${s.subtext};">
           ${f.etablissement || ''}${f.localisation ? ' &bull; ' + f.localisation : ''}${(f.date_fin || f.annee) ? ' &bull; ' + (f.date_fin || f.annee) : ''}
         </div>
-        ${f.description ? `<div style="font-size:9pt; color:${s.subtext}; margin-top:2pt;">${f.description}</div>` : ''}
+        ${f.description ? `<div style="font-size:8.5pt; color:${s.subtext}; margin-top:1.5pt;">${f.description}</div>` : ''}
       </div>`).join('');
   }
 
@@ -127,7 +127,7 @@ class CVBuilderFactory {
   }
 
   _sectionTitle(label, s, extraCSS = '') {
-    return `<h2 style="font-size:10.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin:14pt 0 7pt 0; padding-bottom:3pt; border-bottom:2pt solid ${s.accentLight}; ${extraCSS}">${label}</h2>`;
+    return `<h2 style="font-size:10pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin:11pt 0 5pt 0; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight}; ${extraCSS}">${label}</h2>`;
   }
 
   _contactInfo(cvData, s, separator = ' &nbsp;|&nbsp; ') {
@@ -143,7 +143,7 @@ class CVBuilderFactory {
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:${font}; font-size:10pt; line-height:1.5; color:#1a1a1a; background:white; -webkit-font-smoothing:antialiased; }
+body { font-family:${font}; font-size:9.5pt; line-height:1.45; color:#1a1a1a; background:white; -webkit-font-smoothing:antialiased; }
 @page { size:A4; margin:0; }
 @media print { body { background:white; } }
 ${styles}
@@ -155,17 +155,17 @@ ${styles}
   ============================= */
   classique(cvData, s, blockStyles) {
     const body = `
-<div style="max-width:210mm; margin:0 auto; padding:16mm 20mm 14mm 20mm;">
+<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:14mm 18mm 12mm 18mm;">
 
   <!-- HEADER -->
   <div style="text-align:center; padding-bottom:10pt; margin-bottom:14pt; border-bottom:2pt solid ${s.accent}; ${this._bso(blockStyles,'identity',s)}">
     ${cvData.photo ? `<div style="margin-bottom:7pt; display:flex; justify-content:center;">${this._photoHTML(cvData, '58pt')}</div>` : ''}
-    <div style="font-size:24pt; font-weight:700; color:${s.text}; letter-spacing:1pt; margin-bottom:3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-    <div style="font-size:12pt; color:${s.accent}; margin-bottom:5pt; font-style:italic;">${cvData.titre_poste || ''}</div>
-    <div style="font-size:9pt; color:${s.subtext};">${this._contactInfo(cvData, s)}</div>
+    <div style="font-size:22pt; font-weight:700; color:${s.text}; letter-spacing:1pt; margin-bottom:3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
+    <div style="font-size:11pt; color:${s.accent}; margin-bottom:4pt; font-style:italic;">${cvData.titre_poste || ''}</div>
+    <div style="font-size:8.5pt; color:${s.subtext};">${this._contactInfo(cvData, s)}</div>
   </div>
 
-  ${cvData.resume ? `${this._sectionTitle('Profil', s)}<div style="font-size:10pt; line-height:1.7; color:${s.subtext}; text-align:justify; padding-left:6pt; border-left:3pt solid ${s.accentLight}; ${this._bso(blockStyles,'resume',s)}">${cvData.resume}</div>` : ''}
+  ${cvData.resume ? `${this._sectionTitle('Profil', s)}<div style="font-size:9.5pt; line-height:1.6; color:${s.subtext}; text-align:justify; padding-left:6pt; border-left:3pt solid ${s.accentLight}; ${this._bso(blockStyles,'resume',s)}">${cvData.resume}</div>` : ''}
 
   ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience professionnelle', s)}${this._expItems(cvData.experiences, s, blockStyles)}` : ''}
 
@@ -193,7 +193,7 @@ ${styles}
     const sidebarColor = s.sidebarText;
 
     const sidebar = `
-<div style="width:34%; background:${sidebarBg}; color:${sidebarColor}; padding:20mm 12mm; display:flex; flex-direction:column; gap:0;">
+<div style="width:34%; background:${sidebarBg}; color:${sidebarColor}; padding:16mm 10mm; display:flex; flex-direction:column; gap:0;">
 
   <!-- Photo -->
   <div style="display:flex; justify-content:center; margin-bottom:14pt;">
@@ -201,13 +201,13 @@ ${styles}
   </div>
 
   <!-- Nom + titre -->
-  <div style="text-align:center; margin-bottom:16pt; padding-bottom:12pt; border-bottom:1pt solid rgba(255,255,255,0.2);">
-    <div style="font-size:14pt; font-weight:700; color:${sidebarColor}; line-height:1.3;">${cvData.prenom || ''}<br>${cvData.nom || ''}</div>
-    <div style="font-size:9pt; margin-top:4pt; opacity:0.85;">${cvData.titre_poste || ''}</div>
+  <div style="text-align:center; margin-bottom:12pt; padding-bottom:8pt; border-bottom:1pt solid rgba(255,255,255,0.2);">
+    <div style="font-size:12pt; font-weight:700; color:${sidebarColor}; line-height:1.3;">${cvData.prenom || ''}<br>${cvData.nom || ''}</div>
+    <div style="font-size:8.5pt; margin-top:3pt; opacity:0.85;">${cvData.titre_poste || ''}</div>
   </div>
 
   <!-- Contact -->
-  <div style="margin-bottom:14pt;">
+  <div style="margin-bottom:10pt;">
     <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Contact</div>
     ${cvData.email ? `<div style="font-size:8.5pt; margin-bottom:3pt; word-break:break-all;">${cvData.email}</div>` : ''}
     ${cvData.telephone ? `<div style="font-size:8.5pt; margin-bottom:3pt;">${cvData.telephone}</div>` : ''}
@@ -241,10 +241,10 @@ ${styles}
 </div>`;
 
     const main = `
-<div style="width:66%; padding:20mm 18mm 20mm 16mm;">
+<div style="width:66%; padding:16mm 14mm 14mm 12mm; overflow:hidden;">
   ${cvData.resume ? `
     ${this._sectionTitle('Profil', s)}
-    <div style="font-size:10pt; line-height:1.7; color:${s.subtext}; margin-bottom:4pt;">${cvData.resume}</div>` : ''}
+    <div style="font-size:9.5pt; line-height:1.6; color:${s.subtext}; margin-bottom:4pt;">${cvData.resume}</div>` : ''}
 
   ${cvData.experiences && cvData.experiences.length ? `
     ${this._sectionTitle('Expérience', s)}
@@ -255,7 +255,7 @@ ${styles}
     ${this._formItems(cvData.formations, s)}` : ''}
 </div>`;
 
-    const body = `<div style="display:flex; min-height:297mm; max-width:210mm; margin:0 auto;">${sidebar}${main}</div>`;
+    const body = `<div style="display:flex; height:297mm; max-height:297mm; overflow:hidden; max-width:210mm; margin:0 auto;">${sidebar}${main}</div>`;
     return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
   }
 
@@ -265,30 +265,30 @@ ${styles}
   headerBande(cvData, s, blockStyles) {
     const headerBg = this._blockBg(blockStyles, 'identity', s.accent);
     const body = `
-<div style="max-width:210mm; margin:0 auto;">
+<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto;">
 
   <!-- HEADER BANDE -->
-  <div style="background:${headerBg}; color:white; padding:18mm 22mm 14mm 22mm;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12pt;">
-      <div style="display:flex; align-items:flex-end; gap:12pt;">
-        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '60pt', 'border-radius:8pt; border:2pt solid rgba(255,255,255,0.4);')}</div>` : ''}
+  <div style="background:${headerBg}; color:white; padding:12mm 18mm 10mm 18mm;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10pt;">
+      <div style="display:flex; align-items:flex-end; gap:10pt;">
+        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '55pt', 'border-radius:6pt; border:2pt solid rgba(255,255,255,0.35);')}</div>` : ''}
         <div>
-          <div style="font-size:28pt; font-weight:300; letter-spacing:-0.5pt; margin-bottom:4pt;">${cvData.prenom || ''} <strong>${cvData.nom || ''}</strong></div>
-          <div style="font-size:13pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
+          <div style="font-size:23pt; font-weight:300; letter-spacing:-0.5pt; margin-bottom:2pt;">${cvData.prenom || ''} <strong>${cvData.nom || ''}</strong></div>
+          <div style="font-size:11pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
         </div>
       </div>
-      <div style="text-align:right; font-size:8.5pt; opacity:0.85; line-height:1.8; flex-shrink:0;">
+      <div style="text-align:right; font-size:8pt; opacity:0.85; line-height:1.7; flex-shrink:0;">
         ${cvData.email ? `<div>${cvData.email}</div>` : ''}
         ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
         ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
         ${cvData.linkedin ? `<div>${cvData.linkedin}</div>` : ''}
       </div>
     </div>
-    ${cvData.resume ? `<div style="margin-top:12pt; font-size:9.5pt; opacity:0.9; line-height:1.6; border-top:1pt solid rgba(255,255,255,0.3); padding-top:10pt;">${cvData.resume}</div>` : ''}
+    ${cvData.resume ? `<div style="margin-top:8pt; font-size:9pt; opacity:0.9; line-height:1.55; border-top:1pt solid rgba(255,255,255,0.3); padding-top:7pt;">${cvData.resume}</div>` : ''}
   </div>
 
   <!-- CORPS -->
-  <div style="padding:16mm 22mm;">
+  <div style="padding:12mm 18mm 10mm 18mm;">
     ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience professionnelle', s)}${this._expItems(cvData.experiences, s, blockStyles)}` : ''}
     ${cvData.formations && cvData.formations.length ? `${this._sectionTitle('Formation', s)}${this._formItems(cvData.formations, s)}` : ''}
     ${(cvData.competences_techniques || cvData.competences_soft || cvData.langues) ? `
@@ -342,18 +342,18 @@ ${styles}
 </div>`).join('');
 
     const body = `
-<div style="max-width:210mm; margin:0 auto; padding:20mm 22mm;">
+<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:14mm 18mm 12mm 18mm;">
 
   <!-- HEADER -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18pt; padding-bottom:12pt; border-bottom:2pt solid ${s.accent};">
-    <div style="display:flex; align-items:flex-end; gap:12pt;">
-      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '55pt')}</div>` : ''}
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12pt; padding-bottom:8pt; border-bottom:2pt solid ${s.accent};">
+    <div style="display:flex; align-items:flex-end; gap:10pt;">
+      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '50pt')}</div>` : ''}
       <div>
-        <div style="font-size:24pt; font-weight:700; color:${s.text}; margin-bottom:3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-        <div style="font-size:12pt; color:${s.accent}; font-style:italic;">${cvData.titre_poste || ''}</div>
+        <div style="font-size:21pt; font-weight:700; color:${s.text}; margin-bottom:2pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
+        <div style="font-size:11pt; color:${s.accent}; font-style:italic;">${cvData.titre_poste || ''}</div>
       </div>
     </div>
-    <div style="text-align:right; font-size:9pt; color:${s.subtext}; line-height:1.8;">
+    <div style="text-align:right; font-size:8.5pt; color:${s.subtext}; line-height:1.7;">
       ${cvData.email ? `<div>${cvData.email}</div>` : ''}
       ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
       ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
@@ -361,7 +361,7 @@ ${styles}
   </div>
 
   ${cvData.resume ? `
-  <div style="background:${s.accentLight}; border-left:4pt solid ${s.accent}; padding:10pt 14pt; font-size:10pt; line-height:1.7; color:${s.subtext}; margin-bottom:16pt;">${cvData.resume}</div>` : ''}
+  <div style="background:${s.accentLight}; border-left:3.5pt solid ${s.accent}; padding:8pt 10pt; font-size:9.5pt; line-height:1.6; color:${s.subtext}; margin-bottom:12pt;">${cvData.resume}</div>` : ''}
 
   ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience', s)}${expTimeline}` : ''}
   ${cvData.formations && cvData.formations.length ? `${this._sectionTitle('Formation', s)}${formTimeline}` : ''}
@@ -384,38 +384,38 @@ ${styles}
   ============================= */
   encadre(cvData, s, blockStyles) {
     const card = (title, content, accentLeft = true) => `
-<div style="border:1.5pt solid ${s.lineColor}; border-radius:6pt; ${accentLeft ? `border-left:4pt solid ${s.accent};` : ''} padding:12pt 14pt; margin-bottom:12pt; background:white; page-break-inside:avoid;">
-  <div style="font-size:9.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:8pt;">${title}</div>
+<div style="border:1.5pt solid ${s.lineColor}; border-radius:5pt; ${accentLeft ? `border-left:3.5pt solid ${s.accent};` : ''} padding:9pt 12pt; margin-bottom:8pt; background:white; page-break-inside:avoid;">
+  <div style="font-size:9pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt;">${title}</div>
   ${content}
 </div>`;
 
     const expCards = (cvData.experiences || []).map((exp, i) => {
       const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, s);
       return `
-<div style="border:1.5pt solid ${s.lineColor}; border-radius:6pt; border-left:4pt solid ${s.accentMid}; padding:10pt 12pt; margin-bottom:8pt; page-break-inside:avoid; ${cs}">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3pt;">
-    <div style="font-weight:700; font-size:11pt; color:${s.text};">${exp.poste || ''}</div>
-    ${(exp.date_debut || exp.date_fin) ? `<div style="font-size:8.5pt; color:${s.subtext}; font-style:italic; flex-shrink:0; margin-left:8pt;">${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</div>` : ''}
+<div style="border:1.5pt solid ${s.lineColor}; border-radius:5pt; border-left:3.5pt solid ${s.accentMid}; padding:8pt 10pt; margin-bottom:6pt; page-break-inside:avoid; ${cs}">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2pt;">
+    <div style="font-weight:700; font-size:10.5pt; color:${s.text};">${exp.poste || ''}</div>
+    ${(exp.date_debut || exp.date_fin) ? `<div style="font-size:8pt; color:${s.subtext}; font-style:italic; flex-shrink:0; margin-left:8pt;">${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</div>` : ''}
   </div>
-  <div style="font-size:9.5pt; color:${s.accent}; margin-bottom:4pt;">${exp.entreprise || ''}${exp.localisation ? ' · ' + exp.localisation : ''}</div>
-  ${exp.description ? `<div style="font-size:9.5pt; line-height:1.5; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
+  <div style="font-size:9pt; color:${s.accent}; margin-bottom:3pt;">${exp.entreprise || ''}${exp.localisation ? ' · ' + exp.localisation : ''}</div>
+  ${exp.description ? `<div style="font-size:9pt; line-height:1.4; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
 </div>`;
     }).join('');
 
     const body = `
-<div style="max-width:210mm; margin:0 auto; padding:16mm 18mm;">
+<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:12mm 16mm 10mm 16mm;">
 
   <!-- HEADER CARD -->
-  <div style="background:${s.accent}; color:white; border-radius:8pt; padding:16pt 18pt; margin-bottom:14pt;">
+  <div style="background:${s.accent}; color:white; border-radius:6pt; padding:12pt 16pt; margin-bottom:10pt;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-      <div style="display:flex; align-items:flex-end; gap:12pt;">
-        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '55pt', 'border-radius:6pt; border:2pt solid rgba(255,255,255,0.4);')}</div>` : ''}
+      <div style="display:flex; align-items:flex-end; gap:10pt;">
+        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '50pt', 'border-radius:5pt; border:1.5pt solid rgba(255,255,255,0.4);')}</div>` : ''}
         <div>
-          <div style="font-size:24pt; font-weight:700; margin-bottom:4pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-          <div style="font-size:12pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
+          <div style="font-size:21pt; font-weight:700; margin-bottom:2pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
+          <div style="font-size:10.5pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
         </div>
       </div>
-      <div style="text-align:right; font-size:8.5pt; opacity:0.85; line-height:1.8;">
+      <div style="text-align:right; font-size:8pt; opacity:0.85; line-height:1.7;">
         ${cvData.email ? `<div>${cvData.email}</div>` : ''}
         ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
         ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
@@ -424,7 +424,7 @@ ${styles}
     </div>
   </div>
 
-  ${cvData.resume ? card('Profil professionnel', `<div style="font-size:10pt; line-height:1.7; color:${s.subtext};">${cvData.resume}</div>`) : ''}
+  ${cvData.resume ? card('Profil professionnel', `<div style="font-size:9.5pt; line-height:1.6; color:${s.subtext};">${cvData.resume}</div>`) : ''}
 
   ${cvData.experiences && cvData.experiences.length ? `
   <div style="font-size:9.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:8pt;">Expérience</div>
@@ -459,64 +459,64 @@ ${styles}
 </div>`).join('');
 
     const body = `
-<div style="max-width:210mm; margin:0 auto; padding:16mm 18mm;">
+<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:12mm 16mm 10mm 16mm;">
 
   <!-- HEADER COMPACT -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:8pt; margin-bottom:14pt; border-bottom:2.5pt solid ${s.accent};">
-    <div style="display:flex; align-items:flex-end; gap:10pt;">
-      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '48pt')}</div>` : ''}
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:6pt; margin-bottom:11pt; border-bottom:2pt solid ${s.accent};">
+    <div style="display:flex; align-items:flex-end; gap:9pt;">
+      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '44pt')}</div>` : ''}
       <div>
-        <div style="font-size:22pt; font-weight:700; color:${s.text}; letter-spacing:-0.3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-        <div style="font-size:11pt; color:${s.accent};">${cvData.titre_poste || ''}</div>
+        <div style="font-size:19pt; font-weight:700; color:${s.text}; letter-spacing:-0.3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
+        <div style="font-size:10.5pt; color:${s.accent};">${cvData.titre_poste || ''}</div>
       </div>
     </div>
-    <div style="font-size:8.5pt; color:${s.subtext}; text-align:right; line-height:1.7;">
-      ${[cvData.email, cvData.telephone, cvData.adresse].filter(Boolean).join(' | ')}
+    <div style="font-size:8pt; color:${s.subtext}; text-align:right; line-height:1.6;">
+      ${[cvData.email, cvData.telephone].filter(Boolean).join(' | ')}
     </div>
   </div>
 
   <!-- DEUX COLONNES -->
-  <div style="display:flex; gap:16pt;">
+  <div style="display:flex; gap:14pt;">
 
     <!-- Colonne gauche (60%) -->
     <div style="flex:6;">
       ${cvData.resume ? `
-      <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Profil</div>
-      <div style="font-size:9.5pt; line-height:1.6; color:${s.subtext}; margin-bottom:12pt;">${cvData.resume}</div>` : ''}
+      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Profil</div>
+      <div style="font-size:9pt; line-height:1.5; color:${s.subtext}; margin-bottom:8pt;">${cvData.resume}</div>` : ''}
 
-      <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Expérience</div>
+      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Expérience</div>
       ${expCompact}
     </div>
 
     <!-- Colonne droite (40%) -->
-    <div style="flex:4; padding-left:12pt; border-left:1.5pt solid ${s.lineColor};">
+    <div style="flex:4; padding-left:10pt; border-left:1.5pt solid ${s.lineColor};">
 
       ${cvData.formations && cvData.formations.length ? `
-      <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Formation</div>
+      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Formation</div>
       ${this._formItems(cvData.formations, s)}` : ''}
 
       ${cvData.competences_techniques ? `
-      <div style="margin-top:12pt;">
-        <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Compétences techniques</div>
+      <div style="margin-top:8pt;">
+        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Compétences</div>
         ${this._bulletList(cvData.competences_techniques, s)}
       </div>` : ''}
 
       ${cvData.competences_soft ? `
-      <div style="margin-top:12pt;">
-        <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Soft Skills</div>
+      <div style="margin-top:8pt;">
+        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Soft Skills</div>
         ${this._bulletList(cvData.competences_soft, s)}
       </div>` : ''}
 
       ${cvData.langues ? `
-      <div style="margin-top:12pt;">
-        <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Langues</div>
+      <div style="margin-top:8pt;">
+        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Langues</div>
         ${this._bulletList(cvData.langues, s)}
       </div>` : ''}
 
       ${cvData.interets ? `
-      <div style="margin-top:12pt;">
-        <div style="font-size:8.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt; padding-bottom:3pt; border-bottom:1.5pt solid ${s.accentLight};">Intérêts</div>
-        <div style="font-size:9pt; color:${s.subtext}; line-height:1.6;">${cvData.interets}</div>
+      <div style="margin-top:8pt;">
+        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Intérêts</div>
+        <div style="font-size:9pt; color:${s.subtext}; line-height:1.5;">${cvData.interets}</div>
       </div>` : ''}
     </div>
   </div>
@@ -530,12 +530,12 @@ ${styles}
     const resumeCS = this._blockContainerStyle(blockStyles, 'resume', s);
     const expItems = (cvData.experiences || []).map((exp, i) => {
       const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, s);
-      return `<div style="${cs} display:flex;gap:16pt;margin-bottom:12pt;padding-bottom:10pt;border-bottom:0.5pt solid #f1f5f9;page-break-inside:avoid;">
-        <div style="width:72pt;flex-shrink:0;font-size:8pt;color:#94a3b8;padding-top:2pt;text-align:right;"><em>${exp.date_debut||''}${exp.date_fin?' – '+exp.date_fin:''}</em></div>
+      return `<div style="${cs} display:flex;gap:14pt;margin-bottom:10pt;padding-bottom:8pt;border-bottom:0.5pt solid #f1f5f9;page-break-inside:avoid;">
+        <div style="width:68pt;flex-shrink:0;font-size:7.5pt;color:#94a3b8;padding-top:2pt;text-align:right;"><em>${exp.date_debut||''}${exp.date_fin?' – '+exp.date_fin:''}</em></div>
         <div style="flex:1;">
-          <div style="font-weight:700;font-size:10.5pt;color:#0f172a;margin-bottom:1pt;">${exp.poste||''}</div>
-          <div style="font-size:9pt;color:${gold};margin-bottom:4pt;">${exp.entreprise||''}${exp.localisation?' · '+exp.localisation:''}</div>
-          ${exp.description?`<div style="font-size:9pt;line-height:1.6;color:#475569;white-space:pre-line;">${exp.description}</div>`:''}
+          <div style="font-weight:700;font-size:10pt;color:#0f172a;margin-bottom:1pt;">${exp.poste||''}</div>
+          <div style="font-size:8.5pt;color:${gold};margin-bottom:3pt;">${exp.entreprise||''}${exp.localisation?' · '+exp.localisation:''}</div>
+          ${exp.description?`<div style="font-size:8.5pt;line-height:1.5;color:#475569;white-space:pre-line;">${exp.description}</div>`:''}
         </div>
       </div>`;
     }).join('');
@@ -543,7 +543,7 @@ ${styles}
       <div style="width:72pt;flex-shrink:0;font-size:8pt;color:#94a3b8;text-align:right;"><em>${f.date_fin||f.annee||''}</em></div>
       <div><div style="font-weight:600;font-size:10pt;color:#0f172a;">${f.diplome||''}</div><div style="font-size:9pt;color:#64748b;">${f.etablissement||''}${f.localisation?' · '+f.localisation:''}</div></div>
     </div>`).join('');
-    const body = `<div style="max-width:210mm;margin:0 auto;padding:22mm 26mm 20mm 26mm;background:white;">
+    const body = `<div style="max-width:210mm;max-height:297mm;overflow:hidden;margin:0 auto;padding:18mm 22mm 16mm 22mm;background:white;">
   <div style="${identCS} padding-bottom:14pt;margin-bottom:16pt;border-bottom:1.5pt solid ${gold};">
     ${cvData.photo?`<div style="margin-bottom:8pt;">${this._photoHTML(cvData,'55pt','border-radius:4pt')}</div>`:''}
     <div style="font-size:26pt;font-weight:300;color:#0f172a;letter-spacing:2pt;margin-bottom:3pt;">${cvData.prenom||''} <span style="font-weight:700;">${cvData.nom||''}</span></div>
@@ -586,7 +586,7 @@ ${styles}
       </div>`;
     }).join('');
     const sTitle = (t) => `<div style="font-size:8pt;font-weight:700;color:${gold};text-transform:uppercase;letter-spacing:2pt;margin-bottom:10pt;padding-bottom:4pt;border-bottom:0.5pt solid ${borderColor};">${t}</div>`;
-    const body = `<div style="max-width:210mm;margin:0 auto;background:${bg};min-height:297mm;padding:20mm 22mm;">
+    const body = `<div style="max-width:210mm;max-height:297mm;overflow:hidden;margin:0 auto;background:${bg};min-height:297mm;padding:16mm 18mm 14mm 18mm;">
   <div style="padding-bottom:14pt;margin-bottom:16pt;border-bottom:1pt solid ${gold};">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12pt;">
       <div style="display:flex;align-items:flex-end;gap:12pt;">

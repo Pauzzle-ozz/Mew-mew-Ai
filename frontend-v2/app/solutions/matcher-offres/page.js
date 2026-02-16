@@ -749,7 +749,7 @@ export default function MatcherOffresPage() {
                         <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-400">Générée automatiquement</span>
                       </div>
                       <p className="text-xs text-text-muted mb-3">Une lettre personnalisée a été générée pour cette offre.</p>
-                      <button onClick={() => downloadGeneratedCV(coverLetterResult)}
+                      <button onClick={() => downloadGeneratedCV({ data: coverLetterResult })}
                         className="w-full py-2.5 rounded-lg border border-blue-800/60 text-blue-400 hover:bg-blue-950/20 transition-colors text-sm font-medium">
                         Télécharger la lettre de motivation
                       </button>
