@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [Applications] Erreur création:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur serveur', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
   }
 });
 
@@ -45,7 +45,7 @@ router.get('/user/:userId', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [Applications] Erreur liste:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur serveur', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
   }
 });
 
@@ -68,7 +68,7 @@ router.put('/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [Applications] Erreur mise à jour:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur serveur', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
   }
 });
 
@@ -91,7 +91,7 @@ router.delete('/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [Applications] Erreur suppression:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Erreur serveur', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
   }
 });
 

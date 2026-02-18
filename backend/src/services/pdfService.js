@@ -11,26 +11,30 @@ class PDFService {
   async generatePDF(html) {
     console.log('📄 [PDFService] Génération du PDF...');
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        timeout: 30000
+      });
 
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 }
-    });
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        timeout: 30000
+      });
 
-    await browser.close();
+      console.log('✅ [PDFService] PDF généré, taille:', pdfBuffer.length);
 
-    console.log('✅ [PDFService] PDF généré, taille:', pdfBuffer.length);
-
-    // Forcer la conversion en Buffer si nécessaire
-    return Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+      return Buffer.isBuffer(pdfBuffer) ? pdfBuffer : Buffer.from(pdfBuffer);
+    } finally {
+      if (browser) await browser.close();
+    }
   }
 
   /**

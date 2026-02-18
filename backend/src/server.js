@@ -1,6 +1,7 @@
 // Import des modules nécessaires
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 
 // Chargement des variables d'environnement
@@ -29,15 +30,31 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
-app.use(cors()); // Permet la communication frontend <-> backend
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json()); // Permet de lire les données JSON
 
+// Rate limiting pour les routes IA (protection crédits OpenAI)
+const aiRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 requêtes par fenêtre de 15 min par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Trop de requêtes. Veuillez réessayer dans quelques minutes.'
+  }
+});
+
 // Routes des solutions IA
-app.use('/api/solutions', solutionsRoutes);
+app.use('/api/solutions', aiRateLimiter, solutionsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/portfolio-stats', portfolioStatsRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/matcher', matcherRoutes);
+app.use('/api/matcher', aiRateLimiter, matcherRoutes);
 app.use('/api/applications', applicationsRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)

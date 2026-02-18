@@ -2,6 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 
+const isDev = process.env.NODE_ENV === 'development';
+
 // Import des services
 const portfolioService = require('../services/portfolioService');
 const pdfService = require('../services/pdfService');
@@ -59,7 +61,8 @@ router.post('/', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur création:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de créer le portfolio',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -83,7 +86,8 @@ router.get('/user/:userId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur récupération:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de récupérer les portfolios',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -126,7 +130,8 @@ router.put('/:portfolioId/password', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur définition mot de passe:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de définir le mot de passe',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -158,7 +163,8 @@ router.delete('/:portfolioId/password', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur suppression mot de passe:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de supprimer le mot de passe',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -188,10 +194,13 @@ router.post('/public/:slug/verify-password', async (req, res) => {
 
   } catch (error) {
     console.error('❌ [API Portfolio] Erreur vérification mot de passe:', error.message);
-    const status = error.message === 'Mot de passe incorrect' ? 401 : 500;
-    res.status(status).json({
+    if (error.message === 'Mot de passe incorrect') {
+      return res.status(401).json({ success: false, error: 'Mot de passe incorrect' });
+    }
+    res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Erreur de vérification',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -236,7 +245,8 @@ router.get('/:portfolioId/export-pdf', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur export PDF:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible d\'exporter le PDF',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -276,7 +286,8 @@ router.get('/public/:slug/export-pdf', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur export PDF public:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible d\'exporter le PDF',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -312,7 +323,8 @@ router.get('/:portfolioId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur:', error.message);
     res.status(404).json({
       success: false,
-      error: error.message
+      error: 'Portfolio non trouvé',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -368,7 +380,8 @@ router.put('/:portfolioId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur mise à jour:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de mettre à jour le portfolio',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -400,7 +413,8 @@ router.delete('/:portfolioId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur suppression:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de supprimer le portfolio',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -440,7 +454,8 @@ router.post('/:portfolioId/blocks', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur ajout bloc:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible d\'ajouter le bloc',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -472,7 +487,8 @@ router.put('/blocks/:blockId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur mise à jour bloc:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de mettre à jour le bloc',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -504,7 +520,8 @@ router.delete('/blocks/:blockId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur suppression bloc:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de supprimer le bloc',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -536,7 +553,8 @@ router.put('/:portfolioId/blocks/reorder', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur réorganisation:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de réorganiser les blocs',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -579,7 +597,8 @@ router.post('/:portfolioId/media', upload.single('file'), async (req, res) => {
     console.error('❌ [API Portfolio] Erreur upload:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible d\'uploader le fichier',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -603,7 +622,8 @@ router.get('/:portfolioId/media', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur récupération médias:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de récupérer les médias',
+      ...(isDev && { details: error.message })
     });
   }
 });
@@ -635,7 +655,8 @@ router.delete('/media/:mediaId', async (req, res) => {
     console.error('❌ [API Portfolio] Erreur suppression média:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Impossible de supprimer le média',
+      ...(isDev && { details: error.message })
     });
   }
 });

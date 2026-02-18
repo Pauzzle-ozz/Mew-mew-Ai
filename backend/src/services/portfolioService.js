@@ -1,5 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
+const supabase = require('../lib/supabaseClient');
 
 /**
  * Service de gestion des Portfolios
@@ -7,10 +7,7 @@ const bcrypt = require('bcryptjs');
  */
 class PortfolioService {
   constructor() {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY
-    );
+    this.supabase = supabase;
   }
 
   // ==========================================
@@ -59,7 +56,8 @@ class PortfolioService {
       .from('portfolios')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (error) {
       console.error('❌ [PortfolioService] Erreur récupération:', error);

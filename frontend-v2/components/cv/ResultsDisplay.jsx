@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 function ScoreBar({ label, score, color }) {
   return (
@@ -177,22 +177,28 @@ export default function ResultsDisplay({ result }) {
 
   const CATEGORIES = ['Correspond a mes competences', 'Je pourrais tenter']
 
-  const groupedMetiers = {
-    'Correspond a mes competences': [],
-    'Je pourrais tenter': []
-  }
-
-  result.metiers_proposes?.forEach(metier => {
-    const categorie = metier.categorie || 'Correspond a mes competences'
-    if (groupedMetiers[categorie]) {
-      groupedMetiers[categorie].push(metier)
-    } else {
-      // Fallback : si la categorie ne matche pas, on met dans "Correspond a mes competences"
-      groupedMetiers['Correspond a mes competences'].push(metier)
+  const groupedMetiers = useMemo(() => {
+    const groups = {
+      'Correspond a mes competences': [],
+      'Je pourrais tenter': []
     }
-  })
 
-  const totalDisplayed = CATEGORIES.reduce((sum, cat) => sum + groupedMetiers[cat].length, 0)
+    result.metiers_proposes?.forEach(metier => {
+      const categorie = metier.categorie || 'Correspond a mes competences'
+      if (groups[categorie]) {
+        groups[categorie].push(metier)
+      } else {
+        groups['Correspond a mes competences'].push(metier)
+      }
+    })
+
+    return groups
+  }, [result.metiers_proposes])
+
+  const totalDisplayed = useMemo(
+    () => CATEGORIES.reduce((sum, cat) => sum + groupedMetiers[cat].length, 0),
+    [groupedMetiers]
+  )
 
   const categoryConfig = {
     'Correspond a mes competences': {

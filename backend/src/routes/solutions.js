@@ -158,7 +158,7 @@ router.post('/optimiser-cv-formulaire', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible d\'optimiser le CV',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -206,7 +206,7 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible d\'optimiser le CV PDF',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });

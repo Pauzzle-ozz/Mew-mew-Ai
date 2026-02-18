@@ -92,7 +92,7 @@ router.post('/analyser', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible d\'analyser l\'offre et de générer les documents',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -152,7 +152,7 @@ router.post('/scraper-url', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible d\'analyser cette URL',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -221,7 +221,7 @@ router.post('/analyser-scraper', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible de générer les documents depuis l\'URL scrapée',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -304,7 +304,7 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible de générer les documents',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -353,7 +353,7 @@ router.post('/decouvrir-offres', upload.single('cv'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible de rechercher des offres',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });
@@ -401,7 +401,7 @@ router.post('/extraire-candidat-pdf', upload.single('cv'), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Impossible d\'extraire les données du CV',
-      details: error.message
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
     });
   }
 });

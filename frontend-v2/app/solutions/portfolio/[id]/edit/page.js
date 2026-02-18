@@ -1,11 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useReducer, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/hooks/useAuth'
 import { portfolioApi } from '@/lib/api/portfolioApi'
-import { QRCodeSVG } from 'qrcode.react'
+
+const QRCodeSVG = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeSVG), {
+  ssr: false,
+  loading: () => <div className="w-[120px] h-[120px] bg-gray-100 animate-pulse rounded" />
+})
 
 // Types de blocs disponibles
 const BLOCK_TYPES = [
@@ -24,21 +29,67 @@ export default function PortfolioEditorPage() {
   const portfolioId = params.id
   const { user, loading: authLoading } = useAuth()
 
-  const [portfolio, setPortfolio] = useState(null)
-  const [blocks, setBlocks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-  const [showAddBlock, setShowAddBlock] = useState(false)
-  const [editingBlock, setEditingBlock] = useState(null)
-  const [showImportModal, setShowImportModal] = useState(false)
-  const [importCVData, setImportCVData] = useState('')
-  const [importError, setImportError] = useState(null)
-  const [importing, setImporting] = useState(false)
-  const [passwordInput, setPasswordInput] = useState('')
-  const [passwordSaving, setPasswordSaving] = useState(false)
-  const [passwordMsg, setPasswordMsg] = useState(null)
-  const [exporting, setExporting] = useState(false)
+  // State structuré avec useReducer
+  const initialState = {
+    portfolio: null,
+    blocks: [],
+    ui: { loading: true, saving: false, error: null, exporting: false },
+    modals: {
+      showAddBlock: false,
+      editingBlock: null,
+      showImportModal: false,
+      importCVData: '',
+      importError: null,
+      importing: false,
+    },
+    password: { input: '', saving: false, msg: null },
+  }
+
+  function editorReducer(state, action) {
+    switch (action.type) {
+      case 'SET_PORTFOLIO':
+        return { ...state, portfolio: action.payload }
+      case 'SET_BLOCKS':
+        return { ...state, blocks: action.payload }
+      case 'ADD_BLOCK':
+        return { ...state, blocks: [...state.blocks, action.payload] }
+      case 'UPDATE_BLOCK':
+        return { ...state, blocks: state.blocks.map(b => b.id === action.id ? { ...b, content: action.content } : b) }
+      case 'DELETE_BLOCK':
+        return { ...state, blocks: state.blocks.filter(b => b.id !== action.id) }
+      case 'SET_UI':
+        return { ...state, ui: { ...state.ui, ...action.payload } }
+      case 'SET_MODAL':
+        return { ...state, modals: { ...state.modals, ...action.payload } }
+      case 'SET_PASSWORD':
+        return { ...state, password: { ...state.password, ...action.payload } }
+      default:
+        return state
+    }
+  }
+
+  const [state, dispatch] = useReducer(editorReducer, initialState)
+  const { portfolio, blocks } = state
+  const { loading, saving, error, exporting } = state.ui
+  const { showAddBlock, editingBlock, showImportModal, importCVData, importError, importing } = state.modals
+  const { input: passwordInput, saving: passwordSaving, msg: passwordMsg } = state.password
+
+  // Helpers pour garder la compatibilité avec le code existant
+  const setPortfolio = (p) => dispatch({ type: 'SET_PORTFOLIO', payload: typeof p === 'function' ? p(portfolio) : p })
+  const setBlocks = (b) => dispatch({ type: 'SET_BLOCKS', payload: typeof b === 'function' ? b(blocks) : b })
+  const setSaving = (v) => dispatch({ type: 'SET_UI', payload: { saving: v } })
+  const setLoading = (v) => dispatch({ type: 'SET_UI', payload: { loading: v } })
+  const setError = (v) => dispatch({ type: 'SET_UI', payload: { error: v } })
+  const setExporting = (v) => dispatch({ type: 'SET_UI', payload: { exporting: v } })
+  const setShowAddBlock = (v) => dispatch({ type: 'SET_MODAL', payload: { showAddBlock: v } })
+  const setEditingBlock = (v) => dispatch({ type: 'SET_MODAL', payload: { editingBlock: v } })
+  const setShowImportModal = (v) => dispatch({ type: 'SET_MODAL', payload: { showImportModal: v } })
+  const setImportCVData = (v) => dispatch({ type: 'SET_MODAL', payload: { importCVData: v } })
+  const setImportError = (v) => dispatch({ type: 'SET_MODAL', payload: { importError: v } })
+  const setImporting = (v) => dispatch({ type: 'SET_MODAL', payload: { importing: v } })
+  const setPasswordInput = (v) => dispatch({ type: 'SET_PASSWORD', payload: { input: v } })
+  const setPasswordSaving = (v) => dispatch({ type: 'SET_PASSWORD', payload: { saving: v } })
+  const setPasswordMsg = (v) => dispatch({ type: 'SET_PASSWORD', payload: { msg: v } })
 
   // Charger le portfolio
   useEffect(() => {
@@ -62,7 +113,7 @@ export default function PortfolioEditorPage() {
   }
 
   // Ajouter un bloc
-  const handleAddBlock = async (type) => {
+  const handleAddBlock = useCallback(async (type) => {
     try {
       setSaving(true)
       const defaultContent = getDefaultContent(type)
@@ -76,7 +127,7 @@ export default function PortfolioEditorPage() {
     } finally {
       setSaving(false)
     }
-  }
+  }, [portfolioId, user, blocks])
 
   // Contenu par défaut selon le type
   const getDefaultContent = (type) => {
@@ -110,27 +161,27 @@ export default function PortfolioEditorPage() {
   }
 
   // Mettre à jour un bloc
-  const handleUpdateBlock = async (blockId, content) => {
+  const handleUpdateBlock = useCallback(async (blockId, content) => {
     try {
       setSaving(true)
       await portfolioApi.updateBlock(blockId, user.id, { content })
-      setBlocks(blocks.map(b => b.id === blockId ? { ...b, content } : b))
+      dispatch({ type: 'UPDATE_BLOCK', id: blockId, content })
     } catch (err) {
       console.error('Erreur mise à jour:', err)
       setError('Impossible de sauvegarder')
     } finally {
       setSaving(false)
     }
-  }
+  }, [user])
 
   // Supprimer un bloc
-  const handleDeleteBlock = async (blockId) => {
+  const handleDeleteBlock = useCallback(async (blockId) => {
     if (!confirm('Supprimer ce bloc ?')) return
 
     try {
       setSaving(true)
       await portfolioApi.deleteBlock(blockId, user.id)
-      setBlocks(blocks.filter(b => b.id !== blockId))
+      dispatch({ type: 'DELETE_BLOCK', id: blockId })
       if (editingBlock === blockId) setEditingBlock(null)
     } catch (err) {
       console.error('Erreur suppression:', err)
@@ -138,10 +189,10 @@ export default function PortfolioEditorPage() {
     } finally {
       setSaving(false)
     }
-  }
+  }, [user, editingBlock])
 
   // Déplacer un bloc (haut/bas)
-  const handleMoveBlock = async (blockId, direction) => {
+  const handleMoveBlock = useCallback(async (blockId, direction) => {
     const index = blocks.findIndex(b => b.id === blockId)
     if (index === -1) return
 
@@ -159,7 +210,7 @@ export default function PortfolioEditorPage() {
     } catch (err) {
       console.error('Erreur réorganisation:', err)
     }
-  }
+  }, [blocks, portfolioId, user])
 
   // Importer les données du CV
   const handleImportCV = async () => {
@@ -758,7 +809,7 @@ const handleTogglePublish = async () => {
 
         {/* Modal Import CV */}
         {showImportModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-label="Importer un CV">
             <div className="bg-surface-elevated rounded-xl shadow-xl shadow-black/30 max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto border border-border">
               <h2 className="text-xl font-bold text-text-primary mb-4">📄 Importer mon CV</h2>
 
@@ -999,16 +1050,18 @@ function BlockEditor({
             disabled={!canMoveUp}
             className="p-1 text-text-muted hover:text-text-secondary disabled:opacity-30"
             title="Monter"
+            aria-label="Monter le bloc"
           >
-            ⬆️
+            <span aria-hidden="true">⬆️</span>
           </button>
           <button
             onClick={onMoveDown}
             disabled={!canMoveDown}
             className="p-1 text-text-muted hover:text-text-secondary disabled:opacity-30"
             title="Descendre"
+            aria-label="Descendre le bloc"
           >
-            ⬇️
+            <span aria-hidden="true">⬇️</span>
           </button>
 
           {/* Éditer / Sauvegarder */}
@@ -1033,8 +1086,9 @@ function BlockEditor({
             onClick={onDelete}
             className="p-1 text-error/60 hover:text-error"
             title="Supprimer"
+            aria-label="Supprimer le bloc"
           >
-            🗑️
+            <span aria-hidden="true">🗑️</span>
           </button>
         </div>
       </div>

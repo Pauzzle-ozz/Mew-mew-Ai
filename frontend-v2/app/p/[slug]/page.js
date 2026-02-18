@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { portfolioApi } from '@/lib/api/portfolioApi'
 
 // ✅ FONCTION pour incrémenter les vues
@@ -49,16 +50,17 @@ useEffect(() => {
     try {
       setLoading(true)
 
-      // Vérifier si on a déjà un accès en sessionStorage
-      const cachedAccess = sessionStorage.getItem(`portfolio_access_${slug}`)
-      if (cachedAccess) {
+      // Vérifier si on a déjà un accès en sessionStorage (token seulement, pas les données)
+      const cachedPassword = sessionStorage.getItem(`portfolio_pwd_${slug}`)
+      if (cachedPassword) {
         try {
-          const cachedData = JSON.parse(cachedAccess)
-          setPortfolio(cachedData)
-          await incrementViews(cachedData.id)
+          const result = await portfolioApi.verifyPassword(slug, cachedPassword)
+          setPortfolio(result.data)
+          await incrementViews(result.data.id)
           return
         } catch (e) {
-          sessionStorage.removeItem(`portfolio_access_${slug}`)
+          // Mot de passe expiré ou invalide, on le supprime
+          sessionStorage.removeItem(`portfolio_pwd_${slug}`)
         }
       }
 
@@ -91,8 +93,8 @@ useEffect(() => {
       setPasswordError('')
       const result = await portfolioApi.verifyPassword(slug, passwordInput)
 
-      // Stocker en sessionStorage pour ne pas re-demander
-      sessionStorage.setItem(`portfolio_access_${slug}`, JSON.stringify(result.data))
+      // Stocker seulement le mot de passe pour re-vérifier côté serveur au rechargement
+      sessionStorage.setItem(`portfolio_pwd_${slug}`, passwordInput)
 
       setPortfolio(result.data)
       setPasswordRequired(false)
@@ -171,7 +173,7 @@ useEffect(() => {
               </div>
             )}
 
-            <form onSubmit={handleVerifyPassword} className="space-y-4">
+            <form onSubmit={handleVerifyPassword} className="space-y-4" aria-label="Formulaire de mot de passe">
               <input
                 type="password"
                 placeholder="Entrez le mot de passe"
@@ -179,6 +181,7 @@ useEffect(() => {
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-center text-lg text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-primary/50 focus:border-primary focus:outline-none"
                 autoFocus
+                aria-label="Mot de passe du portfolio"
               />
               <button
                 type="submit"
@@ -265,8 +268,9 @@ return (
       disabled={exporting}
       className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg disabled:opacity-50"
       title="Telecharger en PDF"
+      aria-label="Telecharger le portfolio en PDF"
     >
-      <span className="text-2xl">{exporting ? '⏳' : '📄'}</span>
+      <span className="text-2xl" aria-hidden="true">{exporting ? '⏳' : '📄'}</span>
     </button>
 
     {/* Mode sombre */}
@@ -274,6 +278,7 @@ return (
       onClick={toggleDarkMode}
       className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm hover:scale-110 shadow-lg"
       title={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
+      aria-label={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
     >
       <span className="text-2xl">
         {darkMode ? '☀️' : '🌙'}
@@ -476,11 +481,16 @@ case 'text':
       if (!content.url) return null
       return (
         <div className={`${styles.cardBg} rounded-xl overflow-hidden`}>
-          <img 
-            src={content.url} 
-            alt={content.caption || ''} 
-            className="w-full h-auto"
-          />
+          <div className="relative w-full" style={{ minHeight: '200px' }}>
+            <Image
+              src={content.url}
+              alt={content.caption || ''}
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 896px"
+              unoptimized
+            />
+          </div>
           {content.caption && (
             <p className={`p-4 text-sm ${styles.textColor} opacity-75`}>
               {content.caption}
@@ -558,12 +568,16 @@ case 'text':
         <div className={`${styles.cardBg} rounded-xl p-4`}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {content.images.map((img, index) => (
-              <img 
-                key={index}
-                src={img.url || img}
-                alt=""
-                className="w-full h-40 object-cover rounded-lg"
-              />
+              <div key={index} className="relative h-40 rounded-lg overflow-hidden">
+                <Image
+                  src={img.url || img}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 300px"
+                  unoptimized
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -574,11 +588,14 @@ case 'text':
         <div className={`${styles.cardBg} rounded-xl overflow-hidden`}>
           <div className="md:flex">
             {content.image && (
-              <div className="md:w-1/3">
-                <img 
-                  src={content.image} 
-                  alt={content.title || ''} 
-                  className="w-full h-48 md:h-full object-cover"
+              <div className="md:w-1/3 relative h-48 md:h-auto" style={{ minHeight: '192px' }}>
+                <Image
+                  src={content.image}
+                  alt={content.title || ''}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 300px"
+                  unoptimized
                 />
               </div>
             )}
@@ -742,7 +759,7 @@ function ContactForm({ content, styles, portfolio }) {
 
       {/* Formulaire */}
       {portfolio.owner_email ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" aria-label="Formulaire de contact">
           <div>
             <label className={`block text-sm font-medium mb-1 ${styles.textColor}`}>
               Votre nom
