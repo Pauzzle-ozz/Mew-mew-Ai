@@ -14,9 +14,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
  */
 export async function analyzeOffer(offerData, candidateProfile, options = {}, buildConfig = {}) {
   try {
-    console.log('🔍 [matcherApi] Envoi de l\'offre pour analyse...');
-    console.log('⚙️ [matcherApi] Options:', options);
-
     const response = await fetch(`${API_BASE_URL}/api/matcher/analyser`, {
       method: 'POST',
       headers: {
@@ -36,11 +33,10 @@ export async function analyzeOffer(offerData, candidateProfile, options = {}, bu
       throw new Error(data.error || 'Erreur lors de l\'analyse de l\'offre');
     }
 
-    console.log('✅ [matcherApi] Analyse terminée avec succès');
     return data;
 
   } catch (error) {
-    console.error('❌ [matcherApi] Erreur:', error);
+    console.error('[matcherApi] Erreur:', error);
     throw error;
   }
 }
@@ -52,8 +48,6 @@ export async function analyzeOffer(offerData, candidateProfile, options = {}, bu
  */
 export async function scrapeOfferUrl(url) {
   try {
-    console.log('🔗 [matcherApi] Scraping URL:', url);
-
     const response = await fetch(`${API_BASE_URL}/api/matcher/scraper-url`, {
       method: 'POST',
       headers: {
@@ -70,11 +64,10 @@ export async function scrapeOfferUrl(url) {
       throw error;
     }
 
-    console.log('✅ [matcherApi] Scraping terminé');
     return data;
 
   } catch (error) {
-    console.error('❌ [matcherApi] Erreur scraping:', error);
+    console.error('[matcherApi] Erreur scraping:', error);
     throw error;
   }
 }
@@ -89,8 +82,6 @@ export async function scrapeOfferUrl(url) {
  */
 export async function analyzeScrapedOffer(rawText, url, candidateProfile, options = {}, buildConfig = {}) {
   try {
-    console.log('🔗 [matcherApi] Envoi du texte scrapé pour génération...');
-
     const response = await fetch(`${API_BASE_URL}/api/matcher/analyser-scraper`, {
       method: 'POST',
       headers: {
@@ -111,11 +102,10 @@ export async function analyzeScrapedOffer(rawText, url, candidateProfile, option
       throw new Error(data.error || 'Erreur lors de la génération des documents');
     }
 
-    console.log('✅ [matcherApi] Documents générés (mode scraper)');
     return data;
 
   } catch (error) {
-    console.error('❌ [matcherApi] Erreur scraper:', error);
+    console.error('[matcherApi] Erreur scraper:', error);
     throw error;
   }
 }
@@ -129,8 +119,6 @@ export async function analyzeScrapedOffer(rawText, url, candidateProfile, option
  */
 export async function generateComplete(cvFile, offerUrl, options = {}, buildConfig = {}) {
   try {
-    console.log('🚀 [matcherApi] Mode Rapide - Envoi CV + URL...');
-
     const formData = new FormData();
     formData.append('cv', cvFile);
     formData.append('offerUrl', offerUrl);
@@ -150,11 +138,10 @@ export async function generateComplete(cvFile, offerUrl, options = {}, buildConf
       throw error;
     }
 
-    console.log('✅ [matcherApi] Mode Rapide terminé avec succès');
     return data;
 
   } catch (error) {
-    console.error('❌ [matcherApi] Erreur mode rapide:', error);
+    console.error('[matcherApi] Erreur mode rapide:', error);
     throw error;
   }
 }
@@ -165,18 +152,43 @@ export async function generateComplete(cvFile, offerUrl, options = {}, buildConf
  * @param {string} zipFilename - Nom du fichier ZIP
  */
 export function downloadAllDocuments(documents, zipFilename = 'Candidature_Complete.zip') {
-  // Note: Cette fonction nécessitera JSZip pour créer le ZIP côté client
-  // Pour l'instant, on télécharge les documents individuellement
-  console.log('📦 [matcherApi] Téléchargement de', documents.length, 'documents');
-
   documents.forEach((doc, index) => {
     setTimeout(() => {
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${doc.pdf}`;
       link.download = doc.filename;
       link.click();
-    }, index * 500); // Délai de 500ms entre chaque téléchargement
+    }, index * 500);
   });
+}
+
+/**
+ * Extraire le profil candidat depuis un CV PDF (pour pré-remplir le formulaire)
+ * @param {File} cvFile - Fichier PDF du CV
+ * @returns {Promise} - Données du candidat extraites { prenom, nom, titre_poste, ... }
+ */
+export async function extractCandidateFromCVFile(cvFile) {
+  try {
+    const formData = new FormData();
+    formData.append('cv', cvFile);
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/extraire-candidat-pdf`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Impossible d\'extraire les données du CV');
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error('[matcherApi] Erreur extraction PDF:', error);
+    throw error;
+  }
 }
 
 /**
@@ -186,8 +198,6 @@ export function downloadAllDocuments(documents, zipFilename = 'Candidature_Compl
  */
 export async function discoverJobs(cvFile) {
   try {
-    console.log('🔍 [matcherApi] Mode Découverte - Envoi CV...');
-
     const formData = new FormData();
     formData.append('cv', cvFile);
 
@@ -202,11 +212,10 @@ export async function discoverJobs(cvFile) {
       throw new Error(data.error || 'Erreur lors de la découverte d\'offres');
     }
 
-    console.log('✅ [matcherApi] Découverte terminée');
     return data;
 
   } catch (error) {
-    console.error('❌ [matcherApi] Erreur découverte:', error);
+    console.error('[matcherApi] Erreur découverte:', error);
     throw error;
   }
 }
@@ -220,7 +229,7 @@ export async function checkMatcherHealth() {
     const response = await fetch(`${API_BASE_URL}/api/matcher/health`);
     return await response.json();
   } catch (error) {
-    console.error('❌ [matcherApi] Service indisponible:', error);
+    console.error('[matcherApi] Service indisponible:', error);
     throw error;
   }
 }

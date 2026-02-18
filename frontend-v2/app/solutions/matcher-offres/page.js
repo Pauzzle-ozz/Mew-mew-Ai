@@ -22,7 +22,7 @@ import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
 import Header from '@/components/shared/Header';
 
 // APIs
-import { analyzeOffer, analyzeScrapedOffer, generateComplete } from '@/lib/api/matcherApi';
+import { analyzeOffer, analyzeScrapedOffer, generateComplete, extractCandidateFromCVFile } from '@/lib/api/matcherApi';
 import { cvApi } from '@/lib/api/cvApi';
 import { createApplication } from '@/lib/api/applicationsApi';
 import { downloadGeneratedCV } from '@/lib/utils/fileHelpers';
@@ -72,6 +72,8 @@ export default function MatcherOffresPage() {
     experiences: [], formations: [], competences_techniques: '', competences_soft: '', langues: ''
   });
   const [currentTab, setCurrentTab] = useState('offer');
+  const [profileMode, setProfileMode] = useState('form'); // 'form' | 'pdf'
+  const [formCvFile, setFormCvFile] = useState(null);
 
   // Options de génération (lettre toujours générée, CV idéal désactivé)
   const generateOptions = { generatePersonalizedCV: true, generateIdealCV: false, generateCoverLetter: true };
@@ -121,6 +123,8 @@ export default function MatcherOffresPage() {
     setScrapedData(null);
     setOfferData({ title: '', company: '', location: '', contract_type: '', salary: '', description: '' });
     setCandidateData({ prenom: '', nom: '', titre_poste: '', email: '', telephone: '', adresse: '', linkedin: '', experiences: [], formations: [], competences_techniques: '', competences_soft: '', langues: '' });
+    setProfileMode('form');
+    setFormCvFile(null);
     setError('');
     setProcessing(false);
     setCvDataOriginal(null);
@@ -200,13 +204,27 @@ export default function MatcherOffresPage() {
       } else {
         if (!offerData.title || !offerData.company || !offerData.description)
           throw new Error('Titre, entreprise et description de l\'offre sont obligatoires');
-        if (!candidateData.prenom || !candidateData.nom || !candidateData.titre_poste)
-          throw new Error('Prénom, nom et titre du poste sont obligatoires');
+
+        let candidate = candidateData;
+
+        if (profileMode === 'pdf') {
+          if (!formCvFile) throw new Error('Veuillez ajouter votre CV PDF');
+          const [extracted] = await Promise.all([
+            extractCandidateFromCVFile(formCvFile),
+            _progressAnim([['Extraction du CV...', 20, 800]])
+          ]);
+          candidate = extracted.data;
+        } else {
+          if (!candidateData.prenom || !candidateData.nom || !candidateData.titre_poste)
+            throw new Error('Prénom, nom et titre du poste sont obligatoires');
+        }
+
         const [apiResp] = await Promise.all([
-          analyzeOffer(offerData, candidateData, generateOptions),
-          _progressAnim([['Analyse de correspondance...', 30, 800], ['Optimisation IA...', 70, 2000]])
+          analyzeOffer(offerData, candidate, generateOptions),
+          _progressAnim([['Analyse de correspondance...', 55, 800], ['Optimisation IA...', 85, 2000]])
         ]);
         response = apiResp;
+        if (profileMode === 'pdf') setCandidateData(candidate);
       }
 
       setProgress(100);
@@ -452,7 +470,14 @@ export default function MatcherOffresPage() {
                       {scrapedData && (
                         <div className="bg-surface rounded-xl p-6">
                           <h3 className="text-sm font-semibold text-text-secondary mb-4">Votre profil</h3>
-                          <CandidateProfileForm candidateData={candidateData} setCandidateData={setCandidateData} />
+                          <CandidateProfileForm
+                            candidateData={candidateData}
+                            setCandidateData={setCandidateData}
+                            profileMode={profileMode}
+                            setProfileMode={setProfileMode}
+                            formCvFile={formCvFile}
+                            setFormCvFile={setFormCvFile}
+                          />
                         </div>
                       )}
                     </div>
@@ -473,7 +498,14 @@ export default function MatcherOffresPage() {
                       </div>
                       <div className="bg-surface rounded-xl p-6">
                         {currentTab === 'offer' && <OfferForm offerData={offerData} setOfferData={setOfferData} />}
-                        {currentTab === 'profile' && <CandidateProfileForm candidateData={candidateData} setCandidateData={setCandidateData} />}
+                        {currentTab === 'profile' && <CandidateProfileForm
+                            candidateData={candidateData}
+                            setCandidateData={setCandidateData}
+                            profileMode={profileMode}
+                            setProfileMode={setProfileMode}
+                            formCvFile={formCvFile}
+                            setFormCvFile={setFormCvFile}
+                          />}
                       </div>
                       {currentTab === 'offer' && (
                         <button onClick={() => setCurrentTab('profile')}

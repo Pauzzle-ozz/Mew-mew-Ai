@@ -12,19 +12,36 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    let isMounted = true;
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      router.push('/login');
-    } else {
-      setUser(user);
-      setLoading(false);
-    }
-  };
+    const checkUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!isMounted) return;
+
+        if (!user) {
+          router.push('/login');
+        } else {
+          setUser(user);
+        }
+      } catch (err) {
+        if (isMounted) {
+          router.push('/login');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   return { user, loading };
 }

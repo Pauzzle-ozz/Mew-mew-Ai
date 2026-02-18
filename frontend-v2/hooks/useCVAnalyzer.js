@@ -19,8 +19,6 @@ export function useCVAnalyzer() {
     setResult(null);
 
     try {
-      console.log('📋 [useCVAnalyzer] Analyse via formulaire...');
-      
       const response = await cvApi.analyzeCV({
         userId,
         ...formData
@@ -28,13 +26,12 @@ export function useCVAnalyzer() {
 
       if (response.success) {
         setResult(response.data);
-        console.log('✅ [useCVAnalyzer] Analyse réussie');
         return response.data;
       } else {
         throw new Error(response.error || 'Erreur lors de l\'analyse');
       }
     } catch (err) {
-      console.error('❌ [useCVAnalyzer] Erreur:', err);
+      console.error('[useCVAnalyzer] Erreur:', err);
       setError(err.message || 'Impossible de contacter le serveur');
       throw err;
     } finally {
@@ -51,19 +48,16 @@ export function useCVAnalyzer() {
     setResult(null);
 
     try {
-      console.log('📄 [useCVAnalyzer] Analyse via PDF...');
-
       const response = await cvApi.analyzePDF(file, userId);
 
       if (response.success) {
         setResult(response.data);
-        console.log('✅ [useCVAnalyzer] Analyse PDF réussie');
         return response.data;
       } else {
         throw new Error(response.error || 'Erreur lors de l\'analyse du PDF');
       }
     } catch (err) {
-      console.error('❌ [useCVAnalyzer] Erreur PDF:', err);
+      console.error('[useCVAnalyzer] Erreur PDF:', err);
       setError(err.message || 'Erreur lors de l\'analyse du CV');
       throw err;
     } finally {

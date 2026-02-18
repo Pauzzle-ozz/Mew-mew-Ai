@@ -120,7 +120,9 @@ function deuxColonnes(cvData, s, blockStyles) {
       ${cvData.adresse?`<div style="font-size:8pt;margin-bottom:2pt;">${cvData.adresse}</div>`:''}
       ${cvData.linkedin?`<div style="font-size:8pt;word-break:break-all;">${cvData.linkedin}</div>`:''}</div>` : ''}
     ${cvData.competences_techniques?`<div style="margin-bottom:8pt;"><div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1.5pt;margin-bottom:3pt;opacity:0.65;">Compétences</div><ul style="padding-left:10pt;margin:0;">${cvData.competences_techniques.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<li style="font-size:8pt;margin-bottom:1.5pt;opacity:0.95;">${t}</li>`).join('')}</ul></div>`:''}
+    ${cvData.competences_soft?`<div style="margin-bottom:8pt;"><div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1.5pt;margin-bottom:3pt;opacity:0.65;">Soft Skills</div><ul style="padding-left:10pt;margin:0;">${cvData.competences_soft.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<li style="font-size:8pt;margin-bottom:1.5pt;opacity:0.95;">${t}</li>`).join('')}</ul></div>`:''}
     ${cvData.langues?`<div style="margin-bottom:8pt;"><div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1.5pt;margin-bottom:3pt;opacity:0.65;">Langues</div><div style="font-size:8pt;opacity:0.95;">${cvData.langues}</div></div>`:''}
+    ${cvData.interets?`<div style="margin-bottom:8pt;"><div style="font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:1.5pt;margin-bottom:3pt;opacity:0.65;">Centres d'intérêt</div><div style="font-size:8pt;opacity:0.95;">${cvData.interets}</div></div>`:''}
   </div>`;
   const main = `<div style="flex:1;padding:16mm 14mm 14mm 12mm;overflow:hidden;">
     ${cvData.resume?`${_sectionTitle('Profil',s)}<div style="font-size:9.5pt;line-height:1.6;color:${s.subtext};margin-bottom:4pt; ${_bso(blockStyles,'resume',s)}">${cvData.resume}</div>`:''}

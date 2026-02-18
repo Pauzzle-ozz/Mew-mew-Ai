@@ -359,6 +359,54 @@ router.post('/decouvrir-offres', upload.single('cv'), async (req, res) => {
 });
 
 /**
+ * Extraire le profil candidat depuis un CV PDF
+ * POST /api/matcher/extraire-candidat-pdf
+ *
+ * Body (multipart/form-data):
+ *   cv : fichier PDF du candidat (max 2 Mo)
+ * Response: { success: true, data: { prenom, nom, titre_poste, ... } }
+ */
+router.post('/extraire-candidat-pdf', upload.single('cv'), async (req, res) => {
+  try {
+    const cvFile = req.file;
+
+    if (!cvFile) {
+      return res.status(400).json({ success: false, error: 'Fichier CV (PDF) manquant' });
+    }
+
+    const pdfData = await pdf(cvFile.buffer);
+    const cvText = pdfData.text;
+
+    if (!cvText || cvText.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Impossible de lire le texte du CV. Vérifiez que le PDF n\'est pas une image scannée.'
+      });
+    }
+
+    console.log('🤖 [MATCHER] Extraction profil candidat depuis PDF...');
+    const candidate = await matcherService.extractCandidateFromPDF(cvText);
+
+    console.log('✅ [MATCHER] Profil extrait:', candidate.prenom, candidate.nom);
+
+    res.json({ success: true, data: candidate });
+
+  } catch (error) {
+    console.error('❌ [MATCHER] Erreur extraction PDF:', error.message);
+
+    if (error.status === 429) {
+      return res.status(503).json({ success: false, error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.' });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible d\'extraire les données du CV',
+      details: error.message
+    });
+  }
+});
+
+/**
  * Route de test (santé du service)
  */
 router.get('/health', (req, res) => {

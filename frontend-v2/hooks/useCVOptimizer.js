@@ -19,30 +19,27 @@ export function useCVOptimizer() {
     setResult(null);
 
     try {
-      console.log('🤖 [useCVOptimizer] Optimisation via formulaire...');
-      
       const response = await cvApi.optimizeCVForm(cvData, userId);
 
       if (response.success) {
         setResult(response.data);
-        console.log('✅ [useCVOptimizer] Optimisation réussie');
         return response.data.cvData_optimise;
       } else {
         throw new Error(response.error || 'Erreur lors de l\'optimisation');
       }
     } catch (err) {
-      console.error('❌ [useCVOptimizer] Erreur:', err);
-      
+      console.error('[useCVOptimizer] Erreur:', err);
+
       let errorMessage = 'Une erreur est survenue lors de l\'optimisation';
-      
+
       if (err.message.includes('indisponible') || err.message.includes('surchargé')) {
-        errorMessage = '⚠️ Service d\'optimisation temporairement indisponible. Réessayez dans quelques instants.';
+        errorMessage = 'Service d\'optimisation temporairement indisponible. Réessayez dans quelques instants.';
       } else if (err.message.includes('timeout')) {
-        errorMessage = '⏱️ L\'optimisation a pris trop de temps. Réessayez.';
+        errorMessage = 'L\'optimisation a pris trop de temps. Réessayez.';
       } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = '🔌 Impossible de contacter le serveur. Vérifiez que le backend est démarré.';
+        errorMessage = 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.';
       }
-      
+
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -59,28 +56,25 @@ export function useCVOptimizer() {
     setResult(null);
 
     try {
-      console.log('📄 [useCVOptimizer] Optimisation via PDF...');
-
       const response = await cvApi.optimizeCVPDF(file, userId);
 
       if (response.success) {
         setResult(response.data);
-        console.log('✅ [useCVOptimizer] Optimisation PDF réussie');
         return response.data.cvData_optimise;
       } else {
         throw new Error(response.error || 'Erreur lors de l\'optimisation du PDF');
       }
     } catch (err) {
-      console.error('❌ [useCVOptimizer] Erreur PDF:', err);
-      
+      console.error('[useCVOptimizer] Erreur PDF:', err);
+
       let errorMessage = 'Erreur lors de l\'optimisation du CV';
-      
+
       if (err.message.includes('indisponible')) {
-        errorMessage = '⚠️ Service d\'optimisation indisponible.';
+        errorMessage = 'Service d\'optimisation indisponible.';
       } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = '🔌 Impossible de contacter le serveur.';
+        errorMessage = 'Impossible de contacter le serveur.';
       }
-      
+
       setError(errorMessage);
       throw err;
     } finally {

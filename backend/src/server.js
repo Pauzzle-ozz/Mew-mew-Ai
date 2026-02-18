@@ -5,6 +5,16 @@ const dotenv = require('dotenv');
 
 // Chargement des variables d'environnement
 dotenv.config({ path: './src/.env', override: true });
+
+// Validation des variables d'environnement requises
+const requiredEnvVars = ['OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+const missingVars = requiredEnvVars.filter(key => !process.env[key]);
+if (missingVars.length > 0) {
+  console.error(`\n❌ Variables d'environnement manquantes : ${missingVars.join(', ')}`);
+  console.error('   Vérifiez votre fichier backend/src/.env\n');
+  process.exit(1);
+}
+
 const solutionsRoutes = require('./routes/solutions');
 const portfolioRoutes = require('./routes/portfolio');
 const portfolioStatsRoutes = require('./routes/portfolioStats');
