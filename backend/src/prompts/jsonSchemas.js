@@ -296,10 +296,41 @@ Voici le contenu à transformer :
 ${generatedText}`;
 }
 
+/**
+ * Conversion email candidature spontanee → JSON structure
+ * Utilise par spontaneEmail et spontaneFollowUp
+ */
+function spontaneEmailToJSON(generatedText) {
+  return `Tu vas recevoir un email de candidature spontanee avec un objet (SUBJECT) et un corps.
+
+Ta mission est de transformer ce contenu en JSON STRICT.
+
+Regles :
+- JSON valide uniquement, aucun texte avant/apres
+- Pas de \`\`\`json
+
+Structure JSON attendue :
+
+{
+  "subject": "",
+  "body": "",
+  "candidate_name": ""
+}
+
+- "subject" : l'objet extrait apres "SUBJECT:"
+- "body" : le corps complet de l'email (tout ce qui est apres la ligne "---", y compris la formule de politesse et la signature)
+- "candidate_name" : le prenom et nom extraits de la signature de l'email
+
+Voici le contenu a transformer :
+
+${generatedText}`;
+}
+
 module.exports = {
   analysisToJSON,
   cvToJSON,
   personalizedCVToJSON,
   idealCVToJSON,
-  coverLetterToJSON
+  coverLetterToJSON,
+  spontaneEmailToJSON
 };

@@ -87,6 +87,43 @@ class EmailService {
       throw error;
     }
   }
+  /**
+   * Envoyer une candidature spontanee avec le CV en piece jointe
+   */
+  async sendSpontaneousApplication({ recipientEmail, subject, body, cvBuffer, cvFilename }) {
+    console.log('[EmailService] Envoi candidature spontanee vers:', recipientEmail);
+
+    if (!recipientEmail || !subject || !body || !cvBuffer) {
+      throw new Error('Email destinataire, objet, corps et CV sont obligatoires');
+    }
+
+    const safeBody = escapeHtml(body).replace(/\n/g, '<br>');
+
+    const { data, error } = await this.resend.emails.send({
+      from: 'Candidature <onboarding@resend.dev>',
+      to: [recipientEmail],
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; line-height: 1.6; color: #374151;">
+          <p>${safeBody}</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: cvFilename || 'CV.pdf',
+          content: cvBuffer
+        }
+      ]
+    });
+
+    if (error) {
+      console.error('[EmailService] Erreur envoi candidature spontanee:', error);
+      throw new Error("Impossible d'envoyer l'email de candidature");
+    }
+
+    console.log('[EmailService] Candidature spontanee envoyee, ID:', data.id);
+    return { success: true, messageId: data.id };
+  }
 }
 
 module.exports = new EmailService();

@@ -22,6 +22,7 @@ const portfolioStatsRoutes = require('./routes/portfolioStats');
 const contactRoutes = require('./routes/contact');
 const matcherRoutes = require('./routes/matcher');
 const applicationsRoutes = require('./routes/applications');
+const candidatureSpontaneeRoutes = require('./routes/candidatureSpontanee');
 
 // Création de l'application Express
 const app = express();
@@ -56,6 +57,7 @@ app.use('/api/portfolio-stats', portfolioStatsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/matcher', aiRateLimiter, matcherRoutes);
 app.use('/api/applications', applicationsRoutes);
+app.use('/api/candidature-spontanee', aiRateLimiter, candidatureSpontaneeRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {

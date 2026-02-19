@@ -19,7 +19,12 @@ class ApplicationService {
         location: data.location || '',
         contract_type: data.contract_type || '',
         status: data.status || 'a_postuler',
-        notes: data.notes || ''
+        notes: data.notes || '',
+        recipient_email: data.recipient_email || '',
+        follow_up_date: data.follow_up_date || null,
+        follow_up_sent: data.follow_up_sent ?? false,
+        candidature_type: data.candidature_type || 'offre',
+        contact_name: data.contact_name || ''
       })
       .select()
       .single();
@@ -55,6 +60,11 @@ class ApplicationService {
     if (data.offer_url !== undefined) updateData.offer_url = data.offer_url;
     if (data.location !== undefined) updateData.location = data.location;
     if (data.contract_type !== undefined) updateData.contract_type = data.contract_type;
+    if (data.recipient_email !== undefined) updateData.recipient_email = data.recipient_email;
+    if (data.follow_up_date !== undefined) updateData.follow_up_date = data.follow_up_date;
+    if (data.follow_up_sent !== undefined) updateData.follow_up_sent = data.follow_up_sent;
+    if (data.candidature_type !== undefined) updateData.candidature_type = data.candidature_type;
+    if (data.contact_name !== undefined) updateData.contact_name = data.contact_name;
 
     // Si on change le statut à 'postule' et qu'il n'y a pas encore de date
     if (data.status === 'postule' && data.applied_at !== null) {

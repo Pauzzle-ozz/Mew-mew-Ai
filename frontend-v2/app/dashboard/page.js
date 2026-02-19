@@ -65,7 +65,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Solutions Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
           {/* Solution 1 : Analyseur de CV */}
           <Link href="/solutions/analyse-cv" className="group">
@@ -207,6 +207,41 @@ export default function DashboardPage() {
             </div>
           </Link>
 
+          {/* Solution 5 : Candidature Spontanee */}
+          <Link href="/solutions/candidature-spontanee" className="group">
+            <div className="bg-surface rounded-xl p-6 transition-all duration-300 border border-border hover:border-primary h-full">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span className="text-3xl">📧</span>
+              </div>
+              <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                Candidature Spontanee
+              </h3>
+              <p className="text-text-muted mb-4 text-sm">
+                L&apos;IA redige et envoie un email percutant avec ton CV en piece jointe
+              </p>
+              <div className="space-y-2 text-sm text-text-secondary mb-4">
+                <div className="flex items-center">
+                  <span className="text-primary mr-2">&#10003;</span>
+                  Email automatique
+                </div>
+                <div className="flex items-center">
+                  <span className="text-primary mr-2">&#10003;</span>
+                  CV en piece jointe
+                </div>
+                <div className="flex items-center">
+                  <span className="text-primary mr-2">&#10003;</span>
+                  Relance J+8
+                </div>
+              </div>
+              <div className="text-primary font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
+                Utiliser
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
+
         </div>
 
         {/* Info box */}
@@ -218,7 +253,7 @@ export default function DashboardPage() {
               <div className="text-sm text-text-secondary space-y-1">
                 <p>&#8226; Analyses illimitees</p>
                 <p>&#8226; Taille max des fichiers : 2 Mo</p>
-                <p>&#8226; Acces aux 4 solutions de recherche d&apos;emploi</p>
+                <p>&#8226; Acces aux 5 solutions de recherche d&apos;emploi</p>
               </div>
             </div>
           </div>

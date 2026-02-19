@@ -324,6 +324,15 @@ export default function MatcherOffresPage() {
         user={user}
         onLogout={handleLogout}
         breadcrumbs={[{ label: 'Emploi', href: '/dashboard' }, { label: 'Matcher d\'Offres' }]}
+        actions={
+          <Link
+            href="/solutions/matcher-offres/candidatures"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-sm font-medium hover:bg-pink-500/20 transition-colors"
+          >
+            <span>📋</span>
+            <span>Mes candidatures</span>
+          </Link>
+        }
       />
 
       <div className="py-12 px-4">

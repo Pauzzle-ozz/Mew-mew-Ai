@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { getApplications, updateApplication, deleteApplication } from '@/lib/api/applicationsApi';
+import Header from '@/components/shared/Header';
 
 // ── Statuts ───────────────────────────────────────────────────────────
 const STATUTS = [
@@ -124,13 +126,19 @@ function ApplicationRow({ app, onStatusChange, onDelete }) {
 }
 
 export default function CandidaturesPage() {
-  useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
   const [userId, setUserId] = useState(null);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -180,21 +188,48 @@ export default function CandidaturesPage() {
     return acc;
   }, {});
 
-  return (
-    <div className="min-h-screen bg-black text-white py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-slate-500">Chargement...</div>
+      </div>
+    );
+  }
 
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/solutions/matcher-offres" className="text-sm text-slate-500 hover:text-slate-300 flex items-center gap-1 mb-4 transition-colors">
-            ← Retour au Matcher
-          </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Mes Candidatures</h1>
-              <p className="text-sm text-slate-400 mt-1">{applications.length} candidature{applications.length > 1 ? 's' : ''} au total</p>
-            </div>
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <Header
+        user={user}
+        onLogout={handleLogout}
+        breadcrumbs={[
+          { label: 'Solutions', href: '/dashboard' },
+          { label: 'Mes candidatures' }
+        ]}
+        actions={
+          <div className="hidden sm:flex items-center gap-2">
+            <Link
+              href="/solutions/matcher-offres"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-sm font-medium hover:bg-pink-500/20 transition-colors"
+            >
+              <span>🎯</span>
+              <span>Matcher</span>
+            </Link>
+            <Link
+              href="/solutions/candidature-spontanee"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-medium hover:bg-blue-500/20 transition-colors"
+            >
+              <span>📧</span>
+              <span>Candidature</span>
+            </Link>
           </div>
+        }
+      />
+
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        {/* Title */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-white">Mes Candidatures</h1>
+          <p className="text-sm text-slate-400 mt-1">{applications.length} candidature{applications.length > 1 ? 's' : ''} au total</p>
         </div>
 
         {/* Compteurs par statut */}

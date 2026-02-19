@@ -10,6 +10,7 @@ export default function Header({
   user = null,
   onLogout,
   showAuth = false,
+  actions = null,
 }) {
   return (
     <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border">
@@ -36,8 +37,9 @@ export default function Header({
           )}
         </div>
 
-        {/* Right: Theme toggle + Auth or User */}
+        {/* Right: Actions + Theme toggle + Auth or User */}
         <div className="flex items-center gap-3">
+          {actions}
           <ThemeToggle />
 
           {showAuth && !user && (
