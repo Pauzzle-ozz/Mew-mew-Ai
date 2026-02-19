@@ -2,6 +2,7 @@ const aiService = require('./aiService');
 const { buildPrompt: buildRedacteurPrompt } = require('../prompts/redacteurMultiFormat');
 const { buildPrompt: buildStrategiePrompt } = require('../prompts/strategieContenu');
 const { multiFormatContentToJSON, contentStrategyToJSON } = require('../prompts/marketingJsonSchemas');
+const { buildPrompt: buildPerformancePrompt } = require('../prompts/performanceAnalyse');
 
 /**
  * Service Marketing & Communication
@@ -91,6 +92,23 @@ class MarketingService {
     );
 
     console.log(`✅ [MarketingService] Strategie generee : ${result.strategy?.totalPosts || 0} posts planifies`);
+    return result;
+  }
+
+  /**
+   * Analyse les performances de contenu marketing
+   * Appel direct generateJSON (le prompt retourne deja du JSON)
+   */
+  async analyzePerformance(metricsData) {
+    console.log(`📊 [MarketingService] Analyse performance (plateforme: ${metricsData.platform || 'non precise'})...`);
+
+    const prompt = buildPerformancePrompt(metricsData);
+    const result = await aiService.generateJSON(prompt, {
+      model: 'gpt-4.1-mini',
+      maxTokens: 4000
+    });
+
+    console.log(`✅ [MarketingService] Performance analysee (score: ${result.score?.value || '?'}/100)`);
     return result;
   }
 }

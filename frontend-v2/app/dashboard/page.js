@@ -222,24 +222,21 @@ export default function DashboardPage() {
                 features={['Calendrier 30j', 'Multi-canaux', 'Hashtags & horaires']}
               />
               <SolutionCard
-                disabled
-                href="#"
+                href="/solutions/marketing/veille"
                 emoji="📡"
                 title="Veille Sectorielle"
                 description="Identifiez les sources media et tendances de votre secteur"
                 features={['Sources media', 'Analyse tendances', 'Idees contenu']}
               />
               <SolutionCard
-                disabled
-                href="#"
+                href="/solutions/marketing/concurrence"
                 emoji="🔎"
                 title="Analyseur Concurrence"
                 description="Analysez le positionnement et la strategie de vos concurrents"
                 features={['Scraping URL', 'Benchmark', 'Opportunites']}
               />
               <SolutionCard
-                disabled
-                href="#"
+                href="/solutions/marketing/performance"
                 emoji="📊"
                 title="Analyseur Performance"
                 description="Diagnostiquez vos stats et obtenez des recommandations IA"
@@ -254,9 +251,9 @@ export default function DashboardPage() {
                 <div>
                   <h4 className="font-semibold text-primary mb-2">Marketing & Communication</h4>
                   <div className="text-sm text-text-secondary space-y-1">
-                    <p>&#8226; 2 outils disponibles, 3 a venir</p>
-                    <p>&#8226; Generation de contenu multi-plateforme</p>
-                    <p>&#8226; Calendrier editorial 30 jours</p>
+                    <p>&#8226; 5 outils disponibles</p>
+                    <p>&#8226; Contenu, strategie, veille, concurrence et performance</p>
+                    <p>&#8226; Scraping et analyse IA en temps reel</p>
                   </div>
                 </div>
               </div>
@@ -280,7 +277,7 @@ export default function DashboardPage() {
                 <span className="text-3xl mr-3">📢</span>
                 <div className="text-left">
                   <div className="font-medium text-primary">Marketing & Communication</div>
-                  <div className="text-xs text-text-muted">2 outils disponibles</div>
+                  <div className="text-xs text-text-muted">5 outils disponibles</div>
                 </div>
               </button>
             ) : (

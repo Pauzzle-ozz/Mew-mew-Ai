@@ -25,6 +25,9 @@ const applicationsRoutes = require('./routes/applications');
 const candidatureSpontaneeRoutes = require('./routes/candidatureSpontanee');
 const redacteurRoutes = require('./routes/redacteur');
 const strategieRoutes = require('./routes/strategie');
+const veilleRoutes = require('./routes/veille');
+const concurrenceRoutes = require('./routes/concurrence');
+const performanceRoutes = require('./routes/performance');
 
 // Création de l'application Express
 const app = express();
@@ -62,6 +65,9 @@ app.use('/api/applications', applicationsRoutes);
 app.use('/api/candidature-spontanee', aiRateLimiter, candidatureSpontaneeRoutes);
 app.use('/api/marketing/redacteur', aiRateLimiter, redacteurRoutes);
 app.use('/api/marketing/strategie', aiRateLimiter, strategieRoutes);
+app.use('/api/marketing/veille', aiRateLimiter, veilleRoutes);
+app.use('/api/marketing/concurrence', aiRateLimiter, concurrenceRoutes);
+app.use('/api/marketing/performance', aiRateLimiter, performanceRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {
