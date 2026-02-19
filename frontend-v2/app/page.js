@@ -75,15 +75,15 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="block px-4 py-3 opacity-40 cursor-not-allowed rounded-b-lg">
+                  <Link href="/dashboard?tab=marketing" className="block px-4 py-3 hover:bg-surface rounded-b-lg transition-colors">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">📢</span>
                       <div>
-                        <div className="font-semibold text-text-muted">Marketing & Com</div>
-                        <div className="text-xs text-text-muted">Bientot</div>
+                        <div className="font-semibold text-text-primary">Marketing & Com</div>
+                        <div className="text-xs text-text-muted">Contenu, strategie, veille</div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               </div>
             </nav>
@@ -215,19 +215,26 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="opacity-50 cursor-not-allowed">
-              <div className="bg-surface rounded-2xl p-8 border border-border h-full">
+            <Link href={user ? '/dashboard?tab=marketing' : '/signup'} className="group">
+              <div className="bg-surface rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
                 <div className="text-5xl mb-4">📢</div>
-                <h3 className="text-2xl font-bold text-text-muted mb-3">Marketing & Communication</h3>
-                <p className="text-text-muted mb-6">Campagnes, contenu et strategie de communication.</p>
-                <div className="space-y-2 text-sm text-text-muted">
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Plans de communication</div>
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Automatisation marketing</div>
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Creation de contenu</div>
+                <h3 className="text-2xl font-bold text-text-primary mb-3 group-hover:text-primary transition-colors">
+                  Marketing & Communication
+                </h3>
+                <p className="text-text-secondary mb-6">Creez du contenu, planifiez votre strategie et analysez votre marche avec l&apos;IA.</p>
+                <div className="space-y-2 text-sm text-text-secondary">
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Redacteur multi-format</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Strategie de contenu 30j</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Veille sectorielle IA</div>
                 </div>
-                <div className="mt-6 inline-block px-4 py-2 bg-surface-elevated text-text-muted rounded-lg text-sm font-semibold">Bientot disponible</div>
+                <div className="mt-6 text-primary font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
+                  Acces
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
               </div>
-            </div>
+            </Link>
 
           </div>
         </div>
