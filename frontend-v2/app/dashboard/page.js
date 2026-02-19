@@ -242,6 +242,13 @@ export default function DashboardPage() {
                 description="Diagnostiquez vos stats et obtenez des recommandations IA"
                 features={['Diagnostic', 'Patterns', 'Predictions']}
               />
+              <SolutionCard
+                href="/solutions/marketing/seo"
+                emoji="🔍"
+                title="Audit SEO"
+                description="Analysez le SEO de votre site et obtenez des recommandations"
+                features={['Crawl automatique', 'Score par page', 'Quick wins']}
+              />
             </div>
 
             {/* Info box */}
@@ -251,8 +258,8 @@ export default function DashboardPage() {
                 <div>
                   <h4 className="font-semibold text-primary mb-2">Marketing & Communication</h4>
                   <div className="text-sm text-text-secondary space-y-1">
-                    <p>&#8226; 5 outils disponibles</p>
-                    <p>&#8226; Contenu, strategie, veille, concurrence et performance</p>
+                    <p>&#8226; 6 outils disponibles</p>
+                    <p>&#8226; Contenu, strategie, veille, concurrence, performance et SEO</p>
                     <p>&#8226; Scraping et analyse IA en temps reel</p>
                   </div>
                 </div>
@@ -277,7 +284,7 @@ export default function DashboardPage() {
                 <span className="text-3xl mr-3">📢</span>
                 <div className="text-left">
                   <div className="font-medium text-primary">Marketing & Communication</div>
-                  <div className="text-xs text-text-muted">5 outils disponibles</div>
+                  <div className="text-xs text-text-muted">6 outils disponibles</div>
                 </div>
               </button>
             ) : (
@@ -285,7 +292,7 @@ export default function DashboardPage() {
                 <span className="text-3xl mr-3">💼</span>
                 <div className="text-left">
                   <div className="font-medium text-primary">Recherche d&apos;emploi</div>
-                  <div className="text-xs text-text-muted">5 outils disponibles</div>
+                  <div className="text-xs text-text-muted">6 outils disponibles</div>
                 </div>
               </button>
             )}

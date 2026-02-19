@@ -28,6 +28,7 @@ const strategieRoutes = require('./routes/strategie');
 const veilleRoutes = require('./routes/veille');
 const concurrenceRoutes = require('./routes/concurrence');
 const performanceRoutes = require('./routes/performance');
+const seoRoutes = require('./routes/seo');
 
 // Création de l'application Express
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/marketing/strategie', aiRateLimiter, strategieRoutes);
 app.use('/api/marketing/veille', aiRateLimiter, veilleRoutes);
 app.use('/api/marketing/concurrence', aiRateLimiter, concurrenceRoutes);
 app.use('/api/marketing/performance', aiRateLimiter, performanceRoutes);
+app.use('/api/marketing/seo', aiRateLimiter, seoRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {

@@ -104,3 +104,18 @@ export async function analyzePerformance(metricsData) {
   if (!response.ok) throw new Error(json.error || 'Erreur analyse performance');
   return json.data;
 }
+
+/**
+ * SEO : audit complet d'un site web
+ */
+export async function auditSeo(url, maxPages = 10) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/seo/audit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, maxPages })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur audit SEO');
+  return json.data;
+}
