@@ -57,7 +57,7 @@ export default function LandingPage() {
                   </svg>
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-56 bg-surface-elevated rounded-lg shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <Link href="/solutions" className="block px-4 py-3 hover:bg-surface rounded-t-lg transition-colors">
+                  <Link href={user ? '/dashboard?tab=emploi' : '/signup'} className="block px-4 py-3 hover:bg-surface rounded-t-lg transition-colors">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">💼</span>
                       <div>
@@ -66,21 +66,30 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </Link>
-                  <div className="block px-4 py-3 opacity-40 cursor-not-allowed">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">💰</span>
-                      <div>
-                        <div className="font-semibold text-text-muted">Fiscalite & Compta</div>
-                        <div className="text-xs text-text-muted">Bientot</div>
-                      </div>
-                    </div>
-                  </div>
-                  <Link href="/dashboard?tab=marketing" className="block px-4 py-3 hover:bg-surface rounded-b-lg transition-colors">
+                  <Link href={user ? '/dashboard?tab=marketing' : '/signup'} className="block px-4 py-3 hover:bg-surface transition-colors">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">📢</span>
                       <div>
                         <div className="font-semibold text-text-primary">Marketing & Com</div>
                         <div className="text-xs text-text-muted">Contenu, strategie, veille</div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href={user ? '/dashboard?tab=fiscalite' : '/signup'} className="block px-4 py-3 hover:bg-surface transition-colors">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🏛️</span>
+                      <div>
+                        <div className="font-semibold text-text-primary">Fiscalite</div>
+                        <div className="text-xs text-text-muted">Audit, declarations, simulation</div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href={user ? '/dashboard?tab=finance' : '/signup'} className="block px-4 py-3 hover:bg-surface rounded-b-lg transition-colors">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">💰</span>
+                      <div>
+                        <div className="font-semibold text-text-primary">Finance</div>
+                        <div className="text-xs text-text-muted">Analyse, technique, trading</div>
                       </div>
                     </div>
                   </Link>
@@ -127,17 +136,17 @@ export default function LandingPage() {
 
           {/* Titre */}
           <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-5 tracking-tight">
-            Optimisez votre parcours professionnel.
+            L&apos;IA qui vous propulse.
           </h1>
 
           {/* Sous-titre */}
           <p className="text-lg text-text-secondary mb-10 max-w-xl mx-auto leading-relaxed">
-            Creez un CV, publiez votre portfolio et trouvez des offres qui vous correspondent — tout au meme endroit.
+            Emploi, marketing, fiscalite, finance — des outils IA pour chaque etape de votre parcours professionnel.
           </p>
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={user ? '/solutions' : '/signup'}>
+            <Link href={user ? '/dashboard' : '/signup'}>
               <Button variant="primary" size="lg">Commencer</Button>
             </Link>
             <a href="#outils">
@@ -146,18 +155,22 @@ export default function LandingPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 mt-14 max-w-lg mx-auto">
+          <div className="grid grid-cols-4 gap-6 mt-14 max-w-xl mx-auto">
             <div>
               <div className="text-2xl font-bold text-primary">0€</div>
               <div className="text-sm text-text-muted">Gratuit</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">5 min</div>
-              <div className="text-sm text-text-muted">Pour un CV pro</div>
+              <div className="text-2xl font-bold text-primary">4</div>
+              <div className="text-sm text-text-muted">Univers</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">3</div>
-              <div className="text-sm text-text-muted">Outils disponibles</div>
+              <div className="text-2xl font-bold text-primary">18</div>
+              <div className="text-sm text-text-muted">Outils IA</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-primary">5 min</div>
+              <div className="text-sm text-text-muted">Pour un resultat</div>
             </div>
           </div>
         </div>
@@ -169,69 +182,119 @@ export default function LandingPage() {
 
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-text-primary mb-3">
-              Choisissez votre solution
+              Choisissez votre univers
             </h2>
             <p className="text-text-secondary">
-              Trois domaines, chacun avec ses propres outils
+              Quatre domaines, 18 outils IA a votre service
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <Link href="/solutions" className="group">
-              <div className="bg-surface rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
-                <div className="text-5xl mb-4">💼</div>
-                <h3 className="text-2xl font-bold text-text-primary mb-3 group-hover:text-primary transition-colors">
+            <Link href={user ? '/dashboard?tab=emploi' : '/signup'} className="group">
+              <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
+                <div className="text-4xl mb-3">💼</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
                   Recherche d&apos;emploi
                 </h3>
-                <p className="text-text-secondary mb-6">
-                  Analysez votre profil, creez des CV et portfolios, et adaptez vos candidatures a chaque offre.
+                <p className="text-text-secondary text-sm mb-4">
+                  CV, portfolio, matching d&apos;offres et candidatures spontanees.
                 </p>
-                <div className="space-y-2 text-sm text-text-secondary">
+                <div className="space-y-1.5 text-sm text-text-secondary">
                   <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Analyseur de CV</div>
-                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Generateur de CV & Portfolio</div>
-                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Matching offres d&apos;emploi</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Optimiseur & Generateur CV</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Portfolio pro</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Matcher d&apos;offres</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Candidature spontanee</div>
                 </div>
-                <div className="mt-6 text-primary font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
-                  Acces
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-medium">5 outils</span>
+                  <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
+                    Acces
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
 
-            <div className="opacity-50 cursor-not-allowed">
-              <div className="bg-surface rounded-2xl p-8 border border-border h-full">
-                <div className="text-5xl mb-4">💰</div>
-                <h3 className="text-2xl font-bold text-text-muted mb-3">Fiscalite & Comptabilite</h3>
-                <p className="text-text-muted mb-6">Declarations, optimisation fiscale et comptabilite simplifiee.</p>
-                <div className="space-y-2 text-sm text-text-muted">
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Assistant fiscal</div>
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Gestion comptable</div>
-                  <div className="flex items-center"><span className="mr-2">&#9675;</span>Optimisation fiscale</div>
-                </div>
-                <div className="mt-6 inline-block px-4 py-2 bg-surface-elevated text-text-muted rounded-lg text-sm font-semibold">Bientot disponible</div>
-              </div>
-            </div>
-
             <Link href={user ? '/dashboard?tab=marketing' : '/signup'} className="group">
-              <div className="bg-surface rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
-                <div className="text-5xl mb-4">📢</div>
-                <h3 className="text-2xl font-bold text-text-primary mb-3 group-hover:text-primary transition-colors">
-                  Marketing & Communication
+              <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
+                <div className="text-4xl mb-3">📢</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                  Marketing & Com
                 </h3>
-                <p className="text-text-secondary mb-6">Creez du contenu, planifiez votre strategie et analysez votre marche avec l&apos;IA.</p>
-                <div className="space-y-2 text-sm text-text-secondary">
+                <p className="text-text-secondary text-sm mb-4">
+                  Contenu, strategie, veille, concurrence et performance.
+                </p>
+                <div className="space-y-1.5 text-sm text-text-secondary">
                   <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Redacteur multi-format</div>
                   <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Strategie de contenu 30j</div>
-                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Veille sectorielle IA</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Veille sectorielle</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Analyseur concurrence</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Audit SEO & Performance</div>
                 </div>
-                <div className="mt-6 text-primary font-semibold group-hover:translate-x-2 transition-transform inline-flex items-center">
-                  Acces
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-medium">7 outils</span>
+                  <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
+                    Acces
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href={user ? '/dashboard?tab=fiscalite' : '/signup'} className="group">
+              <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
+                <div className="text-4xl mb-3">🏛️</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                  Fiscalite
+                </h3>
+                <p className="text-text-secondary text-sm mb-4">
+                  Audit fiscal, declarations, calendrier et simulation de strategie.
+                </p>
+                <div className="space-y-1.5 text-sm text-text-secondary">
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Audit fiscal complet</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Assistant fiscal</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Simulateur strategie</div>
+                </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-medium">3 outils</span>
+                  <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
+                    Acces
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href={user ? '/dashboard?tab=finance' : '/signup'} className="group">
+              <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
+                <div className="text-4xl mb-3">💰</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                  Finance
+                </h3>
+                <p className="text-text-secondary text-sm mb-4">
+                  Analyse fondamentale, technique et recommandations trading.
+                </p>
+                <div className="space-y-1.5 text-sm text-text-secondary">
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Analyse fondamentale</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Analyse technique</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Bot trading IA</div>
+                </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-medium">3 outils</span>
+                  <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
+                    Acces
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </Link>
@@ -256,12 +319,12 @@ export default function LandingPage() {
             <div className="text-center">
               <div className="w-14 h-14 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-5">2</div>
               <h3 className="text-lg font-bold text-text-primary mb-2">Choisissez un outil</h3>
-              <p className="text-text-secondary text-sm">CV, portfolio ou matching selon votre besoin</p>
+              <p className="text-text-secondary text-sm">Emploi, marketing, fiscalite ou finance</p>
             </div>
             <div className="text-center">
               <div className="w-14 h-14 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-5">3</div>
               <h3 className="text-lg font-bold text-text-primary mb-2">Obtenez votre resultat</h3>
-              <p className="text-text-secondary text-sm">Un CV ou portfolio pret en quelques minutes</p>
+              <p className="text-text-secondary text-sm">Analyse, recommandations et documents en quelques minutes</p>
             </div>
           </div>
         </div>
@@ -274,7 +337,7 @@ export default function LandingPage() {
           <p className="text-text-secondary mb-7">
             Compte gratuit, aucune carte requise.
           </p>
-          <Link href={user ? '/solutions' : '/signup'}>
+          <Link href={user ? '/dashboard' : '/signup'}>
             <Button variant="primary" size="lg">Commencer</Button>
           </Link>
         </div>

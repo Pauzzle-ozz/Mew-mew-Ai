@@ -9,17 +9,21 @@ import { supabase } from '@/lib/supabase'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import ResultsDisplay from '@/components/cv/ResultsDisplay'
 import AnalyzerForm from '@/components/cv/AnalyzerForm'
+import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
+import ToolHistory from '@/components/shared/ToolHistory'
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import { saveHistoryEntry } from '@/lib/api/historyApi'
 
 export default function AnalyseCVPage() {
   const { user, loading } = useAuth()
-  const { processing, result, error, analyzeWithForm, analyzeWithPDF } = useCVAnalyzer()
+  const { processing, result, setResult, error, analyzeWithForm, analyzeWithPDF } = useCVAnalyzer()
   const router = useRouter()
 
   const [inputMethod, setInputMethod] = useState('upload') // 'upload' ou 'form'
   const [cvFile, setCvFile] = useState(null)
   const [localError, setLocalError] = useState(null)
+  const [showHistory, setShowHistory] = useState(false)
 
   const [formData, setFormData] = useState({
     prenom: '',
@@ -66,7 +70,14 @@ export default function AnalyseCVPage() {
     }
 
     try {
-      await analyzeWithPDF(cvFile, user.id)
+      const res = await analyzeWithPDF(cvFile, user.id)
+      saveHistoryEntry({
+        userId: user.id,
+        toolType: 'analyse-cv',
+        title: `Analyse CV PDF - ${cvFile.name}`,
+        inputSummary: { fichier: cvFile.name },
+        resultSummary: { metiers: res?.metiers_proposes?.slice(0, 3)?.map(m => m.intitule), fullResult: res }
+      }).catch(() => {})
     } catch (err) {
       // Erreur déjà gérée par le hook
     }
@@ -76,7 +87,14 @@ export default function AnalyseCVPage() {
     e.preventDefault()
 
     try {
-      await analyzeWithForm(formData, user.id)
+      const res = await analyzeWithForm(formData, user.id)
+      saveHistoryEntry({
+        userId: user.id,
+        toolType: 'analyse-cv',
+        title: `Analyse CV - ${formData.prenom} ${formData.nom}`,
+        inputSummary: { prenom: formData.prenom, nom: formData.nom, type_poste: formData.type_poste },
+        resultSummary: { metiers: res?.metiers_proposes?.slice(0, 3)?.map(m => m.intitule), fullResult: res }
+      }).catch(() => {})
     } catch (err) {
       // Erreur déjà gérée par le hook
     }
@@ -112,13 +130,34 @@ export default function AnalyseCVPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Info box */}
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+        {/* Info box + Historique */}
+        <div className="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
           <p className="text-sm text-primary">
             ℹ️ <strong>Comment ça marche :</strong> Upload ton CV PDF pour une analyse automatique,
             ou remplis le formulaire manuellement.
           </p>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="ml-4 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary/20 text-primary hover:bg-primary/30 cursor-pointer transition-colors whitespace-nowrap"
+          >
+            Historique
+          </button>
         </div>
+
+        {showHistory && (
+          <ToolHistory
+            userId={user.id}
+            defaultToolType="analyse-cv"
+            onClose={() => setShowHistory(false)}
+            onLoad={(entry) => {
+              const fullResult = entry.result_summary?.fullResult
+              if (fullResult) {
+                setResult(fullResult)
+                setShowHistory(false)
+              }
+            }}
+          />
+        )}
 
         {/* Résultats (si présents) */}
         {result ? (
@@ -198,13 +237,19 @@ export default function AnalyseCVPage() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={!cvFile || processing}
-                  className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {processing ? '🔄 Analyse en cours...' : '🚀 Analyser mon CV'}
-                </button>
+                {processing ? (
+                  <div className="flex justify-center py-4">
+                    <CatLoadingAnimation label="Analyse de votre CV en cours" />
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!cvFile}
+                    className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Analyser mon CV
+                  </button>
+                )}
               </form>
             )}
 

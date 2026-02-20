@@ -19,10 +19,12 @@ import CVStyleSelector from '@/components/cv/CVStyleSelector';
 import CVPreview from '@/components/cv/CVPreview';
 import CVBlockEditor from '@/components/cv/CVBlockEditor';
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
+import ToolHistory from '@/components/shared/ToolHistory';
 import Header from '@/components/shared/Header';
 
 // APIs
 import { analyzeOffer, analyzeScrapedOffer, generateComplete, extractCandidateFromCVFile } from '@/lib/api/matcherApi';
+import { saveHistoryEntry } from '@/lib/api/historyApi';
 import { cvApi } from '@/lib/api/cvApi';
 import { createApplication } from '@/lib/api/applicationsApi';
 import { downloadGeneratedCV } from '@/lib/utils/fileHelpers';
@@ -52,6 +54,9 @@ export default function MatcherOffresPage() {
   const router = useRouter();
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/'); };
+
+  // ── Historique ────────────────────────────────────────────────────
+  const [showHistory, setShowHistory] = useState(false);
 
   // ── Navigation ────────────────────────────────────────────────────
   const [matcherMode, setMatcherMode] = useState(null); // null | 'matching' | 'decouverte'
@@ -239,6 +244,15 @@ export default function MatcherOffresPage() {
       setCoverLetterResult(response.data?.coverLetter || null);
       setStep(2);
 
+      // Sauvegarde historique (fire-and-forget)
+      saveHistoryEntry({
+        userId: user.id,
+        toolType: 'matcher-offres',
+        title: `Match - ${personal.cvData?.titre_poste || 'Offre'}`,
+        inputSummary: { poste: personal.cvData?.titre_poste },
+        resultSummary: { score_matching: personal.score_matching }
+      }).catch(() => {});
+
     } catch (err) {
       setError(err.message || 'Erreur lors de l\'analyse');
     } finally {
@@ -325,15 +339,31 @@ export default function MatcherOffresPage() {
         onLogout={handleLogout}
         breadcrumbs={[{ label: 'Emploi', href: '/dashboard' }, { label: 'Matcher d\'Offres' }]}
         actions={
-          <Link
-            href="/solutions/matcher-offres/candidatures"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-sm font-medium hover:bg-pink-500/20 transition-colors"
-          >
-            <span>📋</span>
-            <span>Mes candidatures</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHistory(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 cursor-pointer transition-colors"
+            >
+              Historique
+            </button>
+            <Link
+              href="/solutions/matcher-offres/candidatures"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pink-500/10 text-pink-400 text-sm font-medium hover:bg-pink-500/20 transition-colors"
+            >
+              <span>📋</span>
+              <span>Mes candidatures</span>
+            </Link>
+          </div>
         }
       />
+
+      {showHistory && (
+        <ToolHistory
+          userId={user.id}
+          defaultToolType="matcher-offres"
+          onClose={() => setShowHistory(false)}
+        />
+      )}
 
       <div className="py-12 px-4">
         <div className="max-w-5xl mx-auto">

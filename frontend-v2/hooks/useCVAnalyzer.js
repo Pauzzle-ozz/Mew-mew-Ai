@@ -77,6 +77,7 @@ export function useCVAnalyzer() {
   return {
     processing,
     result,
+    setResult,
     error,
     analyzeWithForm,
     analyzeWithPDF,

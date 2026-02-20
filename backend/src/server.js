@@ -29,6 +29,15 @@ const veilleRoutes = require('./routes/veille');
 const concurrenceRoutes = require('./routes/concurrence');
 const performanceRoutes = require('./routes/performance');
 const seoRoutes = require('./routes/seo');
+const contentCreatorRoutes = require('./routes/contentCreator');
+const socialMediaRoutes = require('./routes/socialMedia');
+const fiscaliteAuditRoutes = require('./routes/fiscaliteAudit');
+const fiscaliteAssistantRoutes = require('./routes/fiscaliteAssistant');
+const fiscaliteSimulateurRoutes = require('./routes/fiscaliteSimulateur');
+const financeFondamentaleRoutes = require('./routes/financeFondamentale');
+const financeTechniqueRoutes = require('./routes/financeTechnique');
+const financeTradingRoutes = require('./routes/financeTrading');
+const historyRoutes = require('./routes/history');
 
 // Création de l'application Express
 const app = express();
@@ -70,6 +79,15 @@ app.use('/api/marketing/veille', aiRateLimiter, veilleRoutes);
 app.use('/api/marketing/concurrence', aiRateLimiter, concurrenceRoutes);
 app.use('/api/marketing/performance', aiRateLimiter, performanceRoutes);
 app.use('/api/marketing/seo', aiRateLimiter, seoRoutes);
+app.use('/api/marketing/createur', aiRateLimiter, contentCreatorRoutes);
+app.use('/api/social-media', socialMediaRoutes);
+app.use('/api/fiscalite/audit', aiRateLimiter, fiscaliteAuditRoutes);
+app.use('/api/fiscalite/assistant', aiRateLimiter, fiscaliteAssistantRoutes);
+app.use('/api/fiscalite/simulateur', aiRateLimiter, fiscaliteSimulateurRoutes);
+app.use('/api/finance/fondamentale', aiRateLimiter, financeFondamentaleRoutes);
+app.use('/api/finance/technique', aiRateLimiter, financeTechniqueRoutes);
+app.use('/api/finance/trading', aiRateLimiter, financeTradingRoutes);
+app.use('/api/historique', historyRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {

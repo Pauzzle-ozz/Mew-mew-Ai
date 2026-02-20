@@ -337,7 +337,20 @@ router.post('/decouvrir-offres', upload.single('cv'), async (req, res) => {
       });
     }
 
-    const result = await jobDiscoveryService.discoverJobs(cvText);
+    // Sources sélectionnées par l'utilisateur (ou défaut WTTJ + France Travail)
+    let sources = ['wttj', 'france_travail'];
+    if (req.body.sources) {
+      try {
+        sources = JSON.parse(req.body.sources);
+      } catch (_) {}
+    }
+
+    // Filtres optionnels (localisation, type de contrat)
+    const filters = {};
+    if (req.body.localisation) filters.localisation = req.body.localisation;
+    if (req.body.typeContrat) filters.typeContrat = req.body.typeContrat;
+
+    const result = await jobDiscoveryService.discoverJobs(cvText, sources, filters);
 
     console.log('✅ [MATCHER] Découverte terminée:', result.metiers?.length, 'métiers,', result.offres?.length, 'offres');
 

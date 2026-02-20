@@ -3,9 +3,17 @@ import { useState, useRef } from 'react';
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
 import { discoverJobs } from '@/lib/api/matcherApi';
 
+const JOB_SOURCES = [
+  { id: 'wttj', label: 'Welcome to the Jungle', emoji: '🌿', default: true },
+  { id: 'france_travail', label: 'France Travail', emoji: '🇫🇷', default: true },
+  { id: 'indeed', label: 'Indeed', emoji: '🔵', default: false },
+  { id: 'hellowork', label: 'HelloWork', emoji: '👋', default: false },
+  { id: 'apec', label: 'APEC (Cadres)', emoji: '🎩', default: false },
+];
+
 /**
  * OfferDiscovery — Mode découverte du matcher
- * Upload CV → Analyse IA → Affiche métiers + offres trouvées
+ * Upload CV → Choix sources → Analyse IA → Affiche métiers + offres trouvées
  * @param {Function} onSelectOffer - Callback quand l'utilisateur clique "Adapter mon CV" sur une offre
  */
 export default function OfferDiscovery({ onSelectOffer }) {
@@ -16,6 +24,11 @@ export default function OfferDiscovery({ onSelectOffer }) {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null); // { metiers, offres, niveau_experience, resume_profil }
   const [filtreMetier, setFiltreMetier] = useState('');
+  const [selectedSources, setSelectedSources] = useState(
+    JOB_SOURCES.filter(s => s.default).map(s => s.id)
+  );
+  const [localisation, setLocalisation] = useState('');
+  const [typeContrat, setTypeContrat] = useState('');
   const fileRef = useRef();
 
   const handleDrop = (e) => {
@@ -30,12 +43,25 @@ export default function OfferDiscovery({ onSelectOffer }) {
     if (file?.type === 'application/pdf') setCvFile(file);
   };
 
+  const toggleSource = (sourceId) => {
+    setSelectedSources(prev => {
+      if (prev.includes(sourceId)) {
+        if (prev.length <= 1) return prev; // Au moins 1 source
+        return prev.filter(s => s !== sourceId);
+      }
+      return [...prev, sourceId];
+    });
+  };
+
   const handleAnalyse = async () => {
-    if (!cvFile) return;
+    if (!cvFile || selectedSources.length === 0) return;
     setLoading(true);
     setError('');
     try {
-      const data = await discoverJobs(cvFile);
+      const filters = {};
+      if (localisation.trim()) filters.localisation = localisation.trim();
+      if (typeContrat) filters.typeContrat = typeContrat;
+      const data = await discoverJobs(cvFile, selectedSources, filters);
       setResult(data.data);
       setSubStep(1);
     } catch (err) {
@@ -51,7 +77,10 @@ export default function OfferDiscovery({ onSelectOffer }) {
 
   const sourceColors = {
     'WTTJ': 'text-green-400 bg-green-900/20 border-green-800',
-    'France Travail': 'text-blue-400 bg-blue-900/20 border-blue-800'
+    'France Travail': 'text-blue-400 bg-blue-900/20 border-blue-800',
+    'Indeed': 'text-purple-400 bg-purple-900/20 border-purple-800',
+    'HelloWork': 'text-orange-400 bg-orange-900/20 border-orange-800',
+    'APEC': 'text-cyan-400 bg-cyan-900/20 border-cyan-800',
   };
 
   // ── SubStep 0 : Upload CV ──────────────────────────────────────────
@@ -90,6 +119,67 @@ export default function OfferDiscovery({ onSelectOffer }) {
           )}
         </div>
 
+        {/* Sélection des sources */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+          <h3 className="text-sm font-semibold text-white mb-3">Sources de recherche</h3>
+          <div className="flex flex-wrap gap-2">
+            {JOB_SOURCES.map(source => {
+              const isSelected = selectedSources.includes(source.id);
+              return (
+                <button
+                  key={source.id}
+                  type="button"
+                  onClick={() => toggleSource(source.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-primary/15 border-primary/40 text-primary'
+                      : 'bg-slate-800 border-slate-600 text-slate-400 hover:border-slate-400'
+                  }`}
+                >
+                  <span>{source.emoji}</span>
+                  <span>{source.label}</span>
+                  {isSelected && <span className="ml-0.5">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            {selectedSources.length} source{selectedSources.length > 1 ? 's' : ''} · Au moins 1 requise
+          </p>
+        </div>
+
+        {/* Filtres : Localisation + Type de contrat */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+          <h3 className="text-sm font-semibold text-white mb-3">Filtres (optionnel)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-slate-400 mb-1 block">Localisation</label>
+              <input
+                type="text"
+                placeholder="Ex: Paris, Lyon, Toulouse..."
+                value={localisation}
+                onChange={e => setLocalisation(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-400 mb-1 block">Type de contrat</label>
+              <select
+                value={typeContrat}
+                onChange={e => setTypeContrat(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none"
+              >
+                <option value="">Tous types</option>
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="Stage">Stage</option>
+                <option value="Alternance">Alternance</option>
+                <option value="Freelance">Freelance</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {error && (
           <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 text-sm text-red-300">
             {error}
@@ -103,7 +193,7 @@ export default function OfferDiscovery({ onSelectOffer }) {
         ) : (
           <button
             onClick={handleAnalyse}
-            disabled={!cvFile}
+            disabled={!cvFile || selectedSources.length === 0}
             className="w-full py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             Analyser mon profil →

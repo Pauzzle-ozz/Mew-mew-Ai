@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import Header from '@/components/shared/Header'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
+import ToolHistory from '@/components/shared/ToolHistory'
+import { saveHistoryEntry } from '@/lib/api/historyApi'
 import CVTypeSelector from '@/components/cv/CVTypeSelector'
 import CVShapeSelector from '@/components/cv/CVShapeSelector'
 import CVStyleSelector from '@/components/cv/CVStyleSelector'
@@ -80,6 +82,7 @@ export default function OptimiseurCVPage() {
   const [cvFile, setCvFile] = useState(null)
   const [posteCible, setPosteCible] = useState('')
   const [localError, setLocalError] = useState(null)
+  const [showHistory, setShowHistory] = useState(false)
 
   // CV original (avant optim)
   const [cvDataOriginal, setCvDataOriginal] = useState(null)
@@ -139,6 +142,25 @@ export default function OptimiseurCVPage() {
     setCvDataOptimized(data.cvData_optimise)
     setProcessing(false)
     setStep(2)
+
+    // Sauvegarde historique (fire-and-forget)
+    const nom = data.cvData_optimise?.prenom || cvData.prenom || ''
+    const prenom = data.cvData_optimise?.nom || cvData.nom || ''
+    saveHistoryEntry({
+      userId: user.id,
+      toolType: 'optimiseur-cv',
+      title: `Optimisation CV - ${nom} ${prenom}`.trim(),
+      inputSummary: { poste_cible: posteCible || cvData.titre_poste, methode: inputMethod },
+      resultSummary: {
+        score_ats: data.score_ats,
+        fullResult: {
+          score_ats: data.score_ats,
+          points_forts: data.points_forts,
+          ameliorations: data.ameliorations,
+          cvData_optimise: data.cvData_optimise
+        }
+      }
+    }).catch(() => {})
   }
 
   const handleFormSubmit = async (e) => {
@@ -229,6 +251,33 @@ export default function OptimiseurCVPage() {
       <Header user={user} onLogout={handleLogout} breadcrumbs={[{ label: 'Emploi', href: '/dashboard' }, { label: 'Optimiseur CV' }]} />
 
       <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all ${step >= 3 && step <= 4 ? 'max-w-7xl' : 'max-w-4xl'}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex-1" />
+          <button
+            onClick={() => setShowHistory(true)}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer transition-colors"
+          >
+            Historique
+          </button>
+        </div>
+
+        {showHistory && (
+          <ToolHistory
+            userId={user.id}
+            defaultToolType="optimiseur-cv"
+            onClose={() => setShowHistory(false)}
+            onLoad={(entry) => {
+              const full = entry.result_summary?.fullResult
+              if (full) {
+                setOptimResult({ score_ats: full.score_ats, points_forts: full.points_forts, ameliorations: full.ameliorations })
+                setCvDataOptimized(full.cvData_optimise)
+                setStep(2)
+                setShowHistory(false)
+              }
+            }}
+          />
+        )}
+
         <Stepper current={step} />
 
         {/* ═══════════════════════════════════════

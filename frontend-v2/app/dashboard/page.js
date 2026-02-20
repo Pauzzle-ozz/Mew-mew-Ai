@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -9,7 +9,9 @@ import Logo from '@/components/shared/Logo'
 
 const CATEGORIES = [
   { id: 'emploi', label: "Recherche d'emploi", emoji: '💼' },
-  { id: 'marketing', label: 'Marketing & Com', emoji: '📢' }
+  { id: 'marketing', label: 'Marketing & Com', emoji: '📢' },
+  { id: 'fiscalite', label: 'Fiscalite', emoji: '🏛️' },
+  { id: 'finance', label: 'Finance', emoji: '💰' }
 ]
 
 /* ── Solution card helper ── */
@@ -53,12 +55,27 @@ function SolutionCard({ href, emoji, title, description, features, disabled }) {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Logo size="md" link={false} />
+        <p className="text-text-muted">Chargement...</p>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  )
+}
+
+function DashboardContent() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const initialTab = searchParams.get('tab') === 'marketing' ? 'marketing' : 'emploi'
+  const validTabs = ['emploi', 'marketing', 'fiscalite', 'finance']
+  const paramTab = searchParams.get('tab')
+  const initialTab = validTabs.includes(paramTab) ? paramTab : 'emploi'
   const [category, setCategory] = useState(initialTab)
 
   useEffect(() => {
@@ -67,7 +84,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const tab = searchParams.get('tab')
-    if (tab === 'marketing' || tab === 'emploi') {
+    if (validTabs.includes(tab)) {
       setCategory(tab)
     }
   }, [searchParams])
@@ -108,7 +125,7 @@ export default function DashboardPage() {
       <Header
         user={user}
         onLogout={handleLogout}
-        breadcrumbs={[{ label: category === 'emploi' ? "Recherche d'emploi" : 'Marketing & Com' }]}
+        breadcrumbs={[{ label: CATEGORIES.find(c => c.id === category)?.label || category }]}
       />
 
       {/* Main Content */}
@@ -135,12 +152,19 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text-primary mb-2">
-            {category === 'emploi' ? "Recherche d'emploi" : 'Marketing & Communication'}
+            {category === 'emploi' ? "Recherche d'emploi" :
+             category === 'marketing' ? 'Marketing & Communication' :
+             category === 'fiscalite' ? 'Fiscalite & Comptabilite' :
+             'Finance & Investissement'}
           </h2>
           <p className="text-text-secondary">
             {category === 'emploi'
               ? 'Optimisez votre profil et trouvez le job parfait avec nos outils IA'
-              : 'Creez du contenu, planifiez votre strategie et analysez votre marche'
+              : category === 'marketing'
+              ? 'Creez du contenu, planifiez votre strategie et analysez votre marche'
+              : category === 'fiscalite'
+              ? 'Auditez votre fiscalite, preparez vos declarations et optimisez votre strategie'
+              : 'Analysez les marches, evaluez vos investissements et optimisez votre trading'
             }
           </p>
         </div>
@@ -249,6 +273,13 @@ export default function DashboardPage() {
                 description="Analysez le SEO de votre site et obtenez des recommandations"
                 features={['Crawl automatique', 'Score par page', 'Quick wins']}
               />
+              <SolutionCard
+                href="/solutions/marketing/createur"
+                emoji="🎨"
+                title="Createur de Contenu"
+                description="Creez du contenu optimise pour 9 plateformes avec images IA"
+                features={['9 plateformes', 'Images DALL-E', 'Historique creations']}
+              />
             </div>
 
             {/* Info box */}
@@ -258,9 +289,95 @@ export default function DashboardPage() {
                 <div>
                   <h4 className="font-semibold text-primary mb-2">Marketing & Communication</h4>
                   <div className="text-sm text-text-secondary space-y-1">
-                    <p>&#8226; 6 outils disponibles</p>
+                    <p>&#8226; 7 outils disponibles</p>
                     <p>&#8226; Contenu, strategie, veille, concurrence, performance et SEO</p>
                     <p>&#8226; Scraping et analyse IA en temps reel</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══ FISCALITE ═══ */}
+        {category === 'fiscalite' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <SolutionCard
+                href="/solutions/fiscalite/audit"
+                emoji="🔍"
+                title="Audit Fiscal"
+                description="Analysez votre conformite fiscale et identifiez les optimisations"
+                features={['Score conformite', 'Optimisations chiffrees', 'References legales']}
+              />
+              <SolutionCard
+                href="/solutions/fiscalite/assistant"
+                emoji="📋"
+                title="Assistant Fiscal"
+                description="Preparez vos declarations, calendrier fiscal et controles"
+                features={['Declarations pre-remplies', 'Calendrier personnalise', 'Preparation controle']}
+              />
+              <SolutionCard
+                href="/solutions/fiscalite/simulateur"
+                emoji="🧮"
+                title="Simulateur Strategie"
+                description="Comparez les regimes fiscaux et optimisez votre remuneration"
+                features={['Comparaison statuts', 'Mix salaire/dividendes', 'Projections 5 ans']}
+              />
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-start">
+                <div className="text-3xl mr-4">&#8505;&#65039;</div>
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Fiscalite & Comptabilite</h4>
+                  <div className="text-sm text-text-secondary space-y-1">
+                    <p>&#8226; 3 outils d&apos;analyse et simulation fiscale</p>
+                    <p>&#8226; Support PDF, Excel, CSV et Google Sheets</p>
+                    <p>&#8226; References au Code General des Impots</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══ FINANCE ═══ */}
+        {category === 'finance' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <SolutionCard
+                href="/solutions/finance/fondamentale"
+                emoji="📈"
+                title="Analyse Fondamentale"
+                description="Evaluez la sante financiere d&apos;une entreprise ou actif"
+                features={['Ratios financiers', 'Analyse SWOT', 'Verdict d\'investissement']}
+              />
+              <SolutionCard
+                href="/solutions/finance/technique"
+                emoji="📉"
+                title="Analyse Technique"
+                description="Analysez les graphiques et indicateurs de marche"
+                features={['RSI, MACD, Bollinger', 'Supports & resistances', '3 horizons temporels']}
+              />
+              <SolutionCard
+                href="/solutions/finance/trading"
+                emoji="🤖"
+                title="Bot Trading"
+                description="Recommandations de trading combinees fondamentale + technique"
+                features={['Analyse complete', 'Gestion du risque', 'Analyse portefeuille']}
+              />
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-start">
+                <div className="text-3xl mr-4">&#8505;&#65039;</div>
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Finance & Investissement</h4>
+                  <div className="text-sm text-text-secondary space-y-1">
+                    <p>&#8226; Donnees de marche via Yahoo Finance</p>
+                    <p>&#8226; Actions, cryptos et ETF supportes</p>
+                    <p>&#8226; Ceci n&apos;est pas un conseil en investissement</p>
                   </div>
                 </div>
               </div>
@@ -271,31 +388,18 @@ export default function DashboardPage() {
         {/* Other universes */}
         <div className="mt-8 bg-surface rounded-xl p-6 border border-border">
           <h4 className="font-semibold text-text-primary mb-3">Decouvrez nos autres univers</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center opacity-50">
-              <span className="text-3xl mr-3">💰</span>
-              <div>
-                <div className="font-medium text-text-muted">Fiscalite & Comptabilite</div>
-                <div className="text-xs text-text-muted/70">Bientot disponible</div>
-              </div>
-            </div>
-            {category === 'emploi' ? (
-              <button onClick={() => handleCategoryChange('marketing')} className="flex items-center cursor-pointer hover:bg-surface-elevated rounded-lg p-1 -m-1 transition-colors">
-                <span className="text-3xl mr-3">📢</span>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {CATEGORIES.filter(c => c.id !== category).map(cat => (
+              <button key={cat.id} onClick={() => handleCategoryChange(cat.id)} className="flex items-center cursor-pointer hover:bg-surface-elevated rounded-lg p-1 -m-1 transition-colors">
+                <span className="text-3xl mr-3">{cat.emoji}</span>
                 <div className="text-left">
-                  <div className="font-medium text-primary">Marketing & Communication</div>
-                  <div className="text-xs text-text-muted">6 outils disponibles</div>
+                  <div className="font-medium text-primary">{cat.label}</div>
+                  <div className="text-xs text-text-muted">
+                    {cat.id === 'emploi' ? '5 outils' : cat.id === 'marketing' ? '7 outils' : cat.id === 'fiscalite' ? '3 outils' : '3 outils'} disponibles
+                  </div>
                 </div>
               </button>
-            ) : (
-              <button onClick={() => handleCategoryChange('emploi')} className="flex items-center cursor-pointer hover:bg-surface-elevated rounded-lg p-1 -m-1 transition-colors">
-                <span className="text-3xl mr-3">💼</span>
-                <div className="text-left">
-                  <div className="font-medium text-primary">Recherche d&apos;emploi</div>
-                  <div className="text-xs text-text-muted">6 outils disponibles</div>
-                </div>
-              </button>
-            )}
+            ))}
           </div>
         </div>
 

@@ -99,6 +99,29 @@ class AIService {
       ...convOptions
     });
   }
+
+  /**
+   * Generer une image via DALL-E 3
+   * @param {string} prompt - Description de l'image a generer
+   * @param {Object} options - { size, quality }
+   * @returns {Object} { url, revised_prompt }
+   */
+  async generateImage(prompt, options = {}) {
+    const { size = '1024x1024', quality = 'standard' } = options;
+
+    const response = await this.client.images.generate({
+      model: 'dall-e-3',
+      prompt,
+      size,
+      quality,
+      n: 1
+    });
+
+    return {
+      url: response.data[0].url,
+      revisedPrompt: response.data[0].revised_prompt
+    };
+  }
 }
 
 module.exports = new AIService();

@@ -119,3 +119,198 @@ export async function auditSeo(url, maxPages = 10) {
   if (!response.ok) throw new Error(json.error || 'Erreur audit SEO');
   return json.data;
 }
+
+// ═══════════════════════════════════════════
+// CREATEUR DE CONTENU
+// ═══════════════════════════════════════════
+
+/**
+ * Createur : generer du contenu depuis un brief
+ */
+export async function createContent(brief, platforms, contentType) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/generer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ brief, platforms, contentType })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur creation contenu');
+  return json.data;
+}
+
+/**
+ * Createur : recreer du contenu depuis une URL
+ */
+export async function recreateContent(url, platforms, contentType, brief) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/recreer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, platforms, contentType, brief })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur recreation contenu');
+  return json.data;
+}
+
+/**
+ * Createur : generer une image via DALL-E
+ */
+export async function generateContentImage(brief, platform, contentType) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/image`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ brief, platform, contentType })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur generation image');
+  return json.data;
+}
+
+/**
+ * Createur : sauvegarder une creation
+ */
+export async function saveCreation(data) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/sauvegarder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur sauvegarde');
+  return json.data;
+}
+
+/**
+ * Createur : recuperer l'historique des creations
+ */
+export async function getCreationHistory(userId, filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.contentType) params.set('contentType', filters.contentType);
+  if (filters.status) params.set('status', filters.status);
+  if (filters.limit) params.set('limit', filters.limit);
+  if (filters.offset) params.set('offset', filters.offset);
+
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/historique/${userId}?${params}`);
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur historique');
+  return json.data;
+}
+
+/**
+ * Createur : recuperer une creation
+ */
+export async function getCreation(creationId, userId) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/${creationId}?userId=${userId}`);
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur recuperation');
+  return json.data;
+}
+
+/**
+ * Createur : mettre a jour une creation
+ */
+export async function updateCreation(creationId, userId, updates) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/${creationId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, ...updates })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur mise a jour');
+  return json.data;
+}
+
+/**
+ * Createur : supprimer une creation
+ */
+export async function deleteCreation(creationId, userId) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/createur/${creationId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur suppression');
+  return json.data;
+}
+
+// ═══════════════════════════════════════════
+// RESEAUX SOCIAUX - CLES API & PUBLICATION
+// ═══════════════════════════════════════════
+
+/**
+ * Sauvegarder les cles API d'une plateforme
+ */
+export async function saveSocialKeys(userId, platform, credentials) {
+  const response = await fetch(`${API_BASE_URL}/api/social-media/keys`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, platform, credentials })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur sauvegarde cles');
+  return json.data;
+}
+
+/**
+ * Lister les plateformes connectees
+ */
+export async function getSocialKeys(userId) {
+  const response = await fetch(`${API_BASE_URL}/api/social-media/keys/${userId}`);
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur recuperation cles');
+  return json.data;
+}
+
+/**
+ * Supprimer les cles d'une plateforme
+ */
+export async function deleteSocialKeys(userId, platform) {
+  const response = await fetch(`${API_BASE_URL}/api/social-media/keys/${userId}/${platform}`, {
+    method: 'DELETE'
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur suppression');
+  return json.data;
+}
+
+/**
+ * Tester la connexion d'une plateforme
+ */
+export async function testSocialConnection(userId, platform) {
+  const response = await fetch(`${API_BASE_URL}/api/social-media/test`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, platform })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Test connexion echoue');
+  return json.data;
+}
+
+/**
+ * Publier du contenu sur une plateforme
+ */
+export async function publishToSocial(userId, platform, content, imageUrl) {
+  const response = await fetch(`${API_BASE_URL}/api/social-media/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, platform, content, imageUrl })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur publication');
+  return json.data;
+}

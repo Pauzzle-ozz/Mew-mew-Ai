@@ -196,10 +196,15 @@ export async function extractCandidateFromCVFile(cvFile) {
  * @param {File} cvFile - Fichier PDF du CV
  * @returns {Promise} - { metiers, offres }
  */
-export async function discoverJobs(cvFile) {
+export async function discoverJobs(cvFile, sources = [], filters = {}) {
   try {
     const formData = new FormData();
     formData.append('cv', cvFile);
+    if (sources.length > 0) {
+      formData.append('sources', JSON.stringify(sources));
+    }
+    if (filters.localisation) formData.append('localisation', filters.localisation);
+    if (filters.typeContrat) formData.append('typeContrat', filters.typeContrat);
 
     const response = await fetch(`${API_BASE_URL}/api/matcher/decouvrir-offres`, {
       method: 'POST',

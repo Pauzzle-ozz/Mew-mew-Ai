@@ -1,3 +1,5 @@
+import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
+
 export default function AnalyzerForm({ formData, onChange, onSubmit, processing }) {
   const inputStyles = "w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors";
 
@@ -145,13 +147,18 @@ export default function AnalyzerForm({ formData, onChange, onSubmit, processing 
       </div>
 
       {/* Submit button */}
-      <button
-        type="submit"
-        disabled={processing}
-        className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-      >
-        {processing ? 'Analyse en cours...' : 'Analyser mon profil'}
-      </button>
+      {processing ? (
+        <div className="flex justify-center py-4">
+          <CatLoadingAnimation label="Analyse de votre profil en cours" />
+        </div>
+      ) : (
+        <button
+          type="submit"
+          className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover font-bold text-lg transition-colors cursor-pointer"
+        >
+          Analyser mon profil
+        </button>
+      )}
     </form>
   );
 }
