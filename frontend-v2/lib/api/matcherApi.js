@@ -226,6 +226,40 @@ export async function discoverJobs(cvFile, sources = [], filters = {}) {
 }
 
 /**
+ * Adaptation rapide : CV PDF + offre structurée → CV adapté
+ * Utilisé dans le mode Découverte quand on a déjà le CV et les données de l'offre
+ * @param {File} cvFile - Fichier PDF du CV
+ * @param {Object} offer - Données de l'offre { title, company, location, contract_type, description }
+ * @param {Object} buildConfig - Config design (optionnel)
+ * @returns {Promise} - { success, data: { personalizedCV: { pdf, filename, score_matching, modifications_apportees, cvData } } }
+ */
+export async function rapidAdaptCV(cvFile, offer, buildConfig = {}) {
+  try {
+    const formData = new FormData();
+    formData.append('cv', cvFile);
+    formData.append('offer', JSON.stringify(offer));
+    formData.append('buildConfig', JSON.stringify(buildConfig));
+
+    const response = await fetch(`${API_BASE_URL}/api/matcher/adapter-rapide`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erreur lors de l\'adaptation rapide du CV');
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error('[matcherApi] Erreur adaptation rapide:', error);
+    throw error;
+  }
+}
+
+/**
  * Vérifier la santé du service matcher
  * @returns {Promise} - Status du service
  */

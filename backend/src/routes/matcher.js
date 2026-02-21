@@ -310,6 +310,85 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
 });
 
 /**
+ * Adaptation rapide depuis le mode Découverte
+ * CV PDF + données structurées de l'offre → CV adapté (sans re-scraper l'URL)
+ * POST /api/matcher/adapter-rapide
+ *
+ * Body (multipart/form-data):
+ *   cv          : fichier PDF du candidat (max 2 Mo)
+ *   offer       : JSON stringifié { title, company, location, contract_type, description }
+ *   buildConfig : JSON stringifié (optionnel) { shape, style, blockStyles }
+ */
+router.post('/adapter-rapide', upload.single('cv'), async (req, res) => {
+  try {
+    const { offer: offerRaw, buildConfig: buildConfigRaw } = req.body;
+    const cvFile = req.file;
+
+    console.log('⚡ [MATCHER] Adaptation rapide - Démarrage...');
+
+    if (!cvFile) {
+      return res.status(400).json({ success: false, error: 'Fichier CV (PDF) manquant' });
+    }
+
+    if (!offerRaw) {
+      return res.status(400).json({ success: false, error: 'Données de l\'offre manquantes' });
+    }
+
+    let offer;
+    try { offer = JSON.parse(offerRaw); } catch (_) {
+      return res.status(400).json({ success: false, error: 'Format des données de l\'offre invalide' });
+    }
+
+    if (!offer.title && !offer.description) {
+      return res.status(400).json({ success: false, error: 'Titre ou description de l\'offre obligatoire' });
+    }
+
+    let buildConfig = { shape: 'minimal_pro', style: 'ardoise', blockStyles: {} };
+    if (buildConfigRaw) {
+      try { buildConfig = { ...buildConfig, ...JSON.parse(buildConfigRaw) }; } catch (_) {}
+    }
+
+    // Étape 1 : extraction du texte du CV PDF
+    console.log('📄 [MATCHER] Extraction du texte du CV...');
+    const pdfData = await pdf(cvFile.buffer);
+    const cvText = pdfData.text;
+
+    if (!cvText || cvText.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Impossible de lire le texte du CV. Vérifiez que le PDF n\'est pas une image scannée.'
+      });
+    }
+
+    // Étape 2 : extraction du profil candidat via IA
+    console.log('🤖 [MATCHER] Extraction du profil candidat via IA...');
+    const candidate = await matcherService.extractCandidateFromPDF(cvText);
+
+    // Étape 3 : génération du CV adapté (uniquement CV personnalisé, pas de CV idéal ni lettre)
+    console.log('📝 [MATCHER] Génération du CV adapté pour:', offer.title, 'chez', offer.company);
+    const options = { generatePersonalizedCV: true, generateIdealCV: false, generateCoverLetter: false };
+    const result = await matcherService.analyzeAndGenerate(offer, candidate, options, buildConfig);
+
+    console.log('✅ [MATCHER] Adaptation rapide terminée');
+
+    res.json({ success: true, data: result });
+
+  } catch (error) {
+    console.error('❌ [MATCHER] Erreur adaptation rapide:', error.message);
+
+    if (error.status === 429) {
+      return res.status(503).json({ success: false, error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.' });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible d\'adapter le CV',
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
+  }
+});
+
+/**
  * Mode Découverte : analyser un CV et trouver des offres correspondantes
  * POST /api/matcher/decouvrir-offres
  *

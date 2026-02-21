@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef } from 'react';
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
-import { discoverJobs } from '@/lib/api/matcherApi';
+import { discoverJobs, rapidAdaptCV } from '@/lib/api/matcherApi';
+import { downloadGeneratedCV } from '@/lib/utils/fileHelpers';
 
 const JOB_SOURCES = [
   { id: 'wttj', label: 'Welcome to the Jungle', emoji: '🌿', default: true },
@@ -29,6 +30,10 @@ export default function OfferDiscovery({ onSelectOffer }) {
   );
   const [localisation, setLocalisation] = useState('');
   const [typeContrat, setTypeContrat] = useState('');
+  const [adapting, setAdapting] = useState(false);
+  const [adaptResult, setAdaptResult] = useState(null);
+  const [adaptedOffer, setAdaptedOffer] = useState(null);
+  const [adaptError, setAdaptError] = useState('');
   const fileRef = useRef();
 
   const handleDrop = (e) => {
@@ -69,6 +74,43 @@ export default function OfferDiscovery({ onSelectOffer }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdaptCV = async (offre) => {
+    if (!cvFile) return;
+    setAdaptError('');
+    setAdaptResult(null);
+    setAdapting(true);
+    setAdaptedOffer(offre);
+    setSubStep(3);
+
+    try {
+      const offer = {
+        title: offre.titre || '',
+        company: offre.entreprise || '',
+        location: offre.lieu || '',
+        contract_type: offre.contrat || '',
+        description: offre.description || `Poste de ${offre.titre || ''} chez ${offre.entreprise || ''} ${offre.lieu || ''} ${offre.contrat || ''}`.trim(),
+      };
+
+      const response = await rapidAdaptCV(cvFile, offer);
+      const personal = response.data?.personalizedCV;
+
+      if (!personal) throw new Error('L\'IA n\'a pas retourne les donnees du CV');
+
+      setAdaptResult(personal);
+    } catch (err) {
+      setAdaptError(err.message || 'Erreur lors de l\'adaptation');
+    } finally {
+      setAdapting(false);
+    }
+  };
+
+  const backToOffers = () => {
+    setSubStep(2);
+    setAdaptResult(null);
+    setAdaptedOffer(null);
+    setAdaptError('');
   };
 
   const offresFiltered = result?.offres?.filter(o =>
@@ -253,6 +295,123 @@ export default function OfferDiscovery({ onSelectOffer }) {
     );
   }
 
+  // ── SubStep 3 : Resultat adaptation rapide ─────────────────────────
+  if (subStep === 3) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <button
+            onClick={backToOffers}
+            className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1"
+          >
+            ← Retour aux offres
+          </button>
+          <h2 className="text-xl font-semibold text-white">
+            CV adapte pour {adaptedOffer?.titre || 'cette offre'}
+          </h2>
+          {adaptedOffer?.entreprise && (
+            <p className="text-sm text-slate-400 mt-1">
+              {adaptedOffer.entreprise}{adaptedOffer.lieu ? ` · ${adaptedOffer.lieu}` : ''}
+            </p>
+          )}
+        </div>
+
+        {/* Loading */}
+        {adapting && (
+          <div className="flex flex-col items-center py-12">
+            <CatLoadingAnimation label="Adaptation de votre CV en cours..." />
+            <p className="text-xs text-slate-500 mt-3">Cela prend 30 a 60 secondes</p>
+          </div>
+        )}
+
+        {/* Erreur */}
+        {adaptError && !adapting && (
+          <div className="bg-red-900/20 border border-red-800 rounded-xl p-4">
+            <p className="text-sm text-red-300">{adaptError}</p>
+            <button
+              onClick={() => handleAdaptCV(adaptedOffer)}
+              className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
+            >
+              Reessayer
+            </button>
+          </div>
+        )}
+
+        {/* Resultat */}
+        {adaptResult && !adapting && (
+          <>
+            {/* Score de matching */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="relative flex items-center justify-center">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#1e293b" strokeWidth="10" />
+                  <circle
+                    cx="60" cy="60" r="50"
+                    fill="none"
+                    stroke={adaptResult.score_matching >= 75 ? '#22c55e' : adaptResult.score_matching >= 50 ? '#f59e0b' : '#ef4444'}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(adaptResult.score_matching / 100) * 314} 314`}
+                    strokeDashoffset="78.5"
+                    style={{ transition: 'stroke-dasharray 1s ease' }}
+                  />
+                </svg>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-3xl font-bold text-white">{adaptResult.score_matching || '—'}</span>
+                  <span className="text-xs text-slate-400">/ 100</span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-500">Score de compatibilite</p>
+            </div>
+
+            {/* Modifications apportees */}
+            {adaptResult.modifications_apportees?.length > 0 && (
+              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Modifications apportees</h3>
+                <ul className="space-y-1.5">
+                  {adaptResult.modifications_apportees.map((mod, i) => (
+                    <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                      <span className="text-green-400 shrink-0 mt-0.5">→</span>
+                      <span>{mod}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Telecharger */}
+            <button
+              onClick={() => downloadGeneratedCV({ data: adaptResult })}
+              className="w-full py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all"
+            >
+              Telecharger le CV adapte
+            </button>
+
+            {/* Actions : Postuler + Retour */}
+            <div className="grid grid-cols-2 gap-3">
+              {adaptedOffer?.url ? (
+                <a
+                  href={adaptedOffer.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 rounded-xl bg-green-600 text-white font-semibold hover:brightness-110 transition-all text-center text-sm"
+                >
+                  Postuler ↗
+                </a>
+              ) : null}
+              <button
+                onClick={backToOffers}
+                className={`py-3 rounded-xl border border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white transition-colors text-sm font-medium ${!adaptedOffer?.url ? 'col-span-2' : ''}`}
+              >
+                ← Voir d'autres offres
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   // ── SubStep 2 : Liste des offres ───────────────────────────────────
   return (
     <div className="space-y-5">
@@ -332,7 +491,7 @@ export default function OfferDiscovery({ onSelectOffer }) {
                     </a>
                   )}
                   <button
-                    onClick={() => onSelectOffer(offre)}
+                    onClick={() => handleAdaptCV(offre)}
                     className="text-xs px-2 py-1 rounded-lg bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all whitespace-nowrap"
                   >
                     Adapter CV
