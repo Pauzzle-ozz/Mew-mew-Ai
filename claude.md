@@ -34,6 +34,8 @@
 
 - **Analyser leur CV** (formulaire ou PDF) et identifier les metiers correspondants
 - **Optimiser leur CV** pour les ATS (systemes de recrutement) via formulaire ou PDF
+- **Decouvrir des offres** adaptees a leur profil via scraping multi-sources (WTTJ, France Travail, Indeed, etc.)
+- **Adapter rapidement leur CV** a une offre trouvee sans re-saisir leurs informations
 - **Generer un CV PDF** a partir de donnees structurees avec 6 templates au choix
 - **Creer un portfolio professionnel** avec editeur de blocs, medias, QR code et page publique
 - **Suivre les statistiques** de leur portfolio (compteur de vues)
@@ -158,6 +160,7 @@ Mew-mew-Ai/
 |       |
 |       |-- routes/                      # Routes API (endpoints)
 |       |   |-- solutions.js             # Routes analyseur + optimiseur + generateur CV
+|       |   |-- matcher.js               # Routes matcher d'offres (decouverte, adaptation rapide)
 |       |   |-- portfolio.js             # Routes CRUD portfolios + blocs + medias
 |       |   |-- portfolioStats.js        # Route compteur de vues
 |       |   |-- contact.js               # Route envoi d'email de contact
@@ -404,9 +407,9 @@ FRONTEND (Next.js 16 - Port 3000)
       v
 BACKEND (Express 5 - Port 5000)
   |-- Routes (routes/solutions, matcher, portfolio, portfolioStats, contact)
-  |-- Services (aiService, cvService, matcherService, scraperService, portfolioService, emailService, pdfService)
+  |-- Services (aiService, cvService, matcherService, scraperService, jobDiscoveryService, portfolioService, emailService, pdfService)
   |-- Prompts (prompts/ - 13 fichiers de prompts IA)
-  |-- Templates (templateFactory + letterTemplateFactory - templates HTML)
+  |-- Templates (templateFactory + cvBuilderFactory + letterTemplateFactory - templates HTML)
       |
       |-- OpenAI SDK --> API OpenAI (GPT-4o, GPT-4.1-mini)
       |-- supabase-js --> Supabase (BDD + Storage)
@@ -451,6 +454,28 @@ BACKEND (Express 5 - Port 5000)
 7. Le portfolio est accessible sur /p/[slug] (page publique)
 8. Les visiteurs peuvent envoyer un message via le formulaire de contact
 9. Le message est envoye par email via Resend
+```
+
+### Flux de donnees : Decouverte d'offres + Adaptation rapide
+
+```
+1. Utilisateur uploade son CV PDF dans le mode Decouverte
+2. Selectionne les sources de recherche (WTTJ, France Travail, Indeed, etc.)
+3. Frontend POST /api/matcher/decouvrir-offres
+4. Backend extrait le texte du CV avec pdf-parse
+5. jobDiscoveryService.discoverJobs() analyse le CV via IA (GPT-4.1-mini)
+   - Identifie les metiers compatibles
+   - Scrape les offres sur les job boards selectionnes (Puppeteer + APIs)
+6. Frontend affiche les metiers identifies + liste des offres
+7. Utilisateur clique "Adapter CV" sur une offre
+8. Frontend POST /api/matcher/adapter-rapide avec CV PDF + donnees offre
+9. Backend extrait le profil candidat via IA (extraction depuis le CV deja uploaded)
+10. matcherService.analyzeAndGenerate() genere le CV adapte (GPT-4o)
+    - Calcule le score de matching (0-100)
+    - Liste les modifications apportees
+    - Genere le PDF via Puppeteer (template minimal_pro par defaut)
+11. Frontend affiche : score, modifications, bouton telechargement
+12. Utilisateur peut : Postuler (lien offre) ou Retour aux offres (boucle)
 ```
 
 ---
@@ -529,6 +554,29 @@ Classe `CVService` qui centralise :
 - `analyzePDF(cvText, numPages, userId)` : analyse le texte extrait du PDF via OpenAI
 - `optimizeCVForm(cvData, userId)` : optimise un CV depuis un formulaire via OpenAI
 - `optimizeCVPdf(cvText, numPages, userId)` : optimise un CV depuis un PDF via OpenAI
+
+### Backend : matcherService.js
+
+Fichier : `backend/src/services/matcherService.js`
+
+Classe `MatcherService` qui centralise le matching candidat-offre :
+- `analyzeAndGenerate(offer, candidate, options, buildConfig)` : pipeline complet d'adaptation
+  - Genere le CV personnalise (via GPT-4o, temperature 0.7)
+  - Calcule le score de matching (0-100)
+  - Liste les modifications apportees
+  - Genere le PDF via cvBuilderFactory (pas templateFactory ancien systeme)
+- `extractCandidateFromPDF(cvText)` : extrait le profil candidat depuis le texte du CV via IA (GPT-4.1-mini)
+- `formatOfferData(offer)` : formate les donnees de l'offre
+- `formatCandidateData(candidate)` : formate les donnees du candidat
+
+**Pipeline d'adaptation rapide** (utilise par `/api/matcher/adapter-rapide`) :
+1. Extraction du texte PDF (pdf-parse)
+2. Extraction du profil candidat via `extractCandidateFromPDF()`
+3. Generation du CV adapte via `analyzeAndGenerate()` avec options :
+   - `generatePersonalizedCV: true`
+   - `generateIdealCV: false`
+   - `generateCoverLetter: false`
+4. Build config par defaut : `{ shape: 'minimal_pro', style: 'ardoise' }`
 
 ### Backend : portfolioService.js
 
@@ -631,6 +679,13 @@ Fichier : `frontend-v2/postcss.config.mjs`
 - Blocs : add, update, delete, reorder
 - Medias : upload (multipart), getAll, delete
 
+**lib/api/matcherApi.js** : Toutes les methodes pour le matcher d'offres :
+- `discoverJobs(cvFile, sources, filters)` - POST `/api/matcher/decouvrir-offres`
+- `rapidAdaptCV(cvFile, offer, buildConfig)` - POST `/api/matcher/adapter-rapide` (nouveau)
+- `analyzeOffer(offerData, candidateProfile, options, buildConfig)` - POST `/api/matcher/analyser`
+- `generateComplete(cvFile, offerUrl, options, buildConfig)` - POST `/api/matcher/generer-complet`
+- `extractCandidateFromCVFile(cvFile)` - POST `/api/matcher/extraire-candidat-pdf`
+
 **Important** : Les URLs du backend sont codees en dur (`http://localhost:5000`). En production, il faudra les rendre configurables via une variable d'environnement.
 
 ### Frontend : Utilitaires
@@ -642,6 +697,62 @@ Fichier : `frontend-v2/postcss.config.mjs`
 - `base64ToBlob(base64, type)` : convertit base64 en Blob
 - `downloadFile(blob, filename)` : telecharge un fichier via un lien temporaire
 - `downloadGeneratedCV(result)` : decode le PDF base64 et le telecharge
+
+### Frontend : Composant OfferDiscovery (Mode Decouverte)
+
+Fichier : `frontend-v2/components/matcher/OfferDiscovery.jsx`
+
+Composant autonome avec **3 substeps** pour le mode Decouverte :
+
+#### SubStep 0 : Upload CV + Selection sources
+- Zone drag & drop pour le CV PDF (max 2 Mo)
+- Selection des sources de recherche (WTTJ, France Travail, Indeed, HelloWork, APEC)
+- Filtres optionnels : localisation, type de contrat
+- Appelle `discoverJobs(cvFile, sources, filters)` depuis matcherApi
+
+#### SubStep 1 : Metiers identifies
+- Affiche le resume du profil (`resume_profil`)
+- Liste les metiers identifies avec :
+  - Badge niveau (junior, confirme, senior)
+  - Titre du metier
+  - Description courte
+  - Mots-cles (max 4)
+- Bouton "Voir les offres trouvees" → SubStep 2
+
+#### SubStep 2 : Liste des offres
+- Affiche les offres scrappees depuis les job boards
+- Filtre par metier (boutons)
+- Chaque carte d'offre contient :
+  - Badge source (WTTJ, France Travail, etc.) avec couleur
+  - Type de contrat
+  - Titre de l'offre (tronque a 150 chars)
+  - Entreprise + lieu
+  - Description (2 lignes max)
+  - 2 boutons : "Voir ↗" (lien offre) + **"Adapter CV"** (nouveau)
+
+#### SubStep 3 : Resultat adaptation rapide (NOUVEAU)
+- S'affiche apres un clic sur "Adapter CV" dans SubStep 2
+- **Loading** : animation CatLoadingAnimation (30-60 secondes)
+- **Resultat** :
+  - Score de matching (cercle SVG colore : vert ≥75, orange ≥50, rouge <50)
+  - Liste des modifications apportees par l'IA
+  - Bouton "Telecharger le CV adapte"
+  - 2 boutons d'action :
+    - **"Postuler ↗"** : ouvre l'URL de l'offre dans un nouvel onglet
+    - **"← Voir d'autres offres"** : retour au SubStep 2 (boucle)
+- **Erreur** : message + bouton "Reessayer"
+
+**Handler `handleAdaptCV(offre)`** :
+1. Mappe les champs de l'offre (`titre→title`, `entreprise→company`, etc.)
+2. Appelle `rapidAdaptCV(cvFile, offer)` depuis matcherApi
+3. Stocke le resultat dans `adaptResult` (contient `pdf`, `score_matching`, `modifications_apportees`)
+4. Passe au SubStep 3
+
+**Flow en boucle** :
+- L'utilisateur peut adapter son CV a plusieurs offres sans recharger la page
+- Le CV file reste en memoire dans le composant
+- Chaque clic "Adapter CV" genere un nouveau CV adapte
+- Le bouton "Retour aux offres" permet de revenir a la liste sans perdre les resultats
 
 ---
 
@@ -931,6 +1042,78 @@ Body: { name, email, message, portfolioOwnerEmail, portfolioTitle? }
 Response: { success: true, message: "Email envoye avec succes", data: { messageId } }
 ```
 
+### Matcher d'offres
+
+#### Decouvrir des offres (mode Decouverte)
+```
+POST /api/matcher/decouvrir-offres
+Content-Type: multipart/form-data
+
+Body:
+  cv          : fichier PDF (max 2 Mo)
+  sources     : JSON array (optionnel) ["wttj", "france_travail", "indeed", "hellowork", "apec"]
+  localisation: string (optionnel) "Paris", "Lyon", etc.
+  typeContrat : string (optionnel) "CDI", "CDD", "Stage", etc.
+
+Response: {
+  success: true,
+  data: {
+    metiers: [
+      {
+        titre: string,
+        niveau: "junior" | "confirme" | "senior",
+        description_courte: string,
+        mots_cles: string[]
+      }
+    ],
+    niveau_experience: string,
+    resume_profil: string,
+    offres: [
+      {
+        titre: string,
+        entreprise: string,
+        lieu: string,
+        contrat: string,
+        url: string,
+        description: string,
+        source: "WTTJ" | "France Travail" | "Indeed" | "HelloWork" | "APEC",
+        metier_correspondant: string
+      }
+    ]
+  }
+}
+```
+
+#### Adapter rapidement le CV a une offre
+```
+POST /api/matcher/adapter-rapide
+Content-Type: multipart/form-data
+
+Body:
+  cv          : fichier PDF du candidat (max 2 Mo)
+  offer       : JSON { title, company, location, contract_type, description }
+  buildConfig : JSON (optionnel) { shape: "minimal_pro", style: "ardoise", blockStyles: {} }
+
+Response: {
+  success: true,
+  data: {
+    personalizedCV: {
+      pdf: "base64...",
+      filename: "CV_Prenom_Nom_Adapte",
+      score_matching: 85,
+      modifications_apportees: [
+        "Ajout de mots-cles techniques specifiques",
+        "Mise en avant de l'experience pertinente",
+        ...
+      ],
+      cvData: { prenom, nom, titre_poste, ... }
+    }
+  }
+}
+```
+
+**Note** : Ce endpoint permet d'adapter le CV directement depuis le mode Decouverte sans repasser par le formulaire candidat. Le CV est deja uploade, les donnees de l'offre sont deja scrappees, donc pas besoin de re-saisir ni de re-scraper.
+
 ---
 
 ## Commandes utiles
@@ -1153,7 +1336,16 @@ git commit -m "docs: mise a jour claude.md"
 
 ---
 
-**Derniere mise a jour** : Fevrier 2026
+**Derniere mise a jour** : 21 Fevrier 2026
 **Auteur** : Pauzzle-ozz
 **Licence** : MIT
 **Repository** : https://github.com/Pauzzle-ozz/Mew-mew-Ai
+
+---
+
+## Changelog
+
+### 21 Fevrier 2026
+- **Adaptation rapide du CV depuis le mode Decouverte** : Nouvel endpoint `POST /api/matcher/adapter-rapide` permettant d'adapter le CV directement depuis les resultats de decouverte sans repasser par le formulaire candidat. Flow en boucle : voir offres → adapter CV → postuler ou voir d'autres offres.
+- Ajout du substep 3 dans le composant OfferDiscovery pour afficher le score de matching, les modifications et permettre le telechargement du CV adapte.
+- Documentation complete de la nouvelle fonctionnalite dans CLAUDE.md.
