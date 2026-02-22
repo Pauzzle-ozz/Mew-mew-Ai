@@ -24,36 +24,42 @@ Structure JSON attendue :
     "linkedin": {
       "content": "",
       "hashtags": [],
-      "characterCount": 0
+      "characterCount": 0,
+      "qualityScore": 0
     },
     "instagram": {
       "content": "",
       "hashtags": [],
-      "characterCount": 0
+      "characterCount": 0,
+      "qualityScore": 0
     },
     "twitter": {
       "tweets": [],
       "hashtags": [],
-      "totalTweets": 0
+      "totalTweets": 0,
+      "qualityScore": 0
     },
     "blog": {
       "title": "",
       "metaDescription": "",
       "content": "",
       "headings": [],
-      "wordCount": 0
+      "wordCount": 0,
+      "qualityScore": 0
     },
     "video_script": {
       "hook": "",
       "script": "",
       "duration": "",
-      "visualNotes": []
+      "visualNotes": [],
+      "qualityScore": 0
     },
     "newsletter": {
       "subject": "",
       "preheader": "",
       "content": "",
-      "cta": ""
+      "cta": "",
+      "qualityScore": 0
     }
   }
 }
@@ -64,6 +70,7 @@ Consignes specifiques :
 - Pour le blog, extrait les sous-titres dans "headings"
 - Pour le script video, extrait les indications visuelles dans "visualNotes"
 - characterCount et wordCount doivent etre des nombres entiers
+- qualityScore est un entier de 0 a 100 evaluant : potentiel d'engagement (40%), adequation plateforme (30%), clarte et lisibilite (30%). Extrais-le du texte genere ou evalue-le toi-meme.
 - Le contenu doit etre conserve tel quel, sans modification ni troncature
 
 Voici le contenu a transformer :

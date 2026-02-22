@@ -37,6 +37,12 @@ REGLES CRITIQUES :
 3. Le contenu doit etre en francais
 4. Sois creatif et engageant, pas generique
 5. Chaque contenu doit servir l'objectif du brief : ${brief.objective}
+6. Ecris comme un HUMAIN, pas comme une IA. Ton texte doit sembler ecrit par un vrai community manager ou redacteur.
+7. INTERDITS : les phrases bateau type "Saviez-vous que", "Dans un monde ou", "Il est temps de", "N'attendez plus", "Decouvrez comment", "Et si je vous disais". Ces formulations sont instantanement reconnaissables comme generees par IA.
+8. Utilise un langage naturel, des expressions courantes, des tournures conversationnelles. Ose l'imparfait, les phrases courtes, les apartés.
+9. Varie la longueur et la structure des phrases. Alterne phrases courtes et longues. Evite les enumerations systematiques a puces.
+10. Sois specifique et concret plutot que vague et generique. Donne des exemples, des chiffres, des anecdotes quand c'est pertinent.
+11. Pour chaque plateforme, evalue la QUALITE du contenu genere sur un score de 0 a 100 selon : potentiel d'engagement (40%), adequation a la plateforme (30%), clarte et lisibilite (30%). Indique ce score clairement apres le contenu.
 
 Pour chaque plateforme, genere le contenu complet en le separant clairement avec le nom de la plateforme en titre.`;
 }

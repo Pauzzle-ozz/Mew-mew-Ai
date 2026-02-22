@@ -16,6 +16,36 @@ export async function generateContent(brief, platforms) {
 }
 
 /**
+ * Regenerer le contenu pour une seule plateforme
+ */
+export async function regeneratePlatform(brief, platform) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/redacteur/regenerer-plateforme`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ brief, platform })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur regeneration');
+  return json.data;
+}
+
+/**
+ * Suggerer des mots-cles IA a partir du sujet
+ */
+export async function suggestKeywords(subject, targetAudience) {
+  const response = await fetch(`${API_BASE_URL}/api/marketing/redacteur/suggerer-mots-cles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ subject, targetAudience })
+  });
+
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || 'Erreur suggestion mots-cles');
+  return json.data;
+}
+
+/**
  * Generer une strategie de contenu / calendrier editorial 30 jours
  */
 export async function generateStrategy(input) {
