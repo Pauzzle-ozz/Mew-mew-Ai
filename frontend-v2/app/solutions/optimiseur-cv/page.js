@@ -11,20 +11,15 @@ import Header from '@/components/shared/Header'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import ToolHistory from '@/components/shared/ToolHistory'
 import { saveHistoryEntry } from '@/lib/api/historyApi'
-import CVTypeSelector from '@/components/cv/CVTypeSelector'
-import CVShapeSelector from '@/components/cv/CVShapeSelector'
-import CVStyleSelector from '@/components/cv/CVStyleSelector'
 import CVBlockEditor from '@/components/cv/CVBlockEditor'
 import CVPreview from '@/components/cv/CVPreview'
-import { CV_PRESETS } from '@/lib/constants/cvBuilder'
 
 /* ─── Stepper ─────────────────────────────────────────── */
 const STEPS = [
   { n: 1, label: 'Saisie & Optimisation' },
   { n: 2, label: 'Résultats IA' },
-  { n: 3, label: 'Type + Mise en page' },
-  { n: 4, label: 'Édition CV' },
-  { n: 5, label: 'Génération PDF' },
+  { n: 3, label: 'Édition CV' },
+  { n: 4, label: 'Génération PDF' },
 ]
 
 function Stepper({ current }) {
@@ -101,21 +96,16 @@ export default function OptimiseurCVPage() {
   const [cvDataOptimized, setCvDataOptimized] = useState(null)
   const [showComparison, setShowComparison] = useState(false)
 
-  // Étape 3 : type + mise en page + style
-  const [selectedType, setSelectedType] = useState(null)
-  const [selectedShape, setSelectedShape] = useState(null)
-  const [selectedStyle, setSelectedStyle] = useState(null)
-  const [subStep, setSubStep] = useState(0)
-  const [designMode, setDesignMode] = useState('library')
-
-  // Étape 4 : blocs éditables + blockStyles + bloc actif
+  // Étape 3 : blocs éditables + blockStyles + bloc actif + filtrage IA
   const [blockStyles, setBlockStyles] = useState({})
+  const [filtering, setFiltering] = useState(false)
+  const [filterSections, setFilterSections] = useState([])
   const [activeBlock, setActiveBlock] = useState(null)
 
   const BLOCK_ORDER_DEFAULT = ['identity', 'resume', 'experiences', 'formations', 'competences']
   const [blockOrder, setBlockOrder] = useState(BLOCK_ORDER_DEFAULT)
 
-  // Étape 5 : génération + aperçu résultat
+  // Étape 4 : génération + aperçu résultat
   const [generatingCV, setGeneratingCV] = useState(false)
   const [generatedConfig, setGeneratedConfig] = useState(null)
 
@@ -190,21 +180,7 @@ export default function OptimiseurCVPage() {
     } catch (err) { setProcessing(false); setLocalError(err.message) }
   }
 
-  /* ── Étape 3 : sélection type/shape/style ── */
-  const handleSelectType = (type) => {
-    setSelectedType(type)
-    if (!selectedShape) setSelectedShape({ id: type.defaultShape })
-    if (!selectedStyle) setSelectedStyle({ id: type.defaultStyle })
-  }
-
-  const handleSelectPreset = (preset) => {
-    setSelectedShape({ id: preset.shape })
-    setSelectedStyle({ id: preset.style })
-  }
-
-  const canProceedStep3 = selectedShape && selectedStyle
-
-  /* ── Étape 4 : réordonnancement des blocs ── */
+  /* ── Étape 3 : réordonnancement des blocs ── */
   const moveBlock = (key, dir) => {
     setBlockOrder(prev => {
       const idx = prev.indexOf(key)
@@ -230,11 +206,11 @@ export default function OptimiseurCVPage() {
     setBlockStyles(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [prop]: val } }))
   }
 
-  /* ── Étape 5 : Génération ── */
+  /* ── Étape 4 : Génération ── */
   const handleGenerateCV = async () => {
     setGeneratingCV(true); setLocalError(null)
     try {
-      const buildConfig = { shape: selectedShape?.id || 'classique', style: selectedStyle?.id || 'ocean', blockStyles }
+      const buildConfig = { shape: 'classique', style: 'ardoise', blockStyles }
       const result = await cvApi.generateCV(cvDataOptimized, buildConfig)
       if (result.success) {
         setGeneratedConfig({ cvData: cvDataOptimized, buildConfig })
@@ -250,7 +226,7 @@ export default function OptimiseurCVPage() {
     <div className="min-h-screen bg-background">
       <Header user={user} onLogout={handleLogout} breadcrumbs={[{ label: 'Emploi', href: '/dashboard' }, { label: 'Optimiseur CV' }]} />
 
-      <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all ${step >= 3 && step <= 4 ? 'max-w-7xl' : 'max-w-4xl'}`}>
+      <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all ${step === 3 ? 'max-w-7xl' : 'max-w-4xl'}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1" />
           <button
@@ -492,136 +468,16 @@ export default function OptimiseurCVPage() {
             <div className="flex justify-between">
               <button onClick={() => setStep(1)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier</button>
               <button onClick={() => setStep(3)} className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover">
-                Construire mon CV →
+                Éditer mon CV →
               </button>
             </div>
           </div>
         )}
 
         {/* ═══════════════════════════════════════
-            ÉTAPE 3 : DESIGN — BIBLIOTHÈQUE + PERSONNALISÉ
+            ÉTAPE 3 : ÉDITEUR LIVE — GRAND CV + PANEL
         ═══════════════════════════════════════ */}
-        {step === 3 && (
-          <div>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Design de ton CV</h2>
-              <p className="text-text-muted">Choisis un style prêt-à-l'emploi ou personnalise chaque détail.</p>
-            </div>
-
-            <div className="flex gap-8 items-start">
-              <div className="flex-1 min-w-0 space-y-5">
-                <div className="flex gap-2 p-1 bg-surface rounded-lg w-fit">
-                  <button onClick={() => setDesignMode('library')}
-                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'library' ? 'bg-primary text-primary-foreground shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
-                    ✨ Bibliothèque
-                  </button>
-                  <button onClick={() => setDesignMode('custom')}
-                    className={`px-5 py-2 rounded-md text-sm font-semibold transition-all ${designMode === 'custom' ? 'bg-primary text-primary-foreground shadow-md' : 'text-text-muted hover:text-text-secondary'}`}>
-                    🎛️ Personnalisé
-                  </button>
-                </div>
-
-                {designMode === 'library' && (
-                  <div>
-                    <p className="text-xs text-text-muted mb-4">Clique sur un design pour le sélectionner, puis continue.</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      {CV_PRESETS.map(preset => {
-                        const isSelected = selectedShape?.id === preset.shape && selectedStyle?.id === preset.style
-                        return (
-                          <button key={preset.id} onClick={() => handleSelectPreset(preset)}
-                            className={`group rounded-xl border-2 overflow-hidden text-left transition-all hover:scale-[1.02] ${isSelected ? 'border-primary shadow-lg shadow-primary/20' : 'border-border hover:border-primary/40'}`}>
-                            <div className="relative overflow-hidden" style={{ height: '120px', background: '#0a0a0f' }}>
-                              <div style={{ width: '100%', height: '100%', transform: 'scale(0.95)', transformOrigin: 'top left' }}
-                                   dangerouslySetInnerHTML={{ __html: preset.preview }} />
-                              {isSelected && (
-                                <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg">✓</div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-3 bg-surface">
-                              <div className="font-semibold text-sm text-text-primary">{preset.label}</div>
-                              <div className="text-xs text-text-muted mt-0.5">{preset.desc}</div>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {designMode === 'custom' && (
-                  <div>
-                    <div className="flex items-center gap-0 mb-5">
-                      {[{ n: 0, label: 'Domaine' }, { n: 1, label: 'Mise en page' }, { n: 2, label: 'Style' }].map((s, i) => (
-                        <div key={s.n} className="flex items-center">
-                          <button onClick={() => setSubStep(s.n)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${s.n === subStep ? 'bg-primary text-primary-foreground' : s.n < subStep ? 'bg-primary/20 text-primary cursor-pointer' : 'bg-surface text-text-muted cursor-pointer hover:text-text-secondary'}`}>
-                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${s.n < subStep ? 'bg-primary/40' : s.n === subStep ? 'bg-black/15' : 'bg-border'}`}>
-                              {s.n < subStep ? '✓' : s.n + 1}
-                            </span>
-                            {s.label}
-                          </button>
-                          {i < 2 && <div className={`h-0.5 w-4 flex-shrink-0 ${s.n < subStep ? 'bg-primary/40' : 'bg-border'}`} />}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="min-h-56">
-                      {subStep === 0 && <CVTypeSelector selected={selectedType} onSelect={handleSelectType} />}
-                      {subStep === 1 && <CVShapeSelector selected={selectedShape} onSelect={setSelectedShape} />}
-                      {subStep === 2 && <CVStyleSelector selected={selectedStyle} onSelect={setSelectedStyle} />}
-                    </div>
-
-                    <div className="flex justify-between mt-5">
-                      <button onClick={() => setSubStep(p => Math.max(0, p - 1))} disabled={subStep === 0}
-                        className="px-5 py-2.5 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium disabled:opacity-30 text-sm">
-                        ← Précédent
-                      </button>
-                      {subStep < 2 ? (
-                        <button onClick={() => setSubStep(p => p + 1)}
-                          className="px-6 py-2.5 bg-primary/20 text-primary rounded-lg font-semibold hover:bg-primary/30 text-sm transition-all">
-                          Suivant →
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                )}
-
-                {(selectedShape || selectedStyle) && (
-                  <div className="bg-surface-elevated rounded-lg p-3 flex gap-4 flex-wrap text-sm border border-primary/20">
-                    {selectedType && <span><span className="text-text-muted">Domaine :</span> <strong className="text-text-primary">{selectedType.emoji} {selectedType.label}</strong></span>}
-                    {selectedShape && <span><span className="text-text-muted">Forme :</span> <strong className="text-text-primary">{selectedShape.label || selectedShape.id}</strong></span>}
-                    {selectedStyle && <span><span className="text-text-muted">Style :</span> <strong className="text-text-primary">{selectedStyle.label || selectedStyle.id}</strong></span>}
-                  </div>
-                )}
-
-                <div className="flex justify-between pt-2">
-                  <button onClick={() => setStep(2)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Retour</button>
-                  <button onClick={() => setStep(4)} disabled={!canProceedStep3}
-                    className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold disabled:opacity-50 shadow-lg shadow-primary/20 hover:bg-primary-hover">
-                    Éditer mon CV →
-                  </button>
-                </div>
-              </div>
-
-              {/* Preview sticky droite */}
-              <div className="hidden lg:block flex-shrink-0 sticky top-6">
-                <div className="text-xs font-medium text-text-muted mb-2 text-center">Aperçu en temps réel</div>
-                <CVPreview
-                  cvData={cvDataOptimized}
-                  buildConfig={{ shape: selectedShape?.id || 'classique', style: selectedStyle?.id || 'ocean', blockStyles }}
-                  scale={0.46}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════
-            ÉTAPE 4 : ÉDITEUR LIVE — GRAND CV + PANEL
-        ═══════════════════════════════════════ */}
-        {step === 4 && cvDataOptimized && (
+        {step === 3 && cvDataOptimized && (
           <div>
             <div className="mb-5">
               <h2 className="text-2xl font-bold text-text-primary mb-1">Édite ton CV</h2>
@@ -678,10 +534,57 @@ export default function OptimiseurCVPage() {
                   activeBlock={activeBlock}
                 />
 
+                {/* Filtrage IA par section */}
+                <div className="bg-surface-elevated border border-border rounded-xl p-3 space-y-2">
+                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider px-1">Condenser avec l'IA</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { id: 'resume', label: 'Résumé' },
+                      { id: 'experiences', label: 'Expériences' },
+                      { id: 'competences', label: 'Compétences' },
+                      { id: 'qualifications', label: 'Qualifications' },
+                      { id: 'formations', label: 'Formations' },
+                    ].map(s => {
+                      const active = filterSections.includes(s.id)
+                      return (
+                        <button key={s.id}
+                          onClick={() => setFilterSections(prev => active ? prev.filter(x => x !== s.id) : [...prev, s.id])}
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? 'bg-amber-500/20 text-amber-600 border-amber-500/40' : 'bg-transparent text-text-muted border-border hover:border-amber-500/30 hover:text-amber-600'}`}
+                        >{s.label}</button>
+                      )
+                    })}
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setFiltering(true)
+                      try {
+                        const res = await cvApi.filterCV(cvDataOptimized, filterSections)
+                        if (res.success && res.data) {
+                          setCvDataOptimized(res.data)
+                        }
+                      } catch (e) {
+                        console.error('Erreur filtrage:', e)
+                      } finally {
+                        setFiltering(false)
+                      }
+                    }}
+                    disabled={filtering}
+                    className="w-full px-4 py-2 bg-amber-500/10 text-amber-600 border border-amber-500/30 rounded-lg font-semibold text-sm hover:bg-amber-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {filtering
+                      ? <><CatLoadingAnimation label="" /><span>Condensation...</span></>
+                      : <><span>🔄</span><span>{filterSections.length ? `Condenser ${filterSections.length} section${filterSections.length > 1 ? 's' : ''}` : 'Tout condenser'}</span></>
+                    }
+                  </button>
+                  <p className="text-xs text-text-muted text-center opacity-60">
+                    {filterSections.length ? 'Seules les sections sélectionnées seront condensées' : 'Sélectionne des sections ou condense tout'}
+                  </p>
+                </div>
+
                 {/* Navigation */}
                 <div className="flex justify-between pt-1">
-                  <button onClick={() => setStep(3)} className="px-5 py-2.5 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium text-sm">← Retour</button>
-                  <button onClick={() => setStep(5)} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover text-sm">
+                  <button onClick={() => setStep(2)} className="px-5 py-2.5 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium text-sm">← Retour</button>
+                  <button onClick={() => setStep(4)} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover text-sm">
                     Générer PDF →
                   </button>
                 </div>
@@ -697,8 +600,9 @@ export default function OptimiseurCVPage() {
                 </div>
                 <CVPreview
                   cvData={cvDataOptimized}
-                  buildConfig={{ shape: selectedShape?.id || 'classique', style: selectedStyle?.id || 'ocean', blockStyles }}
+                  buildConfig={{ shape: 'classique', style: 'ardoise', blockStyles }}
                   scale={0.68}
+                  maxPages={2}
                   interactive
                   selectedBlock={activeBlock}
                   onBlockClick={setActiveBlock}
@@ -710,42 +614,24 @@ export default function OptimiseurCVPage() {
         )}
 
         {/* ═══════════════════════════════════════
-            ÉTAPE 5 : GÉNÉRATION PDF
+            ÉTAPE 4 : GÉNÉRATION PDF
         ═══════════════════════════════════════ */}
-        {step === 5 && cvDataOptimized && (
+        {step === 4 && cvDataOptimized && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-text-primary mb-1">Générer ton CV</h2>
               <p className="text-text-muted">Ton CV va être généré en PDF haute qualité, prêt à envoyer.</p>
             </div>
 
-            <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6">
-              <h3 className="font-bold text-text-primary mb-4">Récapitulatif</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-surface-elevated rounded-lg">
-                  <div className="text-2xl mb-1">{selectedType?.emoji || '📄'}</div>
-                  <div className="text-xs text-text-muted">Domaine</div>
-                  <div className="text-sm font-medium text-text-primary">{selectedType?.label || '—'}</div>
+            {optimResult?.score_ats && (
+              <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6 flex items-center gap-6">
+                <ATSScore score={optimResult.score_ats} />
+                <div>
+                  <h3 className="font-bold text-text-primary mb-1">Template Classique ATS</h3>
+                  <p className="text-sm text-text-muted">Optimisé pour les systèmes de recrutement automatisés.</p>
                 </div>
-                <div className="text-center p-4 bg-surface-elevated rounded-lg">
-                  <div className="text-2xl mb-1">📐</div>
-                  <div className="text-xs text-text-muted">Forme</div>
-                  <div className="text-sm font-medium text-text-primary">{selectedShape?.label || selectedShape?.id}</div>
-                </div>
-                <div className="text-center p-4 bg-surface-elevated rounded-lg">
-                  <div className="w-6 h-6 rounded-full mx-auto mb-1" style={{ background: selectedStyle?.accent }}></div>
-                  <div className="text-xs text-text-muted">Style</div>
-                  <div className="text-sm font-medium text-text-primary">{selectedStyle?.label || selectedStyle?.id}</div>
-                </div>
-                {optimResult?.score_ats && (
-                  <div className="text-center p-4 bg-surface-elevated rounded-lg">
-                    <div className="text-2xl mb-1 font-bold" style={{ color: optimResult.score_ats >= 75 ? '#22c55e' : '#f59e0b' }}>{optimResult.score_ats}</div>
-                    <div className="text-xs text-text-muted">Score ATS</div>
-                    <div className="text-sm font-medium text-text-primary">/100</div>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
 
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex gap-4">
               <div className="text-3xl">📄</div>
@@ -779,7 +665,7 @@ export default function OptimiseurCVPage() {
             )}
 
             <div className="flex justify-between">
-              <button onClick={() => setStep(4)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier les blocs</button>
+              <button onClick={() => setStep(3)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier les blocs</button>
               <div className="flex gap-3">
                 {generatedConfig && (
                   <button onClick={() => { setGeneratedConfig(null); setStep(1); setProcessing(false) }}

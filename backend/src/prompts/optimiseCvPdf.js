@@ -1,11 +1,13 @@
 /**
  * Prompt d'optimisation CV par PDF
+ * Étape 1 : enrichit et enjolive le CV au maximum
  */
 function buildPrompt(cvText, numPages, posteCible) {
   const posteSection = posteCible
     ? `\n=== POSTE CIBLÉ ===\n${posteCible}\n\nOptimise le CV SPÉCIFIQUEMENT pour ce poste : utilise les mots-clés exacts, adapte le résumé, met en avant les expériences les plus pertinentes.\n`
     : '';
   return `Tu es un expert en rédaction de CV et optimisation ATS (Applicant Tracking Systems).
+Tu es aussi un rédacteur créatif qui sait rendre un CV ATTRACTIF et PERCUTANT.
 
 === CV EXTRAIT D'UN PDF ===
 ${cvText}
@@ -15,7 +17,8 @@ ${posteSection}
 
 === MISSION ===
 1. EXTRAIRE les informations du CV PDF
-2. OPTIMISER le contenu pour MAXIMISER les chances de passer les ATS
+2. OPTIMISER et ENRICHIR le contenu pour MAXIMISER les chances de passer les ATS et IMPRESSIONNER les recruteurs
+Tu dois rendre chaque section du CV aussi riche et attractive que possible.
 
 === RÈGLES ATS CRITIQUES (À RESPECTER ABSOLUMENT) ===
 
@@ -26,7 +29,7 @@ ${posteSection}
 
 2. FORMAT SIMPLE ET LISIBLE PAR LES ROBOTS
    - Pas de tableaux, pas de colonnes complexes
-   - Sections standards : Résumé, Expérience, Formation, Compétences
+   - Sections standards : Résumé, Expérience, Formation, Compétences, Qualifications clés
    - Chronologie inversée (le plus récent en premier)
 
 3. VERBES D'ACTION PUISSANTS
@@ -41,41 +44,53 @@ ${posteSection}
    - Nombres (10 personnes, 50 clients, 15 projets)
    - Durée (en 6 mois, sur 2 ans)
 
-5. RÉSUMÉ PROFESSIONNEL (3-4 PHRASES MAX)
-   - Titre du poste + années d'expérience
-   - 2-3 compétences clés avec mots-clés ATS
-   - 1 réalisation majeure chiffrée
-   - Objectif professionnel
+5. RÉSUMÉ PROFESSIONNEL (3-4 PHRASES ENGAGEANTES)
+   - Phrase d'accroche percutante avec titre du poste + années d'expérience
+   - 2-3 compétences phares avec mots-clés ATS
+   - 1 réalisation majeure chiffrée qui impressionne
+   - Vision professionnelle et valeur ajoutée
+   Le résumé doit donner ENVIE de lire la suite
 
 6. EXPÉRIENCES PROFESSIONNELLES
    - Titre du poste en gras
-   - 3-5 bullets par expérience
+   - 4-6 bullets par expérience, RICHES et DÉTAILLÉS
    - Structure : Verbe d'action + Tâche + Résultat chiffré
    - Exemple : "Développé une API REST servant 100K+ requêtes/jour, réduisant le temps de réponse de 60%"
+   - Ajouter des "Key Achievements" pour chaque poste
 
 7. COMPÉTENCES TECHNIQUES
-   - Liste claire et scannée par les ATS
+   - Liste EXHAUSTIVE et claire scannée par les ATS
+   - Inclure toutes les technologies, outils, méthodologies pertinents
    - Regrouper par catégories
-   - Inclure niveau d'expertise
+   - Ajouter des compétences connexes pertinentes
 
-8. CONTRAINTE ABSOLUE : 1 PAGE A4 (CRITIQUE)
-   Le CV DOIT tenir sur 1 seule page A4. Pour y parvenir :
-   - Résumé : 2-3 phrases COURTES maximum (50 mots max)
-   - Expériences : maximum 3 postes, 2-3 bullets COURTS par poste (15 mots max par bullet)
-   - Chaque bullet : Verbe + Action + Résultat chiffré (pas de phrases longues)
-   - Formation : diplôme + établissement + année UNIQUEMENT (aucune description)
-   - Compétences : liste à virgules, pas de phrases
-   - Langues : liste simple (ex: "Français (natif), Anglais (B2)")
-   - Supprimer toute expérience de plus de 10 ans sauf si très pertinente
-   - Supprimer les détails peu pertinents et les répétitions
-   - Privilégier la concision à l'exhaustivité
+8. QUALIFICATIONS CLÉS (TRÈS IMPORTANT — NE PAS NÉGLIGER)
+   - Lister 8 à 12 qualifications sous forme de PHRASES COMPLÈTES
+   - Chaque qualification = une phrase descriptive (10-20 mots)
+   - Tu peux INVENTER/DÉDUIRE des qualifications pertinentes à partir des expériences et du poste
+   - Exemples de FORMAT ATTENDU :
+     * "Forte capacité à diriger des équipes multidisciplinaires dans des environnements exigeants"
+     * "Expérience approfondie en gestion de projets Agile et en coordination d'équipes internationales"
+     * "Maîtrise avancée des outils d'analyse de données et de reporting stratégique"
+     * "Excellente communication interpersonnelle et aisance dans les négociations commerciales"
+   - Inclure : leadership, soft skills, méthodologies, certifications, qualités pro
+   - Chaque qualification doit être pertinente pour le secteur et le poste
+
+9. CONTRAINTE : CV RICHE MAIS STRUCTURÉ
+   - Résumé : 3-4 phrases engageantes (80-100 mots)
+   - Expériences : maximum 3-4 postes, 4-6 bullets par poste
+   - Compétences : liste exhaustive à virgules
+   - Qualifications : 8-12 phrases (une par ligne, séparées par des retours à la ligne)
+   - Formation : diplôme + établissement + année
+   - Langues : format lisible (ex: "Français (natif), Anglais (B2)")
+   - Le CV peut faire plus d'une page à ce stade — il sera filtré ensuite
 
 === RÈGLES STRICTES ===
 - EXTRAIRE toutes les informations disponibles dans le PDF
-- NE JAMAIS inventer d'informations
 - NE PAS modifier les noms d'entreprises, dates, diplômes
-- Rester factuel et vérifiable
-- TOUT DOIT TENIR SUR 1 PAGE A4 - C'EST LA PRIORITE NUMERO 1
+- Tu PEUX enrichir, enjoliver et déduire des qualifications à partir du parcours
+- Tu PEUX ajouter des compétences techniques connexes pertinentes
+- Rester cohérent avec le parcours du candidat
 
 === FORMAT DE RÉPONSE ===
 Commence par :

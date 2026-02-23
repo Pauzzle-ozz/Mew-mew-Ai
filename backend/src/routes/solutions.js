@@ -258,4 +258,45 @@ router.post('/generer-cv', async (req, res) => {
   }
 });
 
+/**
+ * Filtrer un CV enrichi (condensation IA)
+ */
+router.post('/filtrer-cv', async (req, res) => {
+  try {
+    const { cvData, sections } = req.body;
+
+    if (!cvData || !cvData.prenom || !cvData.nom) {
+      return res.status(400).json({
+        error: 'Données CV manquantes'
+      });
+    }
+
+    console.log('🔄 [FILTRAGE] Début filtrage CV...', sections?.length ? `sections: ${sections.join(', ')}` : 'tout');
+
+    const result = await cvService.filterCV(cvData, sections);
+
+    console.log('✅ [FILTRAGE] CV filtré avec succès');
+
+    res.json({
+      success: true,
+      data: result.cvData_filtre
+    });
+
+  } catch (error) {
+    console.error('❌ [FILTRAGE] Erreur:', error.message);
+
+    if (error.status === 429) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Impossible de filtrer le CV'
+    });
+  }
+});
+
 module.exports = router;

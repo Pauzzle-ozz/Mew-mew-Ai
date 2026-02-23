@@ -138,5 +138,23 @@ export const cvApi = {
     }
 
     return response.json();
+  },
+
+  /**
+   * Filtrer/condenser un CV enrichi par l'IA
+   */
+  async filterCV(cvData, sections) {
+    const response = await fetch(`${API_BASE_URL}/filtrer-cv`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cvData, sections: sections?.length ? sections : undefined })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erreur lors du filtrage');
+    }
+
+    return response.json();
   }
 };

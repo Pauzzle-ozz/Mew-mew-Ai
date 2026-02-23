@@ -126,15 +126,17 @@ RÈGLES :
   "interets": ""
 }
 
-CONTRAINTES 1 PAGE A4 (TRES IMPORTANT) :
-- "resume" : 50 mots MAXIMUM (2-3 phrases courtes)
-- "experiences" : MAXIMUM 3 postes
-- "description" de chaque expérience : MAXIMUM 3 bullets courts séparés par des retours à la ligne, chaque bullet de 15 mots max
-- "formations" : PAS de champ "description", uniquement diplôme + établissement + date
-- "competences_techniques" : liste à virgules, pas de phrases (ex: "JavaScript, React, Node.js, Python")
-- "competences_soft" : liste à virgules (ex: "Leadership, Communication, Gestion de projet")
-- "langues" : format court (ex: "Français (natif), Anglais (B2)")
-- Si le texte source contient plus de 3 expériences, garder uniquement les 3 plus récentes/pertinentes
+CONTRAINTES CONTENU RICHE :
+- "resume" : 3-4 phrases engageantes (80-100 mots), percutant et accrocheur
+- "experiences" : garder tous les postes pertinents (3-4 max)
+- "description" de chaque expérience : 4-6 bullets détaillés séparés par des retours à la ligne, chaque bullet riche avec verbe d'action + résultat chiffré
+- "formations" : diplôme + établissement + date
+- "competences_techniques" : liste EXHAUSTIVE à virgules (ex: "JavaScript, React, Node.js, Python, Docker, AWS")
+- "competences_soft" : 8 à 12 qualifications clés sous forme de PHRASES COMPLÈTES, séparées par des RETOURS À LA LIGNE (\n). Chaque qualification = une phrase de 10-20 mots. EXEMPLE :
+  "Forte capacité à diriger des équipes multidisciplinaires dans des environnements exigeants\nExpérience approfondie en gestion de projets Agile\nExcellente communication interpersonnelle et aisance relationnelle\nMaîtrise avancée des outils d'analyse de données"
+  IMPORTANT : ne JAMAIS laisser ce champ vide, INVENTER des qualifications pertinentes si nécessaire
+- "langues" : format court à virgules (ex: "Français (natif), Anglais (B2)")
+- Le contenu doit être RICHE — il sera filtré ensuite par l'utilisateur
 
 Texte à transformer :
 ${generatedText}`;
@@ -199,6 +201,8 @@ Structure JSON attendue :
     "langues": ""
   }
 }
+
+IMPORTANT pour "competences_soft" : lister 8 à 12 qualifications clés sous forme de PHRASES COMPLÈTES séparées par des retours à la ligne (\n). Chaque qualification = une phrase de 10-20 mots. Ne JAMAIS laisser vide. INVENTER des qualifications pertinentes si nécessaire.
 
 Voici le contenu à transformer :
 

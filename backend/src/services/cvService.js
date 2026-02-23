@@ -3,6 +3,7 @@ const { buildPrompt: buildAnalyseFormPrompt } = require('../prompts/analyseCvFor
 const { buildPrompt: buildAnalysePdfPrompt } = require('../prompts/analyseCvPdf');
 const { buildPrompt: buildOptimiseFormPrompt } = require('../prompts/optimiseCvForm');
 const { buildPrompt: buildOptimisePdfPrompt } = require('../prompts/optimiseCvPdf');
+const { buildPrompt: buildFilterCvPrompt } = require('../prompts/filterCv');
 const { analysisToJSON, cvToJSON } = require('../prompts/jsonSchemas');
 
 /**
@@ -159,6 +160,22 @@ class CVService {
       points_forts: parsed.points_forts || [],
       ameliorations: parsed.ameliorations || [],
       message: 'CV optimisé avec succès (PDF)'
+    };
+  }
+  /**
+   * Filtrer un CV enrichi pour le condenser (étape 2 du pipeline)
+   */
+  async filterCV(cvData, sections) {
+    console.log('🔄 [CVService] Filtrage CV enrichi...', sections?.length ? `sections: ${sections.join(', ')}` : 'toutes sections');
+
+    const filterPrompt = buildFilterCvPrompt(cvData, sections);
+    const filtered = await aiService.generateJSON(filterPrompt, { model: 'gpt-4.1-mini' });
+
+    console.log('✅ [CVService] CV filtré avec succès');
+    return {
+      success: true,
+      cvData_filtre: filtered,
+      message: 'CV filtré avec succès'
     };
   }
 }

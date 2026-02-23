@@ -1,7 +1,7 @@
 /**
- * CV Builder Factory — Nouveau système de templates
- * 6 formes × 8 styles = combinaisons infinies
- * Support : photo (base64), borderRadius, borderStyle, bgColor par bloc
+ * CV Builder Factory — Système de templates CV
+ * Template unique : Classique ATS (professionnel, noir & blanc, 1 colonne)
+ * D'autres templates seront ajoutés ultérieurement.
  */
 
 const STYLES = {
@@ -17,62 +17,19 @@ const STYLES = {
 
 class CVBuilderFactory {
   generate(cvData, buildConfig = {}) {
-    const { shape = 'classique', style = 'ocean', blockStyles = {} } = buildConfig;
-    const s = STYLES[style] || STYLES.ocean;
-
+    const { shape = 'classique', style = 'ardoise', blockStyles = {} } = buildConfig;
+    const s = STYLES[style] || STYLES.ardoise;
     console.log(`📐 [CVBuilderFactory] shape=${shape} style=${style}`);
-
-    switch (shape) {
-      case 'deux_colonnes':  return this.deuxColonnes(cvData, s, blockStyles);
-      case 'header_bande':   return this.headerBande(cvData, s, blockStyles);
-      case 'timeline':       return this.timeline(cvData, s, blockStyles);
-      case 'encadre':        return this.encadre(cvData, s, blockStyles);
-      case 'compact':        return this.compact(cvData, s, blockStyles);
-      case 'minimal_pro':    return this.minimalPro(cvData, s, blockStyles);
-      case 'dark_premium':   return this.darkPremium(cvData, s, blockStyles);
-      default:               return this.classique(cvData, s, blockStyles);
-    }
+    return this.classique(cvData, s, blockStyles);
   }
 
-  /* =============================
-     Helpers communs
-  ============================= */
-  _blockBg(blockStyles, key, fallback = 'transparent') {
-    return (blockStyles[key] && blockStyles[key].bgColor) ? blockStyles[key].bgColor : fallback;
-  }
+  /* ── Helpers ── */
 
-  _blockRadius(blockStyles, key) {
-    const r = blockStyles[key] && blockStyles[key].borderRadius;
-    return { none: '0', small: '4pt', medium: '8pt', large: '16pt' }[r] || '0';
-  }
-
-  _blockBorder(blockStyles, key, s) {
-    const b = blockStyles[key] && blockStyles[key].borderStyle;
-    if (b === 'left_accent') return `border-left:4pt solid ${s.accent};`;
-    if (b === 'full_border') return `border:1.5pt solid ${s.lineColor};`;
-    if (b === 'shadow') return 'box-shadow:0 2pt 8pt rgba(0,0,0,0.10);';
-    return '';
-  }
-
-  _blockContainerStyle(blockStyles, key, s, defaultBg = 'transparent') {
-    const bg = this._blockBg(blockStyles, key, defaultBg);
-    const r = this._blockRadius(blockStyles, key);
-    const bdr = this._blockBorder(blockStyles, key, s);
-    const hasDeco = bg !== 'transparent' || bdr;
-    return `background:${bg}; border-radius:${r}; ${bdr} ${hasDeco ? 'padding:8pt 10pt;' : ''}`;
-  }
-
-  /**
-   * Retourne uniquement les propriétés CSS explicitement définies par l'utilisateur.
-   * À placer EN FIN de style="" pour surcharger les styles du template.
-   */
   _bso(blockStyles, key, s) {
     if (!blockStyles || !blockStyles[key]) return '';
     const bs = blockStyles[key];
     let css = '';
-    if (bs.bgColor && bs.bgColor !== 'transparent') {
-      css += `background:${bs.bgColor};padding:8pt 10pt;`;
-    }
+    if (bs.bgColor && bs.bgColor !== 'transparent') css += `background:${bs.bgColor};padding:8pt 10pt;`;
     const radMap = { small: '4pt', medium: '8pt', large: '16pt' };
     if (bs.borderRadius && radMap[bs.borderRadius]) css += `border-radius:${radMap[bs.borderRadius]};`;
     if (bs.borderStyle && bs.borderStyle !== 'none') {
@@ -83,534 +40,136 @@ class CVBuilderFactory {
     return css;
   }
 
-  _photoHTML(cvData, size = '70pt', extraStyle = 'border-radius:50%;') {
-    if (cvData.photo) {
-      return `<img src="${cvData.photo}" alt="photo" style="width:${size};height:${size};object-fit:cover;${extraStyle};display:block;" />`;
-    }
-    return `<div style="width:${size};height:${size};border-radius:50%;background:rgba(128,128,128,0.15);display:flex;align-items:center;justify-content:center;font-size:22pt;opacity:0.3;">👤</div>`;
+  _contactInfo(cvData) {
+    const parts = [];
+    if (cvData.adresse) parts.push(cvData.adresse);
+    if (cvData.email) parts.push(cvData.email);
+    if (cvData.telephone) parts.push(cvData.telephone);
+    if (cvData.linkedin) parts.push(cvData.linkedin);
+    return parts.join(' &nbsp;&bull;&nbsp; ');
   }
 
-  _expItems(experiences, s, blockStyles) {
-    if (!experiences || experiences.length === 0) return '';
+  _sectionTitle(label) {
+    return `<div style="font-size:10.5pt; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:1.5pt; margin:12pt 0 4pt 0; padding-bottom:2.5pt; border-bottom:0.75pt solid #c0c0c0;">${label}</div>`;
+  }
+
+  _skillsGrid(str) {
+    if (!str) return '';
+    const items = str.split(',').map(t => t.trim()).filter(Boolean);
+    if (!items.length) return '';
+    let html = '<table style="width:100%; border-collapse:collapse; margin-top:3pt;">';
+    for (let i = 0; i < items.length; i += 3) {
+      html += '<tr>';
+      for (let j = 0; j < 3; j++) {
+        const item = items[i + j];
+        html += item
+          ? `<td style="font-size:9pt; color:#2a2a2a; padding:2pt 4pt; line-height:1.4; width:33.33%;">&bull; ${item}</td>`
+          : '<td></td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    return html;
+  }
+
+  /** Qualifications clés + langues fusionnées en liste à puces */
+  _qualificationsList(competencesSoft, langues) {
+    const items = [];
+    if (competencesSoft) {
+      competencesSoft.split('\n').map(t => t.trim()).filter(Boolean).forEach(item => items.push(item));
+    }
+    if (langues) {
+      langues.split(',').map(t => t.trim()).filter(Boolean).forEach(lang => items.push(lang));
+    }
+    if (!items.length) return '';
+    return `<ul style="padding-left:14pt; margin:3pt 0 0 0;">${items.map(item =>
+      `<li style="font-size:9pt; color:#2a2a2a; margin-bottom:2pt; line-height:1.5;">${item}</li>`
+    ).join('')}</ul>`;
+  }
+
+  _expItems(experiences, blockStyles, s) {
+    if (!experiences || !experiences.length) return '';
     return experiences.map((exp, i) => {
       const bsoStr = this._bso(blockStyles, `exp_${i}`, s);
       return `
-        <div style="margin-bottom:9pt; padding-bottom:7pt; border-bottom:0.5pt solid ${s.lineColor}; page-break-inside:avoid; ${bsoStr}">
-          <div style="font-weight:700; font-size:10.5pt; color:${s.text}; margin-bottom:1.5pt;">${exp.poste || ''}</div>
-          <div style="font-size:9pt; color:${s.subtext}; margin-bottom:2pt;">
-            ${exp.entreprise ? `<strong style="color:${s.accent}">${exp.entreprise}</strong>` : ''}
-            ${exp.localisation ? ` &bull; ${exp.localisation}` : ''}
-            ${(exp.date_debut || exp.date_fin) ? ` &bull; <em>${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</em>` : ''}
+        <div style="margin-bottom:9pt; page-break-inside:avoid; ${bsoStr}">
+          <div style="font-weight:700; font-size:10pt; color:#1a1a1a; font-style:italic;">${exp.poste || ''}</div>
+          <div style="font-size:9pt; color:#3a3a3a; margin-bottom:2pt;">
+            ${exp.entreprise ? `<strong>${exp.entreprise}</strong>` : ''}${exp.localisation ? `, ${exp.localisation}` : ''}${(exp.date_debut || exp.date_fin) ? ` &bull; ${exp.date_debut || ''}${exp.date_fin ? ' - ' + exp.date_fin : ''}` : ''}
           </div>
-          ${exp.description ? `<div style="font-size:9pt; line-height:1.4; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
+          ${exp.description ? `<div style="font-size:9pt; line-height:1.5; color:#2a2a2a; white-space:pre-line;">${exp.description}</div>` : ''}
         </div>`;
     }).join('');
   }
 
-  _formItems(formations, s) {
-    if (!formations || formations.length === 0) return '';
+  _formItems(formations) {
+    if (!formations || !formations.length) return '';
     return formations.map(f => `
-      <div style="margin-bottom:6pt; page-break-inside:avoid;">
-        <div style="font-weight:600; font-size:10pt; color:${s.text};">${f.diplome || ''}</div>
-        <div style="font-size:9pt; color:${s.subtext};">
-          ${f.etablissement || ''}${f.localisation ? ' &bull; ' + f.localisation : ''}${(f.date_fin || f.annee) ? ' &bull; ' + (f.date_fin || f.annee) : ''}
+      <div style="margin-bottom:5pt; page-break-inside:avoid;">
+        <div style="font-size:9.5pt; color:#1a1a1a;">
+          <strong>${f.diplome || ''}</strong>${f.etablissement ? `, ${f.etablissement}` : ''}${f.localisation ? `, ${f.localisation}` : ''}${(f.date_fin || f.annee) ? ` &bull; ${f.date_fin || f.annee}` : ''}
         </div>
-        ${f.description ? `<div style="font-size:8.5pt; color:${s.subtext}; margin-top:1.5pt;">${f.description}</div>` : ''}
+        ${f.description ? `<div style="font-size:8.5pt; color:#4a4a4a; margin-top:1pt;">${f.description}</div>` : ''}
       </div>`).join('');
   }
 
-  _bulletList(str, s) {
-    if (!str) return '';
-    const items = str.split(',').map(t => t.trim()).filter(Boolean);
-    if (!items.length) return `<span style="font-size:9.5pt; color:${s.subtext};">${str}</span>`;
-    return `<ul style="padding-left:14pt; margin:0;">${items.map(item => `<li style="font-size:9.5pt; color:${s.subtext}; margin-bottom:2pt; line-height:1.4;">${item}</li>`).join('')}</ul>`;
-  }
-
-  _sectionTitle(label, s, extraCSS = '') {
-    return `<h2 style="font-size:10pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin:11pt 0 5pt 0; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight}; ${extraCSS}">${label}</h2>`;
-  }
-
-  _contactInfo(cvData, s, separator = ' &nbsp;|&nbsp; ') {
-    const parts = [];
-    if (cvData.email) parts.push(cvData.email);
-    if (cvData.telephone) parts.push(cvData.telephone);
-    if (cvData.adresse) parts.push(cvData.adresse);
-    if (cvData.linkedin) parts.push(cvData.linkedin);
-    return parts.join(separator);
-  }
-
-  _html(title, styles, body, font) {
+  _html(title, body) {
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:${font}; font-size:9.5pt; line-height:1.45; color:#1a1a1a; background:white; -webkit-font-smoothing:antialiased; }
+body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size:9.5pt; line-height:1.45; color:#1a1a1a; background:white; -webkit-font-smoothing:antialiased; }
 @page { size:A4; margin:0; }
 @media print { body { background:white; } }
-${styles}
 </style></head><body>${body}</body></html>`;
   }
 
   /* =============================
-     FORME 1 : CLASSIQUE (1 colonne)
+     TEMPLATE : CLASSIQUE ATS
+     1 colonne, professionnel, épuré
   ============================= */
   classique(cvData, s, blockStyles) {
     const body = `
-<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:14mm 18mm 12mm 18mm;">
+<div style="max-width:210mm; min-height:297mm; margin:0 auto; padding:12mm 16mm 10mm 16mm;">
 
   <!-- HEADER -->
-  <div style="text-align:center; padding-bottom:10pt; margin-bottom:14pt; border-bottom:2pt solid ${s.accent}; ${this._bso(blockStyles,'identity',s)}">
-    ${cvData.photo ? `<div style="margin-bottom:7pt; display:flex; justify-content:center;">${this._photoHTML(cvData, '58pt')}</div>` : ''}
-    <div style="font-size:22pt; font-weight:700; color:${s.text}; letter-spacing:1pt; margin-bottom:3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-    <div style="font-size:11pt; color:${s.accent}; margin-bottom:4pt; font-style:italic;">${cvData.titre_poste || ''}</div>
-    <div style="font-size:8.5pt; color:${s.subtext};">${this._contactInfo(cvData, s)}</div>
+  <div style="text-align:center; margin-bottom:8pt; ${this._bso(blockStyles, 'identity', s)}">
+    <div style="font-size:22pt; font-weight:700; color:#1a1a1a; text-transform:uppercase; letter-spacing:2.5pt; margin-bottom:3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
+    <div style="width:60%; margin:0 auto 5pt; border-bottom:0.75pt solid #c0c0c0;"></div>
+    <div style="font-size:8.5pt; color:#4a4a4a; letter-spacing:0.3pt;">${this._contactInfo(cvData)}</div>
   </div>
 
-  ${cvData.resume ? `${this._sectionTitle('Profil', s)}<div style="font-size:9.5pt; line-height:1.6; color:${s.subtext}; text-align:justify; padding-left:6pt; border-left:3pt solid ${s.accentLight}; ${this._bso(blockStyles,'resume',s)}">${cvData.resume}</div>` : ''}
-
-  ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience professionnelle', s)}${this._expItems(cvData.experiences, s, blockStyles)}` : ''}
-
-  ${cvData.formations && cvData.formations.length ? `${this._sectionTitle('Formation', s)}${this._formItems(cvData.formations, s)}` : ''}
-
-  ${(cvData.competences_techniques || cvData.competences_soft || cvData.langues) ? `
-  ${this._sectionTitle('Compétences', s)}
-  <div style="display:flex; flex-wrap:wrap; gap:8pt;">
-    ${cvData.competences_techniques ? `<div style="background:${s.accentLight}; padding:7pt 10pt; border-radius:4pt; flex:1; min-width:40%;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques, s)}</div>` : ''}
-    ${cvData.competences_soft ? `<div style="background:${s.accentLight}; padding:7pt 10pt; border-radius:4pt; flex:1; min-width:40%;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Soft skills</div>${this._bulletList(cvData.competences_soft, s)}</div>` : ''}
-    ${cvData.langues ? `<div style="background:${s.accentLight}; padding:7pt 10pt; border-radius:4pt; flex:1; min-width:40%;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues, s)}</div>` : ''}
-  </div>
+  ${cvData.resume ? `
+  ${this._sectionTitle('Résumé')}
+  <div style="font-size:9.5pt; line-height:1.6; color:#2a2a2a; text-align:justify; margin-top:3pt; ${this._bso(blockStyles, 'resume', s)}">${cvData.resume}</div>
   ` : ''}
 
-  ${cvData.interets ? `${this._sectionTitle('Centres d\'intérêt', s)}<div style="font-size:9.5pt; color:${s.subtext};">${cvData.interets}</div>` : ''}
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-
-  /* =============================
-     FORME 2 : DEUX COLONNES (sidebar gauche)
-  ============================= */
-  deuxColonnes(cvData, s, blockStyles) {
-    const sidebarBg = this._blockBg(blockStyles, 'sidebar', s.sidebarBg);
-    const sidebarColor = s.sidebarText;
-
-    const sidebar = `
-<div style="width:34%; background:${sidebarBg}; color:${sidebarColor}; padding:16mm 10mm; display:flex; flex-direction:column; gap:0;">
-
-  <!-- Photo -->
-  <div style="display:flex; justify-content:center; margin-bottom:14pt;">
-    ${this._photoHTML(cvData, '76pt', 'border-radius:50%; border:3pt solid rgba(255,255,255,0.4);')}
-  </div>
-
-  <!-- Nom + titre -->
-  <div style="text-align:center; margin-bottom:12pt; padding-bottom:8pt; border-bottom:1pt solid rgba(255,255,255,0.2);">
-    <div style="font-size:12pt; font-weight:700; color:${sidebarColor}; line-height:1.3;">${cvData.prenom || ''}<br>${cvData.nom || ''}</div>
-    <div style="font-size:8.5pt; margin-top:3pt; opacity:0.85;">${cvData.titre_poste || ''}</div>
-  </div>
-
-  <!-- Contact -->
-  <div style="margin-bottom:10pt;">
-    <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Contact</div>
-    ${cvData.email ? `<div style="font-size:8.5pt; margin-bottom:3pt; word-break:break-all;">${cvData.email}</div>` : ''}
-    ${cvData.telephone ? `<div style="font-size:8.5pt; margin-bottom:3pt;">${cvData.telephone}</div>` : ''}
-    ${cvData.adresse ? `<div style="font-size:8.5pt; margin-bottom:3pt;">${cvData.adresse}</div>` : ''}
-    ${cvData.linkedin ? `<div style="font-size:8.5pt; word-break:break-all;">${cvData.linkedin}</div>` : ''}
-  </div>
-
   ${cvData.competences_techniques ? `
-  <div style="margin-bottom:14pt;">
-    <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Compétences</div>
-    <ul style="padding-left:12pt; margin:0;">${cvData.competences_techniques.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<li style="font-size:8.5pt; margin-bottom:2pt; opacity:0.95;">${t}</li>`).join('')}</ul>
-  </div>` : ''}
+  ${this._sectionTitle('Compétences')}
+  ${this._skillsGrid(cvData.competences_techniques)}
+  ` : ''}
 
-  ${cvData.competences_soft ? `
-  <div style="margin-bottom:14pt;">
-    <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Soft Skills</div>
-    <ul style="padding-left:12pt; margin:0;">${cvData.competences_soft.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<li style="font-size:8.5pt; margin-bottom:2pt; opacity:0.95;">${t}</li>`).join('')}</ul>
-  </div>` : ''}
-
-  ${cvData.langues ? `
-  <div style="margin-bottom:14pt;">
-    <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Langues</div>
-    <ul style="padding-left:12pt; margin:0;">${cvData.langues.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<li style="font-size:8.5pt; margin-bottom:2pt; opacity:0.95;">${t}</li>`).join('')}</ul>
-  </div>` : ''}
-
-  ${cvData.interets ? `
-  <div>
-    <div style="font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:6pt; opacity:0.7;">Intérêts</div>
-    <div style="font-size:8.5pt; line-height:1.7; opacity:0.95;">${cvData.interets}</div>
-  </div>` : ''}
-</div>`;
-
-    const main = `
-<div style="width:66%; padding:16mm 14mm 14mm 12mm; overflow:hidden;">
-  ${cvData.resume ? `
-    ${this._sectionTitle('Profil', s)}
-    <div style="font-size:9.5pt; line-height:1.6; color:${s.subtext}; margin-bottom:4pt;">${cvData.resume}</div>` : ''}
+  ${(cvData.competences_soft || cvData.langues) ? `
+  ${this._sectionTitle('Qualifications clés')}
+  ${this._qualificationsList(cvData.competences_soft, cvData.langues)}
+  ` : ''}
 
   ${cvData.experiences && cvData.experiences.length ? `
-    ${this._sectionTitle('Expérience', s)}
-    ${this._expItems(cvData.experiences, s, blockStyles)}` : ''}
+  ${this._sectionTitle('Expérience professionnelle')}
+  ${this._expItems(cvData.experiences, blockStyles, s)}
+  ` : ''}
 
   ${cvData.formations && cvData.formations.length ? `
-    ${this._sectionTitle('Formation', s)}
-    ${this._formItems(cvData.formations, s)}` : ''}
+  ${this._sectionTitle('Formation')}
+  ${this._formItems(cvData.formations)}
+  ` : ''}
+
+  ${cvData.interets ? `
+  ${this._sectionTitle("Centres d'intérêt")}
+  <div style="font-size:9pt; color:#3a3a3a;">${cvData.interets}</div>
+  ` : ''}
+
 </div>`;
-
-    const body = `<div style="display:flex; height:297mm; max-height:297mm; overflow:hidden; max-width:210mm; margin:0 auto;">${sidebar}${main}</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-
-  /* =============================
-     FORME 3 : HEADER BANDE (bandeau plein)
-  ============================= */
-  headerBande(cvData, s, blockStyles) {
-    const headerBg = this._blockBg(blockStyles, 'identity', s.accent);
-    const body = `
-<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto;">
-
-  <!-- HEADER BANDE -->
-  <div style="background:${headerBg}; color:white; padding:12mm 18mm 10mm 18mm;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10pt;">
-      <div style="display:flex; align-items:flex-end; gap:10pt;">
-        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '55pt', 'border-radius:6pt; border:2pt solid rgba(255,255,255,0.35);')}</div>` : ''}
-        <div>
-          <div style="font-size:23pt; font-weight:300; letter-spacing:-0.5pt; margin-bottom:2pt;">${cvData.prenom || ''} <strong>${cvData.nom || ''}</strong></div>
-          <div style="font-size:11pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
-        </div>
-      </div>
-      <div style="text-align:right; font-size:8pt; opacity:0.85; line-height:1.7; flex-shrink:0;">
-        ${cvData.email ? `<div>${cvData.email}</div>` : ''}
-        ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
-        ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
-        ${cvData.linkedin ? `<div>${cvData.linkedin}</div>` : ''}
-      </div>
-    </div>
-    ${cvData.resume ? `<div style="margin-top:8pt; font-size:9pt; opacity:0.9; line-height:1.55; border-top:1pt solid rgba(255,255,255,0.3); padding-top:7pt;">${cvData.resume}</div>` : ''}
-  </div>
-
-  <!-- CORPS -->
-  <div style="padding:12mm 18mm 10mm 18mm;">
-    ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience professionnelle', s)}${this._expItems(cvData.experiences, s, blockStyles)}` : ''}
-    ${cvData.formations && cvData.formations.length ? `${this._sectionTitle('Formation', s)}${this._formItems(cvData.formations, s)}` : ''}
-    ${(cvData.competences_techniques || cvData.competences_soft || cvData.langues) ? `
-    ${this._sectionTitle('Compétences', s)}
-    <div style="display:flex; flex-wrap:wrap; gap:6pt;">
-      ${cvData.competences_techniques ? `<div style="background:${s.accentLight}; border-left:3pt solid ${s.accent}; padding:7pt 10pt; flex:1; min-width:45%;"><div style="font-weight:700; color:${s.accent}; font-size:8.5pt; margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques, s)}</div>` : ''}
-      ${cvData.competences_soft ? `<div style="background:${s.accentLight}; border-left:3pt solid ${s.accent}; padding:7pt 10pt; flex:1; min-width:45%;"><div style="font-weight:700; color:${s.accent}; font-size:8.5pt; margin-bottom:4pt;">Soft Skills</div>${this._bulletList(cvData.competences_soft, s)}</div>` : ''}
-      ${cvData.langues ? `<div style="background:${s.accentLight}; border-left:3pt solid ${s.accent}; padding:7pt 10pt; flex:1; min-width:45%;"><div style="font-weight:700; color:${s.accent}; font-size:8.5pt; margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues, s)}</div>` : ''}
-    </div>` : ''}
-    ${cvData.interets ? `${this._sectionTitle('Centres d\'intérêt', s)}<div style="font-size:9.5pt; color:${s.subtext};">${cvData.interets}</div>` : ''}
-  </div>
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-
-  /* =============================
-     FORME 4 : TIMELINE
-  ============================= */
-  timeline(cvData, s, blockStyles) {
-    const expTimeline = (cvData.experiences || []).map((exp, i) => {
-      const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, s);
-      return `
-<div style="display:flex; margin-bottom:14pt; page-break-inside:avoid;">
-  <div style="width:16pt; flex-shrink:0; display:flex; flex-direction:column; align-items:center;">
-    <div style="width:10pt; height:10pt; border-radius:50%; background:${s.accent}; flex-shrink:0; margin-top:3pt;"></div>
-    <div style="width:1.5pt; flex:1; background:${s.lineColor}; margin-top:3pt;"></div>
-  </div>
-  <div style="padding-left:10pt; flex:1; ${cs}">
-    <div style="font-weight:700; font-size:11pt; color:${s.text};">${exp.poste || ''}</div>
-    <div style="font-size:9.5pt; color:${s.accent}; margin-bottom:3pt;">
-      ${exp.entreprise || ''}${exp.localisation ? ' · ' + exp.localisation : ''}
-      ${(exp.date_debut || exp.date_fin) ? ` · <em style="color:${s.subtext}">${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</em>` : ''}
-    </div>
-    ${exp.description ? `<div style="font-size:9.5pt; line-height:1.5; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
-  </div>
-</div>`;
-    }).join('');
-
-    const formTimeline = (cvData.formations || []).map(f => `
-<div style="display:flex; margin-bottom:10pt; page-break-inside:avoid;">
-  <div style="width:16pt; flex-shrink:0; display:flex; flex-direction:column; align-items:center;">
-    <div style="width:8pt; height:8pt; border-radius:50%; background:${s.accentMid}; flex-shrink:0; margin-top:3pt;"></div>
-    <div style="width:1.5pt; flex:1; background:${s.lineColor}; margin-top:3pt;"></div>
-  </div>
-  <div style="padding-left:10pt; flex:1;">
-    <div style="font-weight:600; font-size:10.5pt; color:${s.text};">${f.diplome || ''}</div>
-    <div style="font-size:9.5pt; color:${s.subtext};">
-      ${f.etablissement || ''}${f.localisation ? ' · ' + f.localisation : ''}${(f.date_fin || f.annee) ? ' · ' + (f.date_fin || f.annee) : ''}
-    </div>
-  </div>
-</div>`).join('');
-
-    const body = `
-<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:14mm 18mm 12mm 18mm;">
-
-  <!-- HEADER -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12pt; padding-bottom:8pt; border-bottom:2pt solid ${s.accent};">
-    <div style="display:flex; align-items:flex-end; gap:10pt;">
-      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '50pt')}</div>` : ''}
-      <div>
-        <div style="font-size:21pt; font-weight:700; color:${s.text}; margin-bottom:2pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-        <div style="font-size:11pt; color:${s.accent}; font-style:italic;">${cvData.titre_poste || ''}</div>
-      </div>
-    </div>
-    <div style="text-align:right; font-size:8.5pt; color:${s.subtext}; line-height:1.7;">
-      ${cvData.email ? `<div>${cvData.email}</div>` : ''}
-      ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
-      ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
-    </div>
-  </div>
-
-  ${cvData.resume ? `
-  <div style="background:${s.accentLight}; border-left:3.5pt solid ${s.accent}; padding:8pt 10pt; font-size:9.5pt; line-height:1.6; color:${s.subtext}; margin-bottom:12pt;">${cvData.resume}</div>` : ''}
-
-  ${cvData.experiences && cvData.experiences.length ? `${this._sectionTitle('Expérience', s)}${expTimeline}` : ''}
-  ${cvData.formations && cvData.formations.length ? `${this._sectionTitle('Formation', s)}${formTimeline}` : ''}
-
-  ${(cvData.competences_techniques || cvData.competences_soft || cvData.langues) ? `
-  ${this._sectionTitle('Compétences', s)}
-  <div style="display:flex; flex-wrap:wrap; gap:8pt;">
-    ${cvData.competences_techniques ? `<div style="flex:2; min-width:180pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques, s)}</div>` : ''}
-    ${cvData.competences_soft ? `<div style="flex:1; min-width:130pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Soft Skills</div>${this._bulletList(cvData.competences_soft, s)}</div>` : ''}
-    ${cvData.langues ? `<div style="flex:1; min-width:100pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues, s)}</div>` : ''}
-  </div>` : ''}
-
-  ${cvData.interets ? `${this._sectionTitle('Intérêts', s)}<div style="font-size:9.5pt; color:${s.subtext};">${cvData.interets}</div>` : ''}
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-
-  /* =============================
-     FORME 5 : ENCADRÉ (sections en cartes)
-  ============================= */
-  encadre(cvData, s, blockStyles) {
-    const card = (title, content, accentLeft = true) => `
-<div style="border:1.5pt solid ${s.lineColor}; border-radius:5pt; ${accentLeft ? `border-left:3.5pt solid ${s.accent};` : ''} padding:9pt 12pt; margin-bottom:8pt; background:white; page-break-inside:avoid;">
-  <div style="font-size:9pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:5pt;">${title}</div>
-  ${content}
-</div>`;
-
-    const expCards = (cvData.experiences || []).map((exp, i) => {
-      const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, s);
-      return `
-<div style="border:1.5pt solid ${s.lineColor}; border-radius:5pt; border-left:3.5pt solid ${s.accentMid}; padding:8pt 10pt; margin-bottom:6pt; page-break-inside:avoid; ${cs}">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2pt;">
-    <div style="font-weight:700; font-size:10.5pt; color:${s.text};">${exp.poste || ''}</div>
-    ${(exp.date_debut || exp.date_fin) ? `<div style="font-size:8pt; color:${s.subtext}; font-style:italic; flex-shrink:0; margin-left:8pt;">${exp.date_debut || ''}${exp.date_fin ? ' – ' + exp.date_fin : ''}</div>` : ''}
-  </div>
-  <div style="font-size:9pt; color:${s.accent}; margin-bottom:3pt;">${exp.entreprise || ''}${exp.localisation ? ' · ' + exp.localisation : ''}</div>
-  ${exp.description ? `<div style="font-size:9pt; line-height:1.4; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
-</div>`;
-    }).join('');
-
-    const body = `
-<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:12mm 16mm 10mm 16mm;">
-
-  <!-- HEADER CARD -->
-  <div style="background:${s.accent}; color:white; border-radius:6pt; padding:12pt 16pt; margin-bottom:10pt;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-      <div style="display:flex; align-items:flex-end; gap:10pt;">
-        ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '50pt', 'border-radius:5pt; border:1.5pt solid rgba(255,255,255,0.4);')}</div>` : ''}
-        <div>
-          <div style="font-size:21pt; font-weight:700; margin-bottom:2pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-          <div style="font-size:10.5pt; opacity:0.9; font-style:italic;">${cvData.titre_poste || ''}</div>
-        </div>
-      </div>
-      <div style="text-align:right; font-size:8pt; opacity:0.85; line-height:1.7;">
-        ${cvData.email ? `<div>${cvData.email}</div>` : ''}
-        ${cvData.telephone ? `<div>${cvData.telephone}</div>` : ''}
-        ${cvData.adresse ? `<div>${cvData.adresse}</div>` : ''}
-        ${cvData.linkedin ? `<div>${cvData.linkedin}</div>` : ''}
-      </div>
-    </div>
-  </div>
-
-  ${cvData.resume ? card('Profil professionnel', `<div style="font-size:9.5pt; line-height:1.6; color:${s.subtext};">${cvData.resume}</div>`) : ''}
-
-  ${cvData.experiences && cvData.experiences.length ? `
-  <div style="font-size:9.5pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:8pt;">Expérience</div>
-  ${expCards}` : ''}
-
-  ${cvData.formations && cvData.formations.length ? card('Formation', `<div style="font-size:9.5pt; line-height:1.7; color:${s.subtext};">${this._formItems(cvData.formations, s)}</div>`) : ''}
-
-  ${(cvData.competences_techniques || cvData.competences_soft || cvData.langues) ? card('Compétences', `
-    <div style="display:flex; flex-wrap:wrap; gap:8pt;">
-      ${cvData.competences_techniques ? `<div style="flex:2; min-width:150pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques, s)}</div>` : ''}
-      ${cvData.competences_soft ? `<div style="flex:1; min-width:120pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Soft Skills</div>${this._bulletList(cvData.competences_soft, s)}</div>` : ''}
-      ${cvData.langues ? `<div style="flex:1; min-width:100pt;"><div style="font-weight:700; color:${s.accent}; font-size:9pt; margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues, s)}</div>` : ''}
-    </div>`) : ''}
-
-  ${cvData.interets ? card('Centres d\'intérêt', `<div style="font-size:9.5pt; color:${s.subtext};">${cvData.interets}</div>`) : ''}
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-
-  /* =============================
-     FORME 6 : COMPACT (2 colonnes denses)
-  ============================= */
-  compact(cvData, s, blockStyles) {
-    const expCompact = (cvData.experiences || []).map((exp, i) => `
-<div style="margin-bottom:9pt; padding-bottom:7pt; border-bottom:0.5pt solid ${s.lineColor}; page-break-inside:avoid;">
-  <div style="display:flex; justify-content:space-between;">
-    <div style="font-weight:700; font-size:10.5pt; color:${s.text};">${exp.poste || ''}</div>
-    <div style="font-size:8.5pt; color:${s.subtext}; font-style:italic; flex-shrink:0;">${(exp.date_debut || '') + (exp.date_fin ? ' – ' + exp.date_fin : '')}</div>
-  </div>
-  <div style="font-size:9pt; color:${s.accent}; margin-bottom:2pt;">${exp.entreprise || ''}${exp.localisation ? ' · ' + exp.localisation : ''}</div>
-  ${exp.description ? `<div style="font-size:9pt; line-height:1.4; color:${s.subtext}; white-space:pre-line;">${exp.description}</div>` : ''}
-</div>`).join('');
-
-    const body = `
-<div style="max-width:210mm; max-height:297mm; overflow:hidden; margin:0 auto; padding:12mm 16mm 10mm 16mm;">
-
-  <!-- HEADER COMPACT -->
-  <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:6pt; margin-bottom:11pt; border-bottom:2pt solid ${s.accent};">
-    <div style="display:flex; align-items:flex-end; gap:9pt;">
-      ${cvData.photo ? `<div style="flex-shrink:0;">${this._photoHTML(cvData, '44pt')}</div>` : ''}
-      <div>
-        <div style="font-size:19pt; font-weight:700; color:${s.text}; letter-spacing:-0.3pt;">${cvData.prenom || ''} ${cvData.nom || ''}</div>
-        <div style="font-size:10.5pt; color:${s.accent};">${cvData.titre_poste || ''}</div>
-      </div>
-    </div>
-    <div style="font-size:8pt; color:${s.subtext}; text-align:right; line-height:1.6;">
-      ${[cvData.email, cvData.telephone].filter(Boolean).join(' | ')}
-    </div>
-  </div>
-
-  <!-- DEUX COLONNES -->
-  <div style="display:flex; gap:14pt;">
-
-    <!-- Colonne gauche (60%) -->
-    <div style="flex:6;">
-      ${cvData.resume ? `
-      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Profil</div>
-      <div style="font-size:9pt; line-height:1.5; color:${s.subtext}; margin-bottom:8pt;">${cvData.resume}</div>` : ''}
-
-      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Expérience</div>
-      ${expCompact}
-    </div>
-
-    <!-- Colonne droite (40%) -->
-    <div style="flex:4; padding-left:10pt; border-left:1.5pt solid ${s.lineColor};">
-
-      ${cvData.formations && cvData.formations.length ? `
-      <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Formation</div>
-      ${this._formItems(cvData.formations, s)}` : ''}
-
-      ${cvData.competences_techniques ? `
-      <div style="margin-top:8pt;">
-        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Compétences</div>
-        ${this._bulletList(cvData.competences_techniques, s)}
-      </div>` : ''}
-
-      ${cvData.competences_soft ? `
-      <div style="margin-top:8pt;">
-        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Soft Skills</div>
-        ${this._bulletList(cvData.competences_soft, s)}
-      </div>` : ''}
-
-      ${cvData.langues ? `
-      <div style="margin-top:8pt;">
-        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Langues</div>
-        ${this._bulletList(cvData.langues, s)}
-      </div>` : ''}
-
-      ${cvData.interets ? `
-      <div style="margin-top:8pt;">
-        <div style="font-size:8pt; font-weight:700; color:${s.accent}; text-transform:uppercase; letter-spacing:1.5pt; margin-bottom:4pt; padding-bottom:2.5pt; border-bottom:1.5pt solid ${s.accentLight};">Intérêts</div>
-        <div style="font-size:9pt; color:${s.subtext}; line-height:1.5;">${cvData.interets}</div>
-      </div>` : ''}
-    </div>
-  </div>
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, s.font);
-  }
-  /* ── Minimaliste Pro ── */
-  minimalPro(cvData, s, blockStyles) {
-    const gold = s.accent;
-    const identCS = this._blockContainerStyle(blockStyles, 'identity', s, 'white');
-    const resumeCS = this._blockContainerStyle(blockStyles, 'resume', s);
-    const expItems = (cvData.experiences || []).map((exp, i) => {
-      const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, s);
-      return `<div style="${cs} display:flex;gap:14pt;margin-bottom:10pt;padding-bottom:8pt;border-bottom:0.5pt solid #f1f5f9;page-break-inside:avoid;">
-        <div style="width:68pt;flex-shrink:0;font-size:7.5pt;color:#94a3b8;padding-top:2pt;text-align:right;"><em>${exp.date_debut||''}${exp.date_fin?' – '+exp.date_fin:''}</em></div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:10pt;color:#0f172a;margin-bottom:1pt;">${exp.poste||''}</div>
-          <div style="font-size:8.5pt;color:${gold};margin-bottom:3pt;">${exp.entreprise||''}${exp.localisation?' · '+exp.localisation:''}</div>
-          ${exp.description?`<div style="font-size:8.5pt;line-height:1.5;color:#475569;white-space:pre-line;">${exp.description}</div>`:''}
-        </div>
-      </div>`;
-    }).join('');
-    const formItems = (cvData.formations || []).map(f => `<div style="display:flex;gap:16pt;margin-bottom:8pt;">
-      <div style="width:72pt;flex-shrink:0;font-size:8pt;color:#94a3b8;text-align:right;"><em>${f.date_fin||f.annee||''}</em></div>
-      <div><div style="font-weight:600;font-size:10pt;color:#0f172a;">${f.diplome||''}</div><div style="font-size:9pt;color:#64748b;">${f.etablissement||''}${f.localisation?' · '+f.localisation:''}</div></div>
-    </div>`).join('');
-    const body = `<div style="max-width:210mm;max-height:297mm;overflow:hidden;margin:0 auto;padding:18mm 22mm 16mm 22mm;background:white;">
-  <div style="${identCS} padding-bottom:14pt;margin-bottom:16pt;border-bottom:1.5pt solid ${gold};">
-    ${cvData.photo?`<div style="margin-bottom:8pt;">${this._photoHTML(cvData,'55pt','border-radius:4pt')}</div>`:''}
-    <div style="font-size:26pt;font-weight:300;color:#0f172a;letter-spacing:2pt;margin-bottom:3pt;">${cvData.prenom||''} <span style="font-weight:700;">${cvData.nom||''}</span></div>
-    <div style="font-size:11pt;color:${gold};letter-spacing:1.5pt;text-transform:uppercase;margin-bottom:7pt;">${cvData.titre_poste||''}</div>
-    <div style="font-size:8.5pt;color:#64748b;letter-spacing:0.5pt;">${[cvData.email,cvData.telephone,cvData.adresse,cvData.linkedin].filter(Boolean).join('  ·  ')}</div>
-  </div>
-  ${cvData.resume?`<div style="${resumeCS} font-size:10pt;line-height:1.8;color:#334155;margin-bottom:18pt;padding-left:10pt;border-left:2pt solid ${gold};">${cvData.resume}</div>`:''}
-  ${(cvData.experiences||[]).length?`<div style="margin-bottom:16pt;"><div style="font-size:8pt;font-weight:700;color:${gold};text-transform:uppercase;letter-spacing:2.5pt;margin-bottom:10pt;">Expérience</div>${expItems}</div>`:''}
-  ${(cvData.formations||[]).length?`<div style="margin-bottom:16pt;"><div style="font-size:8pt;font-weight:700;color:${gold};text-transform:uppercase;letter-spacing:2.5pt;margin-bottom:10pt;">Formation</div>${formItems}</div>`:''}
-  ${(cvData.competences_techniques||cvData.competences_soft||cvData.langues)?`<div>
-    <div style="font-size:8pt;font-weight:700;color:${gold};text-transform:uppercase;letter-spacing:2.5pt;margin-bottom:10pt;">Compétences</div>
-    <div style="display:flex;gap:14pt;flex-wrap:wrap;">
-      ${cvData.competences_techniques?`<div style="flex:2;min-width:130pt;"><div style="font-size:8pt;color:#94a3b8;margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques,s)}</div>`:''}
-      ${cvData.competences_soft?`<div style="flex:1;min-width:100pt;"><div style="font-size:8pt;color:#94a3b8;margin-bottom:4pt;">Soft Skills</div>${this._bulletList(cvData.competences_soft,s)}</div>`:''}
-      ${cvData.langues?`<div style="flex:1;min-width:80pt;"><div style="font-size:8pt;color:#94a3b8;margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues,s)}</div>`:''}
-    </div>
-  </div>`:''}
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, "'Helvetica Neue',Helvetica,Arial,sans-serif");
-  }
-
-  /* ── Dark Premium ── */
-  darkPremium(cvData, s, blockStyles) {
-    const gold = '#d4af37';
-    const goldMid = '#c9a227';
-    const bg = '#0f0f1a';
-    const bgCard = '#16162a';
-    const textPrimary = '#f0f0f5';
-    const textSub = '#9090a8';
-    const borderColor = '#2a2a40';
-    const expCards = (cvData.experiences || []).map((exp, i) => {
-      const cs = this._blockContainerStyle(blockStyles, `exp_${i}`, { ...s, accent: gold, lineColor: borderColor });
-      return `<div style="${cs} background:${bgCard};border:1pt solid ${borderColor};border-left:3pt solid ${gold};border-radius:4pt;padding:10pt 14pt;margin-bottom:8pt;page-break-inside:avoid;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:2pt;">
-          <div style="font-weight:700;font-size:11pt;color:${textPrimary};">${exp.poste||''}</div>
-          <div style="font-size:8.5pt;color:${gold};font-style:italic;">${exp.date_debut||''}${exp.date_fin?' – '+exp.date_fin:''}</div>
-        </div>
-        <div style="font-size:9.5pt;color:${gold};opacity:0.8;margin-bottom:4pt;">${exp.entreprise||''}${exp.localisation?' · '+exp.localisation:''}</div>
-        ${exp.description?`<div style="font-size:9pt;line-height:1.5;color:${textSub};white-space:pre-line;">${exp.description}</div>`:''}
-      </div>`;
-    }).join('');
-    const sTitle = (t) => `<div style="font-size:8pt;font-weight:700;color:${gold};text-transform:uppercase;letter-spacing:2pt;margin-bottom:10pt;padding-bottom:4pt;border-bottom:0.5pt solid ${borderColor};">${t}</div>`;
-    const body = `<div style="max-width:210mm;max-height:297mm;overflow:hidden;margin:0 auto;background:${bg};min-height:297mm;padding:16mm 18mm 14mm 18mm;">
-  <div style="padding-bottom:14pt;margin-bottom:16pt;border-bottom:1pt solid ${gold};">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12pt;">
-      <div style="display:flex;align-items:flex-end;gap:12pt;">
-        ${cvData.photo?`<div style="flex-shrink:0;">${this._photoHTML(cvData,'65pt','border-radius:4pt;border:1.5pt solid '+gold)}</div>`:''}
-        <div>
-          <div style="font-size:24pt;font-weight:700;color:${textPrimary};letter-spacing:1.5pt;margin-bottom:3pt;">${cvData.prenom||''} ${cvData.nom||''}</div>
-          <div style="font-size:11pt;color:${gold};letter-spacing:2pt;text-transform:uppercase;">${cvData.titre_poste||''}</div>
-        </div>
-      </div>
-      <div style="text-align:right;font-size:8.5pt;color:${textSub};line-height:1.8;">
-        ${[cvData.email,cvData.telephone,cvData.adresse].filter(Boolean).map(t=>`<div>${t}</div>`).join('')}
-      </div>
-    </div>
-    ${cvData.resume?`<div style="margin-top:10pt;font-size:9.5pt;color:${textSub};line-height:1.7;border-left:3pt solid ${gold};padding-left:10pt;">${cvData.resume}</div>`:''}
-  </div>
-  ${(cvData.experiences||[]).length?`<div style="margin-bottom:16pt;">${sTitle('Expérience')}${expCards}</div>`:''}
-  ${(cvData.formations||[]).length?`<div style="margin-bottom:16pt;">${sTitle('Formation')}<div style="background:${bgCard};border:1pt solid ${borderColor};border-radius:4pt;padding:10pt 14pt;">${this._formItems(cvData.formations,{...s,text:textPrimary,subtext:textSub,accent:gold})}</div></div>`:''}
-  ${(cvData.competences_techniques||cvData.competences_soft||cvData.langues)?`<div>${sTitle('Compétences')}<div style="display:flex;flex-wrap:wrap;gap:8pt;">
-    ${cvData.competences_techniques?`<div style="background:${bgCard};border:1pt solid ${borderColor};border-left:3pt solid ${gold};padding:8pt 12pt;border-radius:3pt;flex:2;min-width:130pt;"><div style="font-size:8pt;color:${gold};margin-bottom:4pt;">Techniques</div>${this._bulletList(cvData.competences_techniques,{...s,subtext:textSub})}</div>`:''}
-    ${cvData.competences_soft?`<div style="background:${bgCard};border:1pt solid ${borderColor};border-left:3pt solid ${goldMid};padding:8pt 12pt;border-radius:3pt;flex:1;min-width:100pt;"><div style="font-size:8pt;color:${gold};margin-bottom:4pt;">Soft Skills</div>${this._bulletList(cvData.competences_soft,{...s,subtext:textSub})}</div>`:''}
-    ${cvData.langues?`<div style="background:${bgCard};border:1pt solid ${borderColor};border-left:3pt solid ${goldMid};padding:8pt 12pt;border-radius:3pt;flex:1;min-width:80pt;"><div style="font-size:8pt;color:${gold};margin-bottom:4pt;">Langues</div>${this._bulletList(cvData.langues,{...s,subtext:textSub})}</div>`:''}
-  </div></div>`:''}
-</div>`;
-    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, '', body, "'Helvetica Neue',Helvetica,Arial,sans-serif");
+    return this._html(`CV - ${cvData.prenom} ${cvData.nom}`, body);
   }
 }
 
