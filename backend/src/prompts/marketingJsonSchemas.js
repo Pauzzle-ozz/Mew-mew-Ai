@@ -4,86 +4,11 @@
  */
 
 /**
- * Conversion contenu multi-format → JSON structure
- * Utilise par redacteurMultiFormat
- */
-function multiFormatContentToJSON(generatedText) {
-  return `Tu vas recevoir du contenu marketing genere pour plusieurs plateformes.
-
-Ta mission est de transformer ce contenu en JSON STRICT.
-
-Regles obligatoires :
-- Reponds UNIQUEMENT avec du JSON valide
-- Aucun texte explicatif, aucun Markdown
-- Toutes les cles doivent etre presentes meme si certaines valeurs sont vides
-
-Structure JSON attendue :
-
-{
-  "platforms": {
-    "linkedin": {
-      "content": "",
-      "hashtags": [],
-      "characterCount": 0,
-      "qualityScore": 0
-    },
-    "instagram": {
-      "content": "",
-      "hashtags": [],
-      "characterCount": 0,
-      "qualityScore": 0
-    },
-    "twitter": {
-      "tweets": [],
-      "hashtags": [],
-      "totalTweets": 0,
-      "qualityScore": 0
-    },
-    "blog": {
-      "title": "",
-      "metaDescription": "",
-      "content": "",
-      "headings": [],
-      "wordCount": 0,
-      "qualityScore": 0
-    },
-    "video_script": {
-      "hook": "",
-      "script": "",
-      "duration": "",
-      "visualNotes": [],
-      "qualityScore": 0
-    },
-    "newsletter": {
-      "subject": "",
-      "preheader": "",
-      "content": "",
-      "cta": "",
-      "qualityScore": 0
-    }
-  }
-}
-
-Consignes specifiques :
-- N'inclus QUE les plateformes presentes dans le texte genere (ignore les autres)
-- Pour Twitter, separe chaque tweet du thread dans le tableau "tweets"
-- Pour le blog, extrait les sous-titres dans "headings"
-- Pour le script video, extrait les indications visuelles dans "visualNotes"
-- characterCount et wordCount doivent etre des nombres entiers
-- qualityScore est un entier de 0 a 100 evaluant : potentiel d'engagement (40%), adequation plateforme (30%), clarte et lisibilite (30%). Extrais-le du texte genere ou evalue-le toi-meme.
-- Le contenu doit etre conserve tel quel, sans modification ni troncature
-
-Voici le contenu a transformer :
-
-${generatedText}`;
-}
-
-/**
  * Conversion strategie de contenu → JSON structure
  * Utilise par strategieContenu
  */
 function contentStrategyToJSON(generatedText) {
-  return `Tu vas recevoir un calendrier editorial sur 30 jours avec des publications planifiees par canal.
+  return `Tu vas recevoir un calendrier editorial sur 30 jours avec des publications planifiees par canal, PLUS un planning de production avec des sessions groupees.
 
 Ta mission est de transformer ce contenu en JSON STRICT.
 
@@ -98,11 +23,13 @@ Structure JSON attendue :
   "strategy": {
     "summary": "",
     "totalPosts": 0,
-    "channelsUsed": []
+    "channelsUsed": [],
+    "totalEstimatedCost": ""
   },
   "calendar": [
     {
       "day": 1,
+      "date": "2026-02-23",
       "theme": "",
       "posts": [
         {
@@ -110,134 +37,60 @@ Structure JSON attendue :
           "type": "",
           "description": "",
           "hashtags": [],
-          "bestTime": ""
+          "bestTime": "",
+          "estimatedCost": "",
+          "productionSessionId": null
         }
       ]
+    }
+  ],
+  "productionSessions": [
+    {
+      "id": 1,
+      "date": "2026-02-22",
+      "day": 1,
+      "type": "tournage_video",
+      "title": "",
+      "items": [
+        {
+          "title": "",
+          "channel": "",
+          "forDay": "Lun 24 Fev"
+        }
+      ],
+      "resources": [],
+      "duration": "",
+      "estimatedCost": "",
+      "notes": ""
     }
   ],
   "tips": []
 }
 
 Consignes specifiques :
-- Le tableau "calendar" doit contenir exactement 30 entrees (jour 1 a 30)
+- Le tableau "calendar" doit contenir exactement 30 entrees
+- Chaque jour DOIT avoir sa "date" au format YYYY-MM-DD (vraie date, pas "Jour 1")
 - Chaque jour peut avoir 0 ou plusieurs posts (certains jours n'ont pas de publication)
-- "channel" doit etre l'un de : "linkedin", "instagram", "twitter", "blog", "newsletter", "video"
-- "type" doit etre l'un de : "educatif", "inspirant", "promotionnel", "behind-the-scenes", "engagement", "storytelling", "actualite"
+- "channel" doit etre l'un de : "linkedin", "instagram", "tiktok", "youtube", "facebook", "twitter", "pinterest", "threads", "snapchat", "blog", "newsletter", "podcast", "whatsapp", "video"
+- "type" doit etre l'un de : "educatif", "inspirant", "promotionnel", "behind-the-scenes", "engagement", "storytelling", "actualite", "divertissement", "teaser", "tutoriel"
 - "bestTime" au format "HH:MM"
+- "estimatedCost" est le cout estime pour produire ce contenu (ex: "Gratuit", "~50 euros", "~200 euros")
+- "productionSessionId" est l'id de la session de production associee (null si pas de session dediee)
+- "productionSessions" est le tableau des sessions de production groupees en amont
+- "type" de session doit etre l'un de : "tournage_video", "shoot_photo", "redaction", "enregistrement_audio", "design", "montage"
+- "items" de chaque session : liste des contenus a produire avec titre, canal et date de publication prevue
+- "resources" : liste des ressources humaines et materielles (ex: "Cadreur", "Micro-cravate", "Eclairage", "Photographe", "Monteur video", "Graphiste")
+- "duration" : duree estimee (ex: "2h", "Demi-journee", "1 journee")
+- "estimatedCost" de session : cout total de la session
 - "summary" est un resume de la strategie en 2-3 phrases
+- "totalEstimatedCost" est le cout total estime sur les 30 jours
 - "tips" est un tableau de 3-5 conseils generaux pour reussir la strategie
 - "totalPosts" est le nombre total de publications sur les 30 jours
+- Les sessions de production doivent etre planifiees AVANT les dates de publication correspondantes
 
 Voici le contenu a transformer :
 
 ${generatedText}`;
 }
 
-/**
- * Conversion contenu createur → JSON structure
- * Utilise par contentCreator (9 plateformes)
- */
-function contentCreatorToJSON(generatedText) {
-  return `Tu vas recevoir du contenu marketing genere pour plusieurs plateformes (jusqu'a 9).
-
-Ta mission est de transformer ce contenu en JSON STRICT.
-
-Regles obligatoires :
-- Reponds UNIQUEMENT avec du JSON valide
-- Aucun texte explicatif, aucun Markdown
-- Toutes les cles doivent etre presentes meme si certaines valeurs sont vides
-
-Structure JSON attendue :
-
-{
-  "platforms": {
-    "linkedin": {
-      "content": "",
-      "hashtags": [],
-      "characterCount": 0,
-      "bestPostingTime": "",
-      "formatTip": ""
-    },
-    "instagram": {
-      "content": "",
-      "hashtags": [],
-      "characterCount": 0,
-      "bestPostingTime": "",
-      "suggestedFormat": ""
-    },
-    "twitter": {
-      "tweets": [],
-      "hashtags": [],
-      "totalTweets": 0,
-      "bestPostingTime": ""
-    },
-    "tiktok": {
-      "hook": "",
-      "caption": "",
-      "hashtags": [],
-      "trendingSounds": [],
-      "duration": "",
-      "textOverlays": [],
-      "bestPostingTime": ""
-    },
-    "youtube": {
-      "title": "",
-      "description": "",
-      "tags": [],
-      "script": "",
-      "timestamps": [],
-      "thumbnailText": "",
-      "duration": "",
-      "bestPostingTime": ""
-    },
-    "facebook": {
-      "content": "",
-      "hashtags": [],
-      "characterCount": 0,
-      "bestPostingTime": "",
-      "format": ""
-    },
-    "blog": {
-      "title": "",
-      "metaDescription": "",
-      "content": "",
-      "headings": [],
-      "wordCount": 0,
-      "seoKeywords": []
-    },
-    "newsletter": {
-      "subject": "",
-      "preheader": "",
-      "content": "",
-      "cta": ""
-    },
-    "video_script": {
-      "hook": "",
-      "script": "",
-      "duration": "",
-      "visualNotes": []
-    }
-  },
-  "contentType": "",
-  "globalTips": []
-}
-
-Consignes specifiques :
-- N'inclus QUE les plateformes presentes dans le texte genere (ignore les autres)
-- Pour Twitter, separe chaque tweet du thread dans le tableau "tweets"
-- Pour TikTok, extrait le hook (premiere phrase accrocheuse), les sons tendance suggeres dans "trendingSounds", et les textes a superposer dans "textOverlays"
-- Pour YouTube, extrait le titre, la description SEO, les tags, le script complet, les timestamps, et la suggestion de texte pour miniature
-- Pour Facebook, indique le format recommande (post, story, video, carrousel) dans "format"
-- Pour le blog, extrait les sous-titres dans "headings" et les mots-cles SEO dans "seoKeywords"
-- Pour le script video, extrait les indications visuelles dans "visualNotes"
-- characterCount et wordCount doivent etre des nombres entiers
-- "contentType" est le type de contenu genere (publicitaire, educatif, viral, etc.)
-- "globalTips" est un tableau de 3-5 conseils generaux pour optimiser la publication
-- Le contenu doit etre conserve tel quel, sans modification ni troncature
-
-Voici le contenu a transformer :
-
-${generatedText}`;
-}
-
-module.exports = { multiFormatContentToJSON, contentStrategyToJSON, contentCreatorToJSON };
+module.exports = { contentStrategyToJSON };

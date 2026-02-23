@@ -232,13 +232,6 @@ function DashboardContent() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <SolutionCard
-                href="/solutions/marketing/redacteur"
-                emoji="✍️"
-                title="Redacteur Multi-Format"
-                description="Un brief, du contenu adapte a 6 plateformes differentes"
-                features={['6 formats', 'Ton personnalise', 'Pret a publier']}
-              />
-              <SolutionCard
                 href="/solutions/marketing/strategie"
                 emoji="📅"
                 title="Strategie de Contenu"
@@ -260,25 +253,11 @@ function DashboardContent() {
                 features={['Scraping URL', 'Benchmark', 'Opportunites']}
               />
               <SolutionCard
-                href="/solutions/marketing/performance"
-                emoji="📊"
-                title="Analyseur Performance"
-                description="Diagnostiquez vos stats et obtenez des recommandations IA"
-                features={['Diagnostic', 'Patterns', 'Predictions']}
-              />
-              <SolutionCard
                 href="/solutions/marketing/seo"
                 emoji="🔍"
                 title="Audit SEO"
                 description="Analysez le SEO de votre site et obtenez des recommandations"
                 features={['Crawl automatique', 'Score par page', 'Quick wins']}
-              />
-              <SolutionCard
-                href="/solutions/marketing/createur"
-                emoji="🎨"
-                title="Createur de Contenu"
-                description="Creez du contenu optimise pour 9 plateformes avec images IA"
-                features={['9 plateformes', 'Images DALL-E', 'Historique creations']}
               />
             </div>
 
@@ -289,8 +268,8 @@ function DashboardContent() {
                 <div>
                   <h4 className="font-semibold text-primary mb-2">Marketing & Communication</h4>
                   <div className="text-sm text-text-secondary space-y-1">
-                    <p>&#8226; 7 outils disponibles</p>
-                    <p>&#8226; Contenu, strategie, veille, concurrence, performance et SEO</p>
+                    <p>&#8226; 4 outils disponibles</p>
+                    <p>&#8226; Strategie, veille, concurrence et SEO</p>
                     <p>&#8226; Scraping et analyse IA en temps reel</p>
                   </div>
                 </div>
