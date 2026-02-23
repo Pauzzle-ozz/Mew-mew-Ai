@@ -8,7 +8,7 @@ const marketingService = require('../services/marketingService');
  */
 router.post('/generer', async (req, res) => {
   try {
-    const { sector, targetAudience, objectives, channels, brandVoice, competitors, currentFrequency } = req.body;
+    const { sector, targetAudience, objectives, channels, brandVoice, budget, startDate } = req.body;
 
     if (!sector || !targetAudience || !objectives || !channels) {
       return res.status(400).json({
@@ -17,7 +17,7 @@ router.post('/generer', async (req, res) => {
       });
     }
 
-    console.log(`📅 [Strategie] Generation calendrier 30j pour ${channels.length} canaux`);
+    console.log(`📅 [Strategie] Generation calendrier 30j pour ${channels.length} canaux (debut: ${startDate || 'auto'})`);
 
     const result = await marketingService.generateContentStrategy({
       sector,
@@ -25,8 +25,8 @@ router.post('/generer', async (req, res) => {
       objectives,
       channels,
       brandVoice,
-      competitors,
-      currentFrequency
+      budget,
+      startDate: startDate || new Date().toISOString().split('T')[0]
     });
 
     res.json({ success: true, data: result });

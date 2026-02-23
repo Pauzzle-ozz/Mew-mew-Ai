@@ -16,7 +16,7 @@ import { generateStrategy } from '@/lib/api/marketingApi'
 const STEPS = [
   { n: 1, label: 'Configuration' },
   { n: 2, label: 'Generation' },
-  { n: 3, label: 'Calendrier' }
+  { n: 3, label: 'Resultats' }
 ]
 
 const OBJECTIVE_OPTIONS = [
@@ -28,21 +28,162 @@ const OBJECTIVE_OPTIONS = [
   'Fidelisation clients'
 ]
 
+const AUDIENCE_OPTIONS = [
+  'Entrepreneurs / Independants',
+  'PME / TPE',
+  'Grands comptes B2B',
+  'Grand public B2C',
+  'Jeunes 18-25 ans',
+  'Professionnels 30-45 ans',
+  'Etudiants',
+  'Femmes 25-40 ans'
+]
+
+const BRAND_VOICE_OPTIONS = [
+  'Expert & professionnel',
+  'Decontracte & proche',
+  'Inspirant & motivant',
+  'Humoristique & decale',
+  'Luxe & exclusif',
+  'Educatif & pedagogue',
+  'Provocateur & audacieux'
+]
+
+const BUDGET_OPTIONS = [
+  { id: 'zero', label: 'Pas de budget', desc: 'DIY, smartphone, outils gratuits' },
+  { id: 'petit', label: 'Petit budget', desc: '< 500\u20ac/mois' },
+  { id: 'moyen', label: 'Budget moyen', desc: '500-2000\u20ac/mois' },
+  { id: 'confortable', label: 'Budget confortable', desc: '2000-5000\u20ac/mois' },
+  { id: 'gros', label: 'Gros budget', desc: '> 5000\u20ac/mois' }
+]
+
+function ChipSelector({ label, options, value, onChange, placeholder }) {
+  const isCustom = value && !options.includes(value)
+  const [showCustom, setShowCustom] = useState(isCustom)
+
+  const toggleOption = (opt) => {
+    if (value === opt) {
+      onChange('')
+    } else {
+      onChange(opt)
+      setShowCustom(false)
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-text-secondary mb-2">{label}</label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {options.map(opt => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => toggleOption(opt)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              value === opt
+                ? 'bg-primary text-white'
+                : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-elevated/80'
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => { setShowCustom(!showCustom); if (!showCustom) onChange('') }}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border border-dashed ${
+            showCustom
+              ? 'border-primary text-primary bg-primary/5'
+              : 'border-border text-text-muted hover:border-primary/40 hover:text-text-secondary'
+          }`}
+        >
+          Personnalise...
+        </button>
+      </div>
+      {showCustom && (
+        <input
+          value={isCustom ? value : ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+        />
+      )}
+    </div>
+  )
+}
+
+function MultiChipSelector({ label, options, value, onChange, placeholder }) {
+  const selectedList = value ? value.split(', ').filter(Boolean) : []
+  const customParts = selectedList.filter(v => !options.includes(v))
+  const hasCustom = customParts.length > 0
+  const [showCustom, setShowCustom] = useState(hasCustom)
+
+  const toggleOption = (opt) => {
+    if (selectedList.includes(opt)) {
+      const next = selectedList.filter(v => v !== opt)
+      onChange(next.join(', '))
+    } else {
+      onChange([...selectedList, opt].join(', '))
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-text-secondary mb-2">{label}</label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {options.map(opt => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => toggleOption(opt)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              selectedList.includes(opt)
+                ? 'bg-primary text-white'
+                : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:bg-surface-elevated/80'
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setShowCustom(!showCustom)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border border-dashed ${
+            showCustom
+              ? 'border-primary text-primary bg-primary/5'
+              : 'border-border text-text-muted hover:border-primary/40 hover:text-text-secondary'
+          }`}
+        >
+          Personnalise...
+        </button>
+      </div>
+      {showCustom && (
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+        />
+      )}
+    </div>
+  )
+}
+
 export default function StrategiePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/') }
 
-  // State
+  const today = new Date().toISOString().split('T')[0]
+
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     sector: '',
     targetAudience: '',
     objectives: '',
     brandVoice: '',
-    competitors: '',
-    currentFrequency: ''
+    budget: ''
   })
   const [channels, setChannels] = useState([])
   const [processing, setProcessing] = useState(false)
@@ -51,17 +192,12 @@ export default function StrategiePage() {
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
 
-  // Helpers
   const _progressAnim = async (steps) => {
     for (const [label, pct, ms] of steps) {
       setProcessingLabel(label)
       setProgress(pct)
       await new Promise(r => setTimeout(r, ms))
     }
-  }
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const validate = () => {
@@ -83,14 +219,16 @@ export default function StrategiePage() {
 
     try {
       const [apiResult] = await Promise.all([
-        generateStrategy({ ...formData, channels }),
+        generateStrategy({ ...formData, channels, startDate: today }),
         _progressAnim([
-          ['Analyse du secteur...', 10, 1000],
-          ['Etude des tendances...', 25, 1500],
-          ['Planification des themes...', 45, 2000],
-          ['Repartition par canal...', 65, 2000],
-          ['Optimisation des horaires...', 80, 1500],
-          ['Construction du calendrier...', 92, 1000],
+          ['Analyse du secteur et de l\'audience...', 10, 1000],
+          ['Etude des tendances et marronniers...', 20, 1500],
+          ['Planification des themes editoriaux...', 35, 2000],
+          ['Repartition par canal...', 50, 2000],
+          ['Optimisation des horaires de publication...', 65, 1500],
+          ['Construction du calendrier editorial...', 78, 1500],
+          ['Planification des sessions de production...', 88, 1500],
+          ['Estimation des couts et ressources...', 95, 1000],
           ['Finalisation...', 98, 800]
         ])
       ])
@@ -113,10 +251,9 @@ export default function StrategiePage() {
     setResult(null)
     setError('')
     setChannels([])
-    setFormData({ sector: '', targetAudience: '', objectives: '', brandVoice: '', competitors: '', currentFrequency: '' })
+    setFormData({ sector: '', targetAudience: '', objectives: '', brandVoice: '', budget: '' })
   }
 
-  // Loading
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
@@ -149,7 +286,7 @@ export default function StrategiePage() {
                 step === s.n ? 'bg-primary text-white' :
                 step > s.n ? 'bg-primary/20 text-primary' : 'bg-surface-elevated text-text-muted'
               }`}>
-                {step > s.n ? '✓ ' : ''}{s.label}
+                {step > s.n ? '\u2713 ' : ''}{s.label}
               </div>
               {s.n < STEPS.length && <div className="w-6 h-px bg-border" />}
             </div>
@@ -171,9 +308,10 @@ export default function StrategiePage() {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-text-primary mb-2">Strategie de Contenu</h1>
-              <p className="text-text-secondary">Generez un calendrier editorial sur 30 jours</p>
+              <p className="text-text-secondary">Generez un calendrier editorial + planning de production sur 30 jours</p>
             </div>
 
+            {/* Panneau Config */}
             <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
               <h2 className="text-lg font-semibold text-text-primary">Configuration</h2>
 
@@ -182,80 +320,62 @@ export default function StrategiePage() {
                 <input
                   name="sector"
                   value={formData.sector}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
                   placeholder="Ex: Mode feminine, SaaS B2B, Restaurant gastronomique..."
                   className={inputStyles}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Audience cible *</label>
-                <input
-                  name="targetAudience"
-                  value={formData.targetAudience}
-                  onChange={handleChange}
-                  placeholder="Ex: Entrepreneurs tech 30-45 ans, PME francaises..."
-                  className={inputStyles}
-                />
-              </div>
+              <ChipSelector
+                label="Audience cible *"
+                options={AUDIENCE_OPTIONS}
+                value={formData.targetAudience}
+                onChange={(v) => setFormData({ ...formData, targetAudience: v })}
+                placeholder="Decrivez votre audience cible..."
+              />
 
+              <MultiChipSelector
+                label="Objectifs *"
+                options={OBJECTIVE_OPTIONS}
+                value={formData.objectives}
+                onChange={(v) => setFormData({ ...formData, objectives: v })}
+                placeholder="Ou saisissez vos objectifs manuellement..."
+              />
+
+              <ChipSelector
+                label="Ton de marque"
+                options={BRAND_VOICE_OPTIONS}
+                value={formData.brandVoice}
+                onChange={(v) => setFormData({ ...formData, brandVoice: v })}
+                placeholder="Decrivez le ton de votre marque..."
+              />
+
+              {/* Budget */}
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Objectifs *</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {OBJECTIVE_OPTIONS.map(obj => (
+                <label className="block text-sm font-medium text-text-secondary mb-2">Budget production (optionnel)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {BUDGET_OPTIONS.map(b => (
                     <button
-                      key={obj}
+                      key={b.id}
                       type="button"
-                      onClick={() => {
-                        const current = formData.objectives
-                        if (current.includes(obj)) {
-                          setFormData({ ...formData, objectives: current.replace(obj, '').replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim() })
-                        } else {
-                          setFormData({ ...formData, objectives: current ? `${current}, ${obj}` : obj })
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                        formData.objectives.includes(obj)
-                          ? 'bg-primary text-white'
-                          : 'bg-surface-elevated text-text-secondary hover:text-text-primary'
+                      onClick={() => setFormData({ ...formData, budget: formData.budget === b.id ? '' : b.id })}
+                      className={`p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
+                        formData.budget === b.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border bg-surface hover:border-primary/40'
                       }`}
                     >
-                      {obj}
+                      <div className={`text-xs font-semibold ${formData.budget === b.id ? 'text-primary' : 'text-text-primary'}`}>
+                        {b.label}
+                      </div>
+                      <div className="text-[10px] text-text-muted mt-0.5">{b.desc}</div>
                     </button>
                   ))}
                 </div>
-                <input
-                  name="objectives"
-                  value={formData.objectives}
-                  onChange={handleChange}
-                  placeholder="Ou saisissez vos objectifs manuellement..."
-                  className={inputStyles}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Ton de marque (optionnel)</label>
-                <input
-                  name="brandVoice"
-                  value={formData.brandVoice}
-                  onChange={handleChange}
-                  placeholder="Ex: Professionnel mais accessible, avec une touche d'humour"
-                  className={inputStyles}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">Concurrents principaux (optionnel)</label>
-                <input
-                  name="competitors"
-                  value={formData.competitors}
-                  onChange={handleChange}
-                  placeholder="Ex: Nike, Adidas, New Balance"
-                  className={inputStyles}
-                />
               </div>
             </div>
 
+            {/* Panneau Canaux */}
             <div className="bg-surface rounded-xl border border-border p-6">
               <ChannelSelector selected={channels} onChange={setChannels} />
             </div>
@@ -280,19 +400,21 @@ export default function StrategiePage() {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-xs text-text-muted">La generation d&apos;un calendrier 30 jours prend un peu plus de temps...</p>
+            <p className="text-xs text-text-muted">La generation du calendrier + planning de production prend un peu plus de temps...</p>
           </div>
         )}
 
-        {/* Step 3: Calendar */}
+        {/* Step 3: Resultats */}
         {step === 3 && result && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Votre calendrier editorial</h2>
-              <p className="text-text-secondary text-sm">30 jours de contenu planifie pour {channels.length} canal{channels.length > 1 ? 'aux' : ''}</p>
+              <h2 className="text-2xl font-bold text-text-primary mb-1">Votre strategie de contenu</h2>
+              <p className="text-text-secondary text-sm">
+                Calendrier editorial + planning de production pour {channels.length} canal{channels.length > 1 ? 'aux' : ''}
+              </p>
             </div>
 
-            <CalendarView data={result} />
+            <CalendarView data={result} startDate={today} budget={formData.budget} />
 
             <div className="flex gap-3 justify-center pt-4">
               <button

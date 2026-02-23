@@ -8,7 +8,7 @@ class AIService {
   constructor() {
     this.client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 60000
+      timeout: 120000
     });
   }
 
