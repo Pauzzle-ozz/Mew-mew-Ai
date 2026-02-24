@@ -4,7 +4,7 @@
  * MatcherTransparency — Étape 2 du matcher
  * Affiche le score de matching et la comparaison avant/après par section
  */
-export default function MatcherTransparency({ score, modifications, cvDataOriginal, cvDataOptimized, onContinue, onBack }) {
+export default function MatcherTransparency({ score, modifications, cvDataOriginal, cvDataOptimized, onBack }) {
   const scoreColor = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
   const scoreLabel = score >= 75 ? 'Excellent matching' : score >= 50 ? 'Bon matching' : 'Matching partiel';
 
@@ -109,21 +109,17 @@ export default function MatcherTransparency({ score, modifications, cvDataOrigin
         </div>
       )}
 
-      {/* Boutons navigation */}
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={onBack}
-          className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white transition-colors text-sm font-medium"
-        >
-          ← Modifier les données
-        </button>
-        <button
-          onClick={onContinue}
-          className="flex-1 py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all text-sm"
-        >
-          Choisir le design →
-        </button>
-      </div>
+      {/* Bouton retour */}
+      {onBack && (
+        <div className="pt-2">
+          <button
+            onClick={onBack}
+            className="px-5 py-3 rounded-xl border border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white transition-colors text-sm font-medium"
+          >
+            ← Modifier les données
+          </button>
+        </div>
+      )}
     </div>
   );
 }

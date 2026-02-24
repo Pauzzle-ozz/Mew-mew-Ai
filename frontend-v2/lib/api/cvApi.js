@@ -1,5 +1,5 @@
 /**
- * API centralisée pour les appels backend
+ * API centralisée pour les appels backend CV
  * Toutes les requêtes HTTP passent par ici
  */
 
@@ -81,26 +81,6 @@ export const cvApi = {
     return response.json();
   },
 
-/**
-   * Générer un CV (PDF uniquement)
-   */
-  async generateCV(cvData, templateOrConfig) {
-    const body = typeof templateOrConfig === 'string'
-      ? { cvData, template: templateOrConfig }
-      : { cvData, buildConfig: templateOrConfig };
-    const response = await fetch(`${API_BASE_URL}/generer-cv`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la génération du CV');
-    }
-
-    return response.json();
-  },
-
   /**
    * Optimiser un CV via formulaire structuré
    */
@@ -135,24 +115,6 @@ export const cvApi = {
 
     if (!response.ok) {
       throw new Error('Erreur lors de l\'optimisation du PDF');
-    }
-
-    return response.json();
-  },
-
-  /**
-   * Filtrer/condenser un CV enrichi par l'IA
-   */
-  async filterCV(cvData, sections) {
-    const response = await fetch(`${API_BASE_URL}/filtrer-cv`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cvData, sections: sections?.length ? sections : undefined })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erreur lors du filtrage');
     }
 
     return response.json();

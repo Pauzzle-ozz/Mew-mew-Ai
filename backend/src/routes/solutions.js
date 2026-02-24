@@ -5,9 +5,6 @@ const router = express.Router();
 
 // Import des services
 const cvService = require('../services/cvService');
-const pdfService = require('../services/pdfService');
-const templateFactory = require('../templates/templateFactory');
-const cvBuilderFactory = require('../templates/cvBuilderFactory');
 
 // Configuration multer
 const storage = multer.memoryStorage();
@@ -207,94 +204,6 @@ router.post('/optimiser-cv-pdf', upload.single('cv'), async (req, res) => {
       success: false,
       error: 'Impossible d\'optimiser le CV PDF',
       ...(process.env.NODE_ENV === 'development' && { details: error.message })
-    });
-  }
-});
-
-/**
- * Générer un CV (PDF uniquement)
- */
-router.post('/generer-cv', async (req, res) => {
-  try {
-    const { cvData, template, buildConfig } = req.body;
-
-    // Validation
-    cvService.validateCVData(cvData);
-
-    console.log('🚀 [GENERATION] Début génération CV (PDF uniquement)...');
-
-    let html;
-    if (buildConfig) {
-      // Nouveau système : type + forme + style + blocs
-      html = cvBuilderFactory.generate(cvData, buildConfig);
-    } else {
-      // Ancien système (compatibilité)
-      if (!template) {
-        return res.status(400).json({ error: 'Template ou buildConfig requis' });
-      }
-      html = templateFactory.getTemplate(template, cvData);
-    }
-
-    // Génération PDF uniquement
-    const pdfBuffer = await pdfService.generatePDF(html);
-    const pdfBase64 = pdfBuffer.toString('base64');
-
-    console.log('✅ [GENERATION] CV généré avec succès (PDF)');
-
-    res.json({
-      success: true,
-      data: {
-        pdf: pdfBase64,
-        filename: `CV_${cvData.prenom}_${cvData.nom}`
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ [GENERATION] Erreur:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Impossible de générer le CV'
-    });
-  }
-});
-
-/**
- * Filtrer un CV enrichi (condensation IA)
- */
-router.post('/filtrer-cv', async (req, res) => {
-  try {
-    const { cvData, sections } = req.body;
-
-    if (!cvData || !cvData.prenom || !cvData.nom) {
-      return res.status(400).json({
-        error: 'Données CV manquantes'
-      });
-    }
-
-    console.log('🔄 [FILTRAGE] Début filtrage CV...', sections?.length ? `sections: ${sections.join(', ')}` : 'tout');
-
-    const result = await cvService.filterCV(cvData, sections);
-
-    console.log('✅ [FILTRAGE] CV filtré avec succès');
-
-    res.json({
-      success: true,
-      data: result.cvData_filtre
-    });
-
-  } catch (error) {
-    console.error('❌ [FILTRAGE] Erreur:', error.message);
-
-    if (error.status === 429) {
-      return res.status(503).json({
-        success: false,
-        error: 'Service IA temporairement surchargé. Réessayez dans quelques instants.'
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Impossible de filtrer le CV'
     });
   }
 });

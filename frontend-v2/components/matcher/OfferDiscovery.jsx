@@ -2,7 +2,6 @@
 import { useState, useRef } from 'react';
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation';
 import { discoverJobs, rapidAdaptCV } from '@/lib/api/matcherApi';
-import { downloadGeneratedCV } from '@/lib/utils/fileHelpers';
 
 const JOB_SOURCES = [
   { id: 'wttj', label: 'Welcome to the Jungle', emoji: '🌿', default: true },
@@ -12,18 +11,94 @@ const JOB_SOURCES = [
   { id: 'apec', label: 'APEC (Cadres)', emoji: '🎩', default: false },
 ];
 
+/* ─── Bouton copier ──────────────────────────────────── */
+function CopyButton({ text, label }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        copied
+          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+          : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+      }`}
+    >
+      {copied ? '✓ Copié !' : `Copier ${label || ''}`}
+    </button>
+  );
+}
+
+/* ─── Section texte ──────────────────────────────────── */
+function TextSection({ title, icon, text }) {
+  if (!text) return null;
+  return (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">{icon}</span>
+          <span className="font-medium text-white text-xs">{title}</span>
+        </div>
+        <CopyButton text={text} />
+      </div>
+      <div className="p-2 bg-slate-900/50 border border-slate-700/50 rounded-lg">
+        <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Formatters ─────────────────────────────────────── */
+function formatExperiences(experiences) {
+  if (!experiences?.length) return '';
+  return experiences.map(exp => {
+    const lines = [];
+    if (exp.poste) lines.push(exp.poste);
+    const meta = [exp.entreprise, exp.localisation, [exp.date_debut, exp.date_fin].filter(Boolean).join(' - ')].filter(Boolean).join(' | ');
+    if (meta) lines.push(meta);
+    if (exp.description) lines.push(exp.description);
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
+function formatFormations(formations) {
+  if (!formations?.length) return '';
+  return formations.map(f => {
+    const lines = [];
+    if (f.diplome) lines.push(f.diplome);
+    const meta = [f.etablissement, f.localisation, f.date_fin].filter(Boolean).join(' | ');
+    if (meta) lines.push(meta);
+    return lines.join('\n');
+  }).join('\n\n');
+}
+
 /**
  * OfferDiscovery — Mode découverte du matcher
- * Upload CV → Choix sources → Analyse IA → Affiche métiers + offres trouvées
- * @param {Function} onSelectOffer - Callback quand l'utilisateur clique "Adapter mon CV" sur une offre
  */
 export default function OfferDiscovery({ onSelectOffer }) {
-  const [subStep, setSubStep] = useState(0); // 0: upload, 1: métiers, 2: offres
+  const [subStep, setSubStep] = useState(0);
   const [cvFile, setCvFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState(null); // { metiers, offres, niveau_experience, resume_profil }
+  const [result, setResult] = useState(null);
   const [filtreMetier, setFiltreMetier] = useState('');
   const [selectedSources, setSelectedSources] = useState(
     JOB_SOURCES.filter(s => s.default).map(s => s.id)
@@ -51,7 +126,7 @@ export default function OfferDiscovery({ onSelectOffer }) {
   const toggleSource = (sourceId) => {
     setSelectedSources(prev => {
       if (prev.includes(sourceId)) {
-        if (prev.length <= 1) return prev; // Au moins 1 source
+        if (prev.length <= 1) return prev;
         return prev.filter(s => s !== sourceId);
       }
       return [...prev, sourceId];
@@ -134,7 +209,6 @@ export default function OfferDiscovery({ onSelectOffer }) {
           <p className="text-sm text-slate-400">On analyse votre CV et on trouve les offres qui vous correspondent</p>
         </div>
 
-        {/* Zone drag & drop */}
         <div
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -161,7 +235,6 @@ export default function OfferDiscovery({ onSelectOffer }) {
           )}
         </div>
 
-        {/* Sélection des sources */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
           <h3 className="text-sm font-semibold text-white mb-3">Sources de recherche</h3>
           <div className="flex flex-wrap gap-2">
@@ -190,7 +263,6 @@ export default function OfferDiscovery({ onSelectOffer }) {
           </p>
         </div>
 
-        {/* Filtres : Localisation + Type de contrat */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
           <h3 className="text-sm font-semibold text-white mb-3">Filtres (optionnel)</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -257,26 +329,17 @@ export default function OfferDiscovery({ onSelectOffer }) {
 
         <div className="grid grid-cols-1 gap-3">
           {result?.metiers?.map((metier, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors"
-            >
+            <div key={idx} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 capitalize">
-                      {metier.niveau}
-                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 capitalize">{metier.niveau}</span>
                   </div>
                   <h3 className="font-semibold text-white">{metier.titre}</h3>
-                  {metier.description_courte && (
-                    <p className="text-xs text-slate-400 mt-1">{metier.description_courte}</p>
-                  )}
+                  {metier.description_courte && <p className="text-xs text-slate-400 mt-1">{metier.description_courte}</p>}
                   <div className="flex flex-wrap gap-1 mt-2">
                     {metier.mots_cles?.slice(0, 4).map((kw, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                        {kw}
-                      </span>
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{kw}</span>
                     ))}
                   </div>
                 </div>
@@ -295,19 +358,16 @@ export default function OfferDiscovery({ onSelectOffer }) {
     );
   }
 
-  // ── SubStep 3 : Resultat adaptation rapide ─────────────────────────
+  // ── SubStep 3 : Résultat adaptation rapide (TEXTE) ────────────────
   if (subStep === 3) {
+    const cvData = adaptResult?.cvData;
+
     return (
       <div className="space-y-6">
         <div>
-          <button
-            onClick={backToOffers}
-            className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1"
-          >
-            ← Retour aux offres
-          </button>
+          <button onClick={backToOffers} className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1">← Retour aux offres</button>
           <h2 className="text-xl font-semibold text-white">
-            CV adapte pour {adaptedOffer?.titre || 'cette offre'}
+            CV adapté pour {adaptedOffer?.titre || 'cette offre'}
           </h2>
           {adaptedOffer?.entreprise && (
             <p className="text-sm text-slate-400 mt-1">
@@ -320,7 +380,7 @@ export default function OfferDiscovery({ onSelectOffer }) {
         {adapting && (
           <div className="flex flex-col items-center py-12">
             <CatLoadingAnimation label="Adaptation de votre CV en cours..." />
-            <p className="text-xs text-slate-500 mt-3">Cela prend 30 a 60 secondes</p>
+            <p className="text-xs text-slate-500 mt-3">Cela prend 30 à 60 secondes</p>
           </div>
         )}
 
@@ -328,16 +388,11 @@ export default function OfferDiscovery({ onSelectOffer }) {
         {adaptError && !adapting && (
           <div className="bg-red-900/20 border border-red-800 rounded-xl p-4">
             <p className="text-sm text-red-300">{adaptError}</p>
-            <button
-              onClick={() => handleAdaptCV(adaptedOffer)}
-              className="mt-2 text-xs text-red-400 hover:text-red-300 underline"
-            >
-              Reessayer
-            </button>
+            <button onClick={() => handleAdaptCV(adaptedOffer)} className="mt-2 text-xs text-red-400 hover:text-red-300 underline">Réessayer</button>
           </div>
         )}
 
-        {/* Resultat */}
+        {/* Résultat : score + texte copiable */}
         {adaptResult && !adapting && (
           <>
             {/* Score de matching */}
@@ -361,13 +416,13 @@ export default function OfferDiscovery({ onSelectOffer }) {
                   <span className="text-xs text-slate-400">/ 100</span>
                 </div>
               </div>
-              <p className="text-xs text-slate-500">Score de compatibilite</p>
+              <p className="text-xs text-slate-500">Score de compatibilité</p>
             </div>
 
-            {/* Modifications apportees */}
+            {/* Modifications apportées */}
             {adaptResult.modifications_apportees?.length > 0 && (
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Modifications apportees</h3>
+                <h3 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Modifications apportées</h3>
                 <ul className="space-y-1.5">
                   {adaptResult.modifications_apportees.map((mod, i) => (
                     <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
@@ -379,13 +434,34 @@ export default function OfferDiscovery({ onSelectOffer }) {
               </div>
             )}
 
-            {/* Telecharger */}
-            <button
-              onClick={() => downloadGeneratedCV({ data: adaptResult })}
-              className="w-full py-3 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all"
-            >
-              Telecharger le CV adapte
-            </button>
+            {/* Sections de texte copiable */}
+            {cvData && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white">Texte à copier dans ton CV</h3>
+                  <CopyButton
+                    text={[
+                      cvData.titre_poste && `Titre: ${cvData.titre_poste}`,
+                      cvData.resume && `\nRésumé:\n${cvData.resume}`,
+                      cvData.experiences?.length && `\nExpériences:\n${formatExperiences(cvData.experiences)}`,
+                      cvData.formations?.length && `\nFormations:\n${formatFormations(cvData.formations)}`,
+                      cvData.competences_techniques && `\nCompétences:\n${cvData.competences_techniques}`,
+                      cvData.competences_soft && `\nSoft skills:\n${cvData.competences_soft}`,
+                      cvData.langues && `\nLangues:\n${cvData.langues}`,
+                    ].filter(Boolean).join('\n')}
+                    label="tout"
+                  />
+                </div>
+
+                {cvData.titre_poste && <TextSection title="Titre" icon="🏷️" text={cvData.titre_poste} />}
+                <TextSection title="Résumé" icon="📝" text={cvData.resume} />
+                {cvData.experiences?.length > 0 && <TextSection title="Expériences" icon="💼" text={formatExperiences(cvData.experiences)} />}
+                {cvData.formations?.length > 0 && <TextSection title="Formations" icon="🎓" text={formatFormations(cvData.formations)} />}
+                <TextSection title="Compétences" icon="⚡" text={cvData.competences_techniques} />
+                <TextSection title="Soft skills" icon="🤝" text={cvData.competences_soft} />
+                <TextSection title="Langues" icon="🌍" text={cvData.langues} />
+              </div>
+            )}
 
             {/* Actions : Postuler + Retour */}
             <div className="grid grid-cols-2 gap-3">
@@ -418,10 +494,9 @@ export default function OfferDiscovery({ onSelectOffer }) {
       <div>
         <button onClick={() => setSubStep(1)} className="text-xs text-slate-500 hover:text-slate-300 mb-3 flex items-center gap-1">← Retour</button>
         <h2 className="text-xl font-semibold text-white">Offres trouvées pour vous</h2>
-        <p className="text-sm text-slate-400 mt-1">{offresFiltered.length} offres · Cliquez sur une offre pour adapter votre CV</p>
+        <p className="text-sm text-slate-400 mt-1">{offresFiltered.length} offres · Cliquez sur "Adapter CV" pour obtenir le texte optimisé</p>
       </div>
 
-      {/* Filtre par métier */}
       {result?.metiers?.length > 1 && (
         <div className="flex gap-2 flex-wrap">
           <button
@@ -455,28 +530,21 @@ export default function OfferDiscovery({ onSelectOffer }) {
       ) : (
         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
           {offresFiltered.map((offre, idx) => (
-            <div
-              key={idx}
-              className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors"
-            >
+            <div key={idx} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 hover:border-primary/40 transition-colors">
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${sourceColors[offre.source] || 'text-slate-400 bg-slate-800 border-slate-700'}`}>
                       {offre.source}
                     </span>
-                    {offre.contrat && (
-                      <span className="text-xs text-slate-500">{offre.contrat}</span>
-                    )}
+                    {offre.contrat && <span className="text-xs text-slate-500">{offre.contrat}</span>}
                   </div>
                   <h3 className="font-semibold text-white text-sm truncate">{offre.titre}</h3>
                   <p className="text-xs text-slate-400 mt-0.5">
                     {offre.entreprise && <span>{offre.entreprise}</span>}
                     {offre.lieu && <span> · {offre.lieu}</span>}
                   </p>
-                  {offre.description && (
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{offre.description}</p>
-                  )}
+                  {offre.description && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{offre.description}</p>}
                 </div>
                 <div className="flex flex-col gap-2 shrink-0">
                   {offre.url && (

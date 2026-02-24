@@ -1,8 +1,4 @@
 const aiService = require('./aiService');
-const pdfService = require('./pdfService');
-const templateFactory = require('../templates/templateFactory');
-const cvBuilderFactory = require('../templates/cvBuilderFactory');
-const letterTemplateFactory = require('../templates/letterTemplateFactory');
 
 // Prompts matcher (formulaire structure)
 const { buildPrompt: buildMatcherCvPersoPrompt } = require('../prompts/matcherCvPersonnalise');
@@ -22,18 +18,14 @@ const { personalizedCVToJSON, idealCVToJSON, coverLetterToJSON } = require('../p
 
 /**
  * Service de matching d'offres d'emploi
- * Centralise la logique d'analyse et de génération de documents personnalisés
+ * Retourne du texte structuré (plus de PDF)
  */
 class MatcherService {
   /**
    * Analyser une offre et générer les documents sélectionnés
-   * @param {Object} offer - Données de l'offre d'emploi
-   * @param {Object} candidate - Données du candidat
-   * @param {Object} options - Options de génération { generatePersonalizedCV, generateIdealCV, generateCoverLetter }
-   * @param {Object} buildConfig - Config CV Builder { shape, style, blockStyles }
-   * @returns {Object} Les PDFs en base64 (uniquement ceux demandés)
+   * @returns {Object} Les données structurées (texte, score, modifications)
    */
-  async analyzeAndGenerate(offer, candidate, options = {}, buildConfig = {}) {
+  async analyzeAndGenerate(offer, candidate, options = {}) {
     const {
       generatePersonalizedCV = true,
       generateIdealCV = true,
@@ -50,11 +42,10 @@ class MatcherService {
       const results = {};
       const promises = [];
 
-      // Appels IA en parallèle (uniquement ceux demandés)
       if (generatePersonalizedCV) {
         console.log('📄 [MatcherService] Génération CV personnalisé...');
         promises.push(
-          this.generatePersonalizedCVWorkflow(offer, candidate, buildConfig)
+          this.generatePersonalizedCVWorkflow(offer, candidate)
             .then(data => { results.personalizedCV = data; })
         );
       }
@@ -62,7 +53,7 @@ class MatcherService {
       if (generateIdealCV) {
         console.log('📄 [MatcherService] Génération CV idéal...');
         promises.push(
-          this.generateIdealCVWorkflow(offer, buildConfig)
+          this.generateIdealCVWorkflow(offer)
             .then(data => { results.idealCV = data; })
         );
       }
@@ -75,11 +66,9 @@ class MatcherService {
         );
       }
 
-      // Attendre tous les workflows en parallèle
       await Promise.all(promises);
 
       console.log('✅ [MatcherService] Tous les documents générés avec succès');
-
       return results;
 
     } catch (error) {
@@ -90,14 +79,8 @@ class MatcherService {
 
   /**
    * Générer les documents à partir du texte brut scrapé (mode URL)
-   * @param {string} rawText - Texte brut extrait de la page web
-   * @param {string} url - URL source de l'offre
-   * @param {Object} candidate - Données du candidat
-   * @param {Object} options - Options de génération
-   * @param {Object} buildConfig - Config CV Builder { shape, style, blockStyles }
-   * @returns {Object} Les PDFs en base64 (uniquement ceux demandés)
    */
-  async scrapeAndGenerate(rawText, url, candidate, options = {}, buildConfig = {}) {
+  async scrapeAndGenerate(rawText, url, candidate, options = {}) {
     const {
       generatePersonalizedCV = true,
       generateIdealCV = true,
@@ -116,23 +99,20 @@ class MatcherService {
       const promises = [];
 
       if (generatePersonalizedCV) {
-        console.log('📄 [MatcherService] Scraper → CV personnalisé...');
         promises.push(
-          this.scraperPersonalizedCVWorkflow(rawText, url, candidate, buildConfig)
+          this.scraperPersonalizedCVWorkflow(rawText, url, candidate)
             .then(data => { results.personalizedCV = data; })
         );
       }
 
       if (generateIdealCV) {
-        console.log('📄 [MatcherService] Scraper → CV idéal...');
         promises.push(
-          this.scraperIdealCVWorkflow(rawText, url, buildConfig)
+          this.scraperIdealCVWorkflow(rawText, url)
             .then(data => { results.idealCV = data; })
         );
       }
 
       if (generateCoverLetter) {
-        console.log('📄 [MatcherService] Scraper → Lettre de motivation...');
         promises.push(
           this.scraperCoverLetterWorkflow(rawText, url, candidate)
             .then(data => { results.coverLetter = data; })
@@ -140,7 +120,6 @@ class MatcherService {
       }
 
       await Promise.all(promises);
-
       console.log('✅ [MatcherService] Tous les documents générés (mode scraper)');
       return results;
 
@@ -154,10 +133,7 @@ class MatcherService {
   // WORKFLOWS SCRAPER (texte brut depuis URL)
   // ========================================
 
-  /**
-   * Scraper → CV personnalisé via IA
-   */
-  async scraperPersonalizedCVWorkflow(rawText, url, candidate, buildConfig = {}) {
+  async scraperPersonalizedCVWorkflow(rawText, url, candidate) {
     console.log('📡 [MatcherService] IA scraper CV personnalisé');
 
     const formattedCandidate = this.formatCandidateData(candidate);
@@ -174,23 +150,14 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV personnalisé (scraper)');
     }
 
-    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
-    const html = cvBuilderFactory.generate(result.personalizedCV, config);
-    const pdfBuffer = await pdfService.generatePDF(html);
-
     return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `CV_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_'),
       score_matching: result.score_matching || 0,
       modifications_apportees: result.modifications_apportees || [],
       cvData: result.personalizedCV
     };
   }
 
-  /**
-   * Scraper → CV idéal via IA
-   */
-  async scraperIdealCVWorkflow(rawText, url, buildConfig = {}) {
+  async scraperIdealCVWorkflow(rawText, url) {
     console.log('📡 [MatcherService] IA scraper CV idéal');
 
     const genPrompt = buildScraperCvIdealPrompt(rawText, url);
@@ -206,20 +173,9 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV idéal (scraper)');
     }
 
-    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
-    const html = cvBuilderFactory.generate(result.idealCV, config);
-    const pdfBuffer = await pdfService.generatePDF(html);
-
-    return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `CV_Ideal_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_'),
-      cvData: result.idealCV
-    };
+    return { cvData: result.idealCV };
   }
 
-  /**
-   * Scraper → Lettre de motivation via IA
-   */
   async scraperCoverLetterWorkflow(rawText, url, candidate) {
     console.log('📡 [MatcherService] IA scraper lettre');
 
@@ -237,23 +193,14 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné la lettre de motivation (scraper)');
     }
 
-    const html = letterTemplateFactory.getTemplate(result.coverLetter, candidate, {});
-    const pdfBuffer = await pdfService.generatePDF(html);
-
-    return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `Lettre_Motivation_${candidate.prenom}_${candidate.nom}_Scraper`.replace(/[^a-zA-Z0-9_-]/g, '_')
-    };
+    return { letterData: result.coverLetter };
   }
 
   // ========================================
   // WORKFLOWS MATCHER (formulaire structure)
   // ========================================
 
-  /**
-   * Générer le CV personnalisé via IA
-   */
-  async generatePersonalizedCVWorkflow(offer, candidate, buildConfig = {}) {
+  async generatePersonalizedCVWorkflow(offer, candidate) {
     console.log('📡 [MatcherService] IA CV personnalisé');
 
     const formattedOffer = this.formatOfferData(offer);
@@ -271,24 +218,14 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV personnalisé');
     }
 
-    // Générer le PDF avec CV Builder
-    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
-    const html = cvBuilderFactory.generate(result.personalizedCV, config);
-    const pdfBuffer = await pdfService.generatePDF(html);
-
     return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `CV_${candidate.prenom}_${candidate.nom}_${offer.company}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
       score_matching: result.score_matching || 0,
       modifications_apportees: result.modifications_apportees || [],
       cvData: result.personalizedCV
     };
   }
 
-  /**
-   * Générer le CV idéal via IA
-   */
-  async generateIdealCVWorkflow(offer, buildConfig = {}) {
+  async generateIdealCVWorkflow(offer) {
     console.log('📡 [MatcherService] IA CV idéal');
 
     const formattedOffer = this.formatOfferData(offer);
@@ -305,21 +242,9 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné le CV idéal');
     }
 
-    // Générer le PDF avec CV Builder
-    const config = { shape: 'classique', style: 'anthracite', blockStyles: {}, ...buildConfig };
-    const html = cvBuilderFactory.generate(result.idealCV, config);
-    const pdfBuffer = await pdfService.generatePDF(html);
-
-    return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `CV_Ideal_${offer.company}_${offer.title}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
-      cvData: result.idealCV
-    };
+    return { cvData: result.idealCV };
   }
 
-  /**
-   * Générer la lettre de motivation via IA
-   */
   async generateCoverLetterWorkflow(offer, candidate) {
     console.log('📡 [MatcherService] IA lettre de motivation');
 
@@ -338,20 +263,11 @@ class MatcherService {
       throw new Error('L\'IA n\'a pas retourné la lettre de motivation');
     }
 
-    // Générer le PDF
-    const html = letterTemplateFactory.getTemplate(result.coverLetter, candidate, offer);
-    const pdfBuffer = await pdfService.generatePDF(html);
-
-    return {
-      pdf: pdfBuffer.toString('base64'),
-      filename: `Lettre_Motivation_${candidate.prenom}_${candidate.nom}_${offer.company}`.replace(/[^a-zA-Z0-9_-]/g, '_')
-    };
+    return { letterData: result.coverLetter };
   }
 
   /**
    * Extraire le profil candidat depuis le texte brut d'un CV (mode rapide)
-   * @param {string} cvText - Texte brut extrait du PDF
-   * @returns {Object} Profil candidat structuré
    */
   async extractCandidateFromPDF(cvText) {
     console.log('🔍 [MatcherService] Extraction du profil candidat depuis le CV PDF...');
@@ -367,9 +283,6 @@ class MatcherService {
     return this.formatCandidateData(result);
   }
 
-  /**
-   * Formater les données de l'offre
-   */
   formatOfferData(offer) {
     return {
       title: offer.title,
@@ -381,9 +294,6 @@ class MatcherService {
     };
   }
 
-  /**
-   * Formater les données du candidat
-   */
   formatCandidateData(candidate) {
     return {
       prenom: candidate.prenom,
@@ -401,7 +311,6 @@ class MatcherService {
       langues: candidate.langues || ''
     };
   }
-
 }
 
 module.exports = new MatcherService();

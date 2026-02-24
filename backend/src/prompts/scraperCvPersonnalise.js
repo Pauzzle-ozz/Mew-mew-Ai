@@ -34,13 +34,14 @@ Ignore tout le contenu parasite (navigation, publicités, mentions légales, coo
 **OBJECTIF : le CV optimisé doit atteindre un score de concordance MINIMUM de 80/100.**
 
 En utilisant l'offre extraite et le profil candidat :
-- Reformule agressivement le titre du poste pour correspondre exactement à l'intitulé de l'offre
-- Réécrire le résumé professionnel en intégrant les mots-clés exacts de l'offre
-- Réorganise les expériences pour mettre en avant celles qui correspondent le mieux à l'offre
-- Adapte les descriptions d'expériences pour utiliser le vocabulaire et les compétences de l'offre
-- Met en avant toutes les compétences clés mentionnées dans l'offre (même si implicites dans le profil)
-- Garde les données exactes du candidat (prenom, nom, email, téléphone, etc.) — ne les invente pas
-- Si le profil est éloigné de l'offre, mets en avant les compétences transversales pour maximiser la pertinence
+- Reformuler le titre du poste pour correspondre à l'intitulé de l'offre
+- Résumé : 2-3 phrases (50-80 mots) avec les mots-clés exacts de l'offre
+- MAX 3 expériences, 3-4 bullets par poste (verbe + tâche + résultat chiffré)
+- Adapter les descriptions pour utiliser le vocabulaire de l'offre
+- 8-15 compétences techniques pertinentes
+- 5-7 qualifications clés en phrases de 12-18 mots
+- Garder les données exactes du candidat — ne pas inventer
+- Le CV doit tenir sur UNE PAGE A4 — être CONCIS et PERCUTANT
 
 ---
 

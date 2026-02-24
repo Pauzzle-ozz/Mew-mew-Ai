@@ -3,23 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { validatePDF, downloadGeneratedCV } from '@/lib/utils/fileHelpers'
-import { cvApi } from '@/lib/api/cvApi'
+import { validatePDF } from '@/lib/utils/fileHelpers'
 import { supabase } from '@/lib/supabase'
 import ErrorMessage from '@/components/shared/ErrorMessage'
 import Header from '@/components/shared/Header'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import ToolHistory from '@/components/shared/ToolHistory'
 import { saveHistoryEntry } from '@/lib/api/historyApi'
-import CVBlockEditor from '@/components/cv/CVBlockEditor'
-import CVPreview from '@/components/cv/CVPreview'
 
 /* ─── Stepper ─────────────────────────────────────────── */
 const STEPS = [
-  { n: 1, label: 'Saisie & Optimisation' },
-  { n: 2, label: 'Résultats IA' },
-  { n: 3, label: 'Édition CV' },
-  { n: 4, label: 'Génération PDF' },
+  { n: 1, label: 'Upload CV' },
+  { n: 2, label: 'Résultats' },
 ]
 
 function Stepper({ current }) {
@@ -64,6 +59,109 @@ function ATSScore({ score }) {
   )
 }
 
+/* ─── Bouton copier avec feedback ─────────────────────── */
+function CopyButton({ text, label }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Fallback pour les navigateurs qui ne supportent pas clipboard API
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        copied
+          ? 'bg-success/20 text-success border border-success/30'
+          : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+      }`}
+    >
+      {copied ? '✓ Copié !' : `Copier ${label || ''}`}
+    </button>
+  )
+}
+
+/* ─── Section de texte optimisé ───────────────────────── */
+function OptimizedSection({ title, icon, originalText, optimizedText }) {
+  const [showOriginal, setShowOriginal] = useState(false)
+
+  if (!optimizedText) return null
+
+  return (
+    <div className="bg-surface rounded-xl border border-border p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{icon}</span>
+          <h3 className="font-semibold text-text-primary text-sm">{title}</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {originalText && (
+            <button
+              onClick={() => setShowOriginal(!showOriginal)}
+              className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+            >
+              {showOriginal ? '▲ Masquer original' : '▼ Voir original'}
+            </button>
+          )}
+          <CopyButton text={optimizedText} />
+        </div>
+      </div>
+
+      {/* Original (collapsible) */}
+      {showOriginal && originalText && (
+        <div className="mb-3 p-3 bg-red-50/5 border border-red-500/15 rounded-lg">
+          <div className="text-xs font-bold text-red-400 uppercase mb-1.5">Avant</div>
+          <p className="text-xs text-text-muted whitespace-pre-line leading-relaxed">{originalText}</p>
+        </div>
+      )}
+
+      {/* Optimisé */}
+      <div className="p-3 bg-success/5 border border-success/15 rounded-lg">
+        {showOriginal && <div className="text-xs font-bold text-success uppercase mb-1.5">Après (optimisé)</div>}
+        <p className="text-sm text-text-secondary whitespace-pre-line leading-relaxed">{optimizedText}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Formater les expériences en texte copiable ──────── */
+function formatExperiences(experiences) {
+  if (!experiences?.length) return ''
+  return experiences.map(exp => {
+    const lines = []
+    if (exp.poste) lines.push(exp.poste)
+    const meta = [exp.entreprise, exp.localisation, [exp.date_debut, exp.date_fin].filter(Boolean).join(' - ')].filter(Boolean).join(' | ')
+    if (meta) lines.push(meta)
+    if (exp.description) lines.push(exp.description)
+    return lines.join('\n')
+  }).join('\n\n')
+}
+
+function formatFormations(formations) {
+  if (!formations?.length) return ''
+  return formations.map(f => {
+    const lines = []
+    if (f.diplome) lines.push(f.diplome)
+    const meta = [f.etablissement, f.localisation, f.date_fin].filter(Boolean).join(' | ')
+    if (meta) lines.push(meta)
+    return lines.join('\n')
+  }).join('\n\n')
+}
+
 /* ─── Page principale ─────────────────────────────────── */
 export default function OptimiseurCVPage() {
   const { user, loading } = useAuth()
@@ -72,57 +170,31 @@ export default function OptimiseurCVPage() {
   const [processing, setProcessing] = useState(false)
   const [step, setStep] = useState(1)
 
-  // Étape 1 : saisie
-  const [inputMethod, setInputMethod] = useState('form')
+  // Étape 1 : upload
   const [cvFile, setCvFile] = useState(null)
   const [posteCible, setPosteCible] = useState('')
   const [localError, setLocalError] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
-  // CV original (avant optim)
-  const [cvDataOriginal, setCvDataOriginal] = useState(null)
-
-  // Formulaire
-  const [cvData, setCvData] = useState({
-    prenom: '', nom: '', titre_poste: '', email: '', telephone: '',
-    adresse: '', linkedin: '', resume: '',
-    experiences: [{ poste: '', entreprise: '', localisation: '', date_debut: '', date_fin: '', description: '' }],
-    formations: [{ diplome: '', etablissement: '', localisation: '', date_fin: '', description: '' }],
-    competences_techniques: '', competences_soft: '', langues: '', interets: ''
-  })
-
-  // Étape 2 : résultats IA
+  // Étape 2 : résultats
   const [optimResult, setOptimResult] = useState(null)
   const [cvDataOptimized, setCvDataOptimized] = useState(null)
-  const [showComparison, setShowComparison] = useState(false)
-
-  // Étape 3 : blocs éditables + blockStyles + bloc actif + filtrage IA
-  const [blockStyles, setBlockStyles] = useState({})
-  const [filtering, setFiltering] = useState(false)
-  const [filterSections, setFilterSections] = useState([])
-  const [activeBlock, setActiveBlock] = useState(null)
-
-  const BLOCK_ORDER_DEFAULT = ['identity', 'resume', 'experiences', 'formations', 'competences']
-  const [blockOrder, setBlockOrder] = useState(BLOCK_ORDER_DEFAULT)
-
-  // Étape 4 : génération + aperçu résultat
-  const [generatingCV, setGeneratingCV] = useState(false)
-  const [generatedConfig, setGeneratedConfig] = useState(null)
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/') }
 
-  /* ── Form helpers ── */
-  const handleChange = (f, v) => setCvData(prev => ({ ...prev, [f]: v }))
-  const handleArrayChange = (arr, i, f, v) => {
-    const a = [...cvData[arr]]; a[i] = { ...a[i], [f]: v }
-    setCvData(prev => ({ ...prev, [arr]: a }))
-  }
-  const addArrayItem = (arr, tpl) => setCvData(prev => ({ ...prev, [arr]: [...prev[arr], tpl] }))
-  const removeArrayItem = (arr, i) => setCvData(prev => ({ ...prev, [arr]: prev[arr].filter((_, j) => j !== i) }))
-
-  /* ── Étape 1 : Optimisation ── */
+  /* ── Étape 1 : Upload + Optimisation ── */
   const handleFileChange = (e) => {
     const file = e.target.files[0]; if (!file) return
+    setLocalError(null)
+    try { validatePDF(file); setCvFile(file) } catch (err) { setLocalError(err.message); setCvFile(null) }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (!file) return
     setLocalError(null)
     try { validatePDF(file); setCvFile(file) } catch (err) { setLocalError(err.message); setCvFile(null) }
   }
@@ -134,13 +206,13 @@ export default function OptimiseurCVPage() {
     setStep(2)
 
     // Sauvegarde historique (fire-and-forget)
-    const nom = data.cvData_optimise?.prenom || cvData.prenom || ''
-    const prenom = data.cvData_optimise?.nom || cvData.nom || ''
+    const nom = data.cvData_optimise?.prenom || ''
+    const prenom = data.cvData_optimise?.nom || ''
     saveHistoryEntry({
       userId: user.id,
       toolType: 'optimiseur-cv',
       title: `Optimisation CV - ${nom} ${prenom}`.trim(),
-      inputSummary: { poste_cible: posteCible || cvData.titre_poste, methode: inputMethod },
+      inputSummary: { poste_cible: posteCible || data.cvData_optimise?.titre_poste, methode: 'upload' },
       resultSummary: {
         score_ats: data.score_ats,
         fullResult: {
@@ -151,17 +223,6 @@ export default function OptimiseurCVPage() {
         }
       }
     }).catch(() => {})
-  }
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault(); setLocalError(null)
-    setCvDataOriginal({ ...cvData })
-    setProcessing(true)
-    try {
-      const fullResp = await cvApi.optimizeCVForm(cvData, user.id, posteCible || undefined)
-      if (fullResp.success) { _goToStep2(fullResp.data) }
-      else throw new Error(fullResp.error || 'Erreur lors de l\'optimisation')
-    } catch (err) { setProcessing(false); setLocalError(err.message) }
   }
 
   const handlePdfOptimization = async (e) => {
@@ -180,53 +241,13 @@ export default function OptimiseurCVPage() {
     } catch (err) { setProcessing(false); setLocalError(err.message) }
   }
 
-  /* ── Étape 3 : réordonnancement des blocs ── */
-  const moveBlock = (key, dir) => {
-    setBlockOrder(prev => {
-      const idx = prev.indexOf(key)
-      if (idx < 0) return prev
-      const next = [...prev]
-      const swap = idx + dir
-      if (swap < 0 || swap >= next.length) return prev
-      ;[next[idx], next[swap]] = [next[swap], next[idx]]
-      return next
-    })
-  }
-
-  const BLOCK_LABELS = {
-    identity:    { label: 'Identité & Contact', icon: '👤' },
-    resume:      { label: 'Résumé Profil',      icon: '📝' },
-    experiences: { label: 'Expériences',        icon: '💼' },
-    formations:  { label: 'Formations',         icon: '🎓' },
-    competences: { label: 'Compétences',        icon: '⚡' },
-  }
-
-  /* ── Bloc styles ── */
-  const handleBlockStyleChange = (key, prop, val) => {
-    setBlockStyles(prev => ({ ...prev, [key]: { ...(prev[key] || {}), [prop]: val } }))
-  }
-
-  /* ── Étape 4 : Génération ── */
-  const handleGenerateCV = async () => {
-    setGeneratingCV(true); setLocalError(null)
-    try {
-      const buildConfig = { shape: 'classique', style: 'ardoise', blockStyles }
-      const result = await cvApi.generateCV(cvDataOptimized, buildConfig)
-      if (result.success) {
-        setGeneratedConfig({ cvData: cvDataOptimized, buildConfig })
-        downloadGeneratedCV(result)
-      }
-    } catch (err) { setLocalError(err.message) }
-    finally { setGeneratingCV(false) }
-  }
-
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-text-primary">Chargement...</div>
 
   return (
     <div className="min-h-screen bg-background">
       <Header user={user} onLogout={handleLogout} breadcrumbs={[{ label: 'Emploi', href: '/dashboard' }, { label: 'Optimiseur CV' }]} />
 
-      <main className={`mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all ${step === 3 ? 'max-w-7xl' : 'max-w-4xl'}`}>
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-2">
           <div className="flex-1" />
           <button
@@ -257,14 +278,13 @@ export default function OptimiseurCVPage() {
         <Stepper current={step} />
 
         {/* ═══════════════════════════════════════
-            ÉTAPE 1 : SAISIE + OPTIMISATION
+            ÉTAPE 1 : UPLOAD PDF + OPTIMISATION
         ═══════════════════════════════════════ */}
         {step === 1 && (
           <>
-            {/* Animation discrète pendant le traitement */}
             {processing && (
               <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6">
-                <CatLoadingAnimation label={inputMethod === 'upload' ? 'Analyse du PDF en cours' : 'Optimisation en cours'} />
+                <CatLoadingAnimation label="Analyse et optimisation du CV en cours" />
               </div>
             )}
 
@@ -272,8 +292,8 @@ export default function OptimiseurCVPage() {
               <>
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
                   <p className="text-sm text-primary">
-                    <strong>Comment ça marche :</strong> Upload ton CV PDF ou remplis le formulaire.
-                    L'IA optimise le contenu pour les ATS, te donne un score et prépare ton CV pour la mise en page.
+                    <strong>Comment ça marche :</strong> Upload ton CV PDF (fait sur Canva, CV Maker, etc.).
+                    L'IA analyse et optimise le texte pour les ATS, puis te donne les sections optimisées à copier-coller dans ton éditeur.
                   </p>
                 </div>
 
@@ -290,128 +310,56 @@ export default function OptimiseurCVPage() {
                   />
                 </div>
 
-                {/* Choix méthode */}
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6 mb-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Comment veux-tu saisir ton CV ?</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button type="button" onClick={() => setInputMethod('form')} className={`p-6 rounded-lg border-2 transition-all ${inputMethod === 'form' ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'}`}>
-                      <div className="text-4xl mb-3">✍️</div>
-                      <h4 className="font-semibold text-lg mb-2 text-text-primary">Formulaire manuel</h4>
-                      <p className="text-sm text-text-muted">Remplis tes informations et l'IA les optimisera.</p>
-                    </button>
-                    <button type="button" onClick={() => setInputMethod('upload')} className={`p-6 rounded-lg border-2 transition-all ${inputMethod === 'upload' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
-                      <div className="text-4xl mb-3">📤</div>
-                      <h4 className="font-semibold text-lg mb-2 text-text-primary">Upload CV PDF</h4>
-                      <p className="text-sm text-text-muted">Upload ton CV et l'IA l'extraira et l'optimisera.</p>
-                    </button>
-                  </div>
-                </div>
-
                 <ErrorMessage message={localError} onClose={() => setLocalError(null)} />
+
+                {/* Zone upload PDF drag & drop */}
+                <form onSubmit={handlePdfOptimization} className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
+                  <h3 className="text-lg font-semibold text-text-primary mb-4">Upload ton CV (PDF)</h3>
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                    onDragLeave={() => setIsDragging(false)}
+                    className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all mb-4 ${
+                      isDragging ? 'border-primary bg-primary/5' :
+                      cvFile ? 'border-success bg-success/5' : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => document.getElementById('cv-upload').click()}
+                  >
+                    <input id="cv-upload" type="file" accept=".pdf" onChange={handleFileChange} className="hidden" />
+                    {cvFile ? (
+                      <div className="space-y-2">
+                        <div className="text-3xl">📄</div>
+                        <p className="text-sm font-medium text-success">{cvFile.name}</p>
+                        <p className="text-xs text-text-muted">{(cvFile.size / 1024).toFixed(0)} Ko — Cliquer pour changer</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="text-4xl">📎</div>
+                        <p className="font-medium text-text-primary">Glisse ton CV PDF ici</p>
+                        <p className="text-sm text-text-muted">ou clique pour sélectionner — Max 2 Mo</p>
+                      </div>
+                    )}
+                  </div>
+                  <button type="submit" disabled={!cvFile || processing} className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 hover:bg-primary-hover transition-colors">
+                    Optimiser mon CV avec l'IA
+                  </button>
+                </form>
               </>
-            )}
-
-            {/* MODE FORMULAIRE */}
-            {!processing && inputMethod === 'form' && (
-              <form onSubmit={handleFormSubmit} className="space-y-6">
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Informations personnelles</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <input type="text" placeholder="Prénom *" value={cvData.prenom} onChange={e => handleChange('prenom', e.target.value)} required className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted focus:ring-2 focus:ring-primary/50 outline-none" />
-                    <input type="text" placeholder="Nom *" value={cvData.nom} onChange={e => handleChange('nom', e.target.value)} required className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted focus:ring-2 focus:ring-primary/50 outline-none" />
-                    <input type="text" placeholder="Intitulé du poste souhaité *" value={cvData.titre_poste} onChange={e => handleChange('titre_poste', e.target.value)} required className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted focus:ring-2 focus:ring-primary/50 outline-none md:col-span-2" />
-                    <input type="email" placeholder="Email *" value={cvData.email} onChange={e => handleChange('email', e.target.value)} required className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted focus:ring-2 focus:ring-primary/50 outline-none" />
-                    <input type="tel" placeholder="Téléphone" value={cvData.telephone} onChange={e => handleChange('telephone', e.target.value)} className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                    <input type="text" placeholder="Localisation (ex: Paris, France)" value={cvData.adresse} onChange={e => handleChange('adresse', e.target.value)} className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                    <input type="text" placeholder="LinkedIn (optionnel)" value={cvData.linkedin} onChange={e => handleChange('linkedin', e.target.value)} className="px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                  </div>
-                </div>
-
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Résumé professionnel</h3>
-                  <textarea rows={4} placeholder="Présentez-vous en quelques lignes..." value={cvData.resume} onChange={e => handleChange('resume', e.target.value)} className="w-full px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                </div>
-
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                  <div className="flex justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">Expériences professionnelles</h3>
-                    <button type="button" onClick={() => addArrayItem('experiences', { poste: '', entreprise: '', localisation: '', date_debut: '', date_fin: '', description: '' })} className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium">+ Ajouter</button>
-                  </div>
-                  {cvData.experiences.map((exp, i) => (
-                    <div key={i} className="p-4 border-2 border-border rounded-lg space-y-3 mb-4">
-                      <div className="flex justify-between"><span className="text-sm font-semibold text-text-muted">Expérience #{i + 1}</span>{cvData.experiences.length > 1 && <button type="button" onClick={() => removeArrayItem('experiences', i)} className="text-error text-sm">Supprimer</button>}</div>
-                      <input placeholder="Intitulé du poste" value={exp.poste} onChange={e => handleArrayChange('experiences', i, 'poste', e.target.value)} className="w-full px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <input placeholder="Employeur" value={exp.entreprise} onChange={e => handleArrayChange('experiences', i, 'entreprise', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                        <input placeholder="Localisation" value={exp.localisation || ''} onChange={e => handleArrayChange('experiences', i, 'localisation', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                        <input placeholder="Date début (ex: Jan 2020)" value={exp.date_debut || ''} onChange={e => handleArrayChange('experiences', i, 'date_debut', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                        <input placeholder="Date fin (ex: Dec 2023)" value={exp.date_fin || ''} onChange={e => handleArrayChange('experiences', i, 'date_fin', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                      </div>
-                      <textarea rows={4} placeholder="Description (bullets, réalisations chiffrées...)" value={exp.description} onChange={e => handleArrayChange('experiences', i, 'description', e.target.value)} className="w-full px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                  <div className="flex justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-text-primary">Formation</h3>
-                    <button type="button" onClick={() => addArrayItem('formations', { diplome: '', etablissement: '', localisation: '', date_fin: '', description: '' })} className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium">+ Ajouter</button>
-                  </div>
-                  {cvData.formations.map((form, i) => (
-                    <div key={i} className="p-4 border-2 border-border rounded-lg space-y-3 mb-4">
-                      <div className="flex justify-between"><span className="text-sm font-semibold text-text-muted">Formation #{i + 1}</span>{cvData.formations.length > 1 && <button type="button" onClick={() => removeArrayItem('formations', i)} className="text-error text-sm">Supprimer</button>}</div>
-                      <input placeholder="Diplôme" value={form.diplome} onChange={e => handleArrayChange('formations', i, 'diplome', e.target.value)} className="w-full px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <input placeholder="École / Université" value={form.etablissement} onChange={e => handleArrayChange('formations', i, 'etablissement', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                        <input placeholder="Localisation" value={form.localisation || ''} onChange={e => handleArrayChange('formations', i, 'localisation', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                        <input placeholder="Année / Date fin" value={form.date_fin || ''} onChange={e => handleArrayChange('formations', i, 'date_fin', e.target.value)} className="px-4 py-2 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Compétences</h3>
-                  <div className="space-y-4">
-                    <textarea rows={3} placeholder="Compétences techniques (ex: JavaScript, React, Python...)" value={cvData.competences_techniques} onChange={e => handleChange('competences_techniques', e.target.value)} className="w-full px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                    <textarea rows={2} placeholder="Soft skills (ex: Leadership, Communication...)" value={cvData.competences_soft} onChange={e => handleChange('competences_soft', e.target.value)} className="w-full px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                    <input placeholder="Langues (ex: Français natif, Anglais C1)" value={cvData.langues} onChange={e => handleChange('langues', e.target.value)} className="w-full px-4 py-3 border border-border rounded-lg bg-surface-elevated text-text-primary placeholder-text-muted outline-none" />
-                  </div>
-                </div>
-
-                <button type="submit" disabled={processing} className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg shadow-lg shadow-black/20 disabled:opacity-50 hover:bg-primary-hover transition-colors">
-                  Optimiser mon CV avec l'IA
-                </button>
-              </form>
-            )}
-
-            {/* MODE UPLOAD */}
-            {!processing && inputMethod === 'upload' && (
-              <form onSubmit={handlePdfOptimization} className="bg-surface rounded-lg shadow-lg shadow-black/20 p-6">
-                <h3 className="text-lg font-semibold text-text-primary mb-4">Upload ton CV (PDF)</h3>
-                <div className="mb-6">
-                  <input type="file" accept=".pdf" onChange={handleFileChange} className="block w-full text-sm border border-border rounded-lg bg-surface-elevated text-text-primary p-3" />
-                  <p className="mt-2 text-xs text-text-muted">Format PDF uniquement, maximum 2 Mo</p>
-                </div>
-                {cvFile && <div className="mb-4 p-3 bg-success/10 border border-success/20 rounded-lg"><p className="text-sm text-success">✓ Fichier : <strong>{cvFile.name}</strong></p></div>}
-                <button type="submit" disabled={!cvFile || processing} className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg disabled:opacity-50 hover:bg-primary-hover transition-colors">
-                  Optimiser mon CV avec l'IA
-                </button>
-              </form>
             )}
           </>
         )}
 
         {/* ═══════════════════════════════════════
-            ÉTAPE 2 : RÉSULTATS IA (score + avant/après)
+            ÉTAPE 2 : RÉSULTATS (texte par section + copier)
         ═══════════════════════════════════════ */}
         {step === 2 && optimResult && cvDataOptimized && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-text-primary mb-1">Résultats de l'optimisation</h2>
-              <p className="text-text-muted">L'IA a analysé et optimisé ton CV pour maximiser les chances de passer les ATS.</p>
+              <p className="text-text-muted">Copie chaque section optimisée dans ton éditeur de CV (Canva, CV Maker, etc.).</p>
             </div>
 
+            {/* Score ATS + Points forts + Améliorations */}
             <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 {optimResult.score_ats && (
@@ -444,239 +392,87 @@ export default function OptimiseurCVPage() {
               </div>
             </div>
 
-            {cvDataOriginal?.resume && cvDataOptimized?.resume && (
-              <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6">
-                <button onClick={() => setShowComparison(!showComparison)} className="flex items-center justify-between w-full">
-                  <h3 className="font-bold text-text-primary">Comparaison avant / après</h3>
-                  <span className="text-text-muted text-sm">{showComparison ? '▲ Masquer' : '▼ Voir les changements'}</span>
-                </button>
-                {showComparison && (
-                  <div className="grid md:grid-cols-2 gap-4 mt-4">
-                    <div className="p-4 bg-red-50/5 border border-red-500/20 rounded-lg">
-                      <div className="text-xs font-bold text-red-400 uppercase mb-2">Avant</div>
-                      <p className="text-xs text-text-muted leading-relaxed">{cvDataOriginal.resume}</p>
-                    </div>
-                    <div className="p-4 bg-success/5 border border-success/20 rounded-lg">
-                      <div className="text-xs font-bold text-success uppercase mb-2">Après (optimisé)</div>
-                      <p className="text-xs text-text-secondary leading-relaxed">{cvDataOptimized.resume}</p>
-                    </div>
-                  </div>
-                )}
+            {/* Sections optimisées */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-text-primary">Texte optimisé par section</h3>
+                <CopyButton
+                  text={[
+                    cvDataOptimized.titre_poste && `Titre: ${cvDataOptimized.titre_poste}`,
+                    cvDataOptimized.resume && `\nRésumé:\n${cvDataOptimized.resume}`,
+                    cvDataOptimized.experiences?.length && `\nExpériences:\n${formatExperiences(cvDataOptimized.experiences)}`,
+                    cvDataOptimized.formations?.length && `\nFormations:\n${formatFormations(cvDataOptimized.formations)}`,
+                    cvDataOptimized.competences_techniques && `\nCompétences techniques:\n${cvDataOptimized.competences_techniques}`,
+                    cvDataOptimized.competences_soft && `\nSoft skills / Qualifications:\n${cvDataOptimized.competences_soft}`,
+                    cvDataOptimized.langues && `\nLangues:\n${cvDataOptimized.langues}`,
+                  ].filter(Boolean).join('\n')}
+                  label="tout"
+                />
               </div>
-            )}
 
-            <div className="flex justify-between">
-              <button onClick={() => setStep(1)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier</button>
-              <button onClick={() => setStep(3)} className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover">
-                Éditer mon CV →
+              {/* Titre du poste */}
+              {cvDataOptimized.titre_poste && (
+                <div className="bg-surface rounded-xl border border-border p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🏷️</span>
+                      <h3 className="font-semibold text-text-primary text-sm">Titre du poste</h3>
+                    </div>
+                    <CopyButton text={cvDataOptimized.titre_poste} />
+                  </div>
+                  <div className="p-3 bg-success/5 border border-success/15 rounded-lg">
+                    <p className="text-sm text-text-secondary font-medium">{cvDataOptimized.titre_poste}</p>
+                  </div>
+                </div>
+              )}
+
+              <OptimizedSection
+                title="Résumé professionnel"
+                icon="📝"
+                optimizedText={cvDataOptimized.resume}
+              />
+
+              {cvDataOptimized.experiences?.length > 0 && (
+                <OptimizedSection
+                  title="Expériences professionnelles"
+                  icon="💼"
+                  optimizedText={formatExperiences(cvDataOptimized.experiences)}
+                />
+              )}
+
+              {cvDataOptimized.formations?.length > 0 && (
+                <OptimizedSection
+                  title="Formations"
+                  icon="🎓"
+                  optimizedText={formatFormations(cvDataOptimized.formations)}
+                />
+              )}
+
+              <OptimizedSection
+                title="Compétences techniques"
+                icon="⚡"
+                optimizedText={cvDataOptimized.competences_techniques}
+              />
+
+              <OptimizedSection
+                title="Soft skills / Qualifications"
+                icon="🤝"
+                optimizedText={cvDataOptimized.competences_soft}
+              />
+
+              <OptimizedSection
+                title="Langues"
+                icon="🌍"
+                optimizedText={cvDataOptimized.langues}
+              />
+            </div>
+
+            {/* Navigation */}
+            <div className="flex justify-between pt-4">
+              <button onClick={() => { setStep(1); setCvFile(null); setOptimResult(null); setCvDataOptimized(null) }}
+                className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">
+                Recommencer
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════
-            ÉTAPE 3 : ÉDITEUR LIVE — GRAND CV + PANEL
-        ═══════════════════════════════════════ */}
-        {step === 3 && cvDataOptimized && (
-          <div>
-            <div className="mb-5">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Édite ton CV</h2>
-              <p className="text-text-muted text-sm">Clique sur une zone du CV pour éditer la section correspondante. Les modifications s'affichent en temps réel.</p>
-            </div>
-
-            <div className="flex gap-6 items-start">
-              {/* ── Panel gauche : sections + éditeur ── */}
-              <div className="w-80 flex-shrink-0 space-y-3">
-
-                {/* Sélecteur de sections */}
-                <div className="bg-surface rounded-xl border border-border p-3">
-                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2.5 px-1">Sections</div>
-                  <div className="space-y-1">
-                    {blockOrder.map((key, idx) => {
-                      const b = BLOCK_LABELS[key]
-                      const isActive = activeBlock === key
-                      return (
-                        <div
-                          key={key}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-all ${isActive ? 'border-primary bg-primary/10 shadow-sm shadow-primary/20' : 'border-transparent hover:border-border hover:bg-surface-elevated'}`}
-                          onClick={() => setActiveBlock(isActive ? null : key)}
-                        >
-                          <span className="text-base leading-none">{b.icon}</span>
-                          <span className={`flex-1 text-sm font-medium ${isActive ? 'text-primary' : 'text-text-secondary'}`}>{b.label}</span>
-                          <div className="flex flex-col gap-0 opacity-50 hover:opacity-100">
-                            <button
-                              onClick={e => { e.stopPropagation(); moveBlock(key, -1) }}
-                              disabled={idx === 0}
-                              className="w-5 h-4 text-text-muted hover:text-primary disabled:opacity-20 text-xs leading-none flex items-center justify-center"
-                            >▲</button>
-                            <button
-                              onClick={e => { e.stopPropagation(); moveBlock(key, 1) }}
-                              disabled={idx === blockOrder.length - 1}
-                              className="w-5 h-4 text-text-muted hover:text-primary disabled:opacity-20 text-xs leading-none flex items-center justify-center"
-                            >▼</button>
-                          </div>
-                          {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <p className="text-xs text-text-muted mt-2.5 px-1 opacity-60">
-                    Clique pour éditer · ▲▼ pour réordonner
-                  </p>
-                </div>
-
-                {/* Éditeur de bloc actif */}
-                <CVBlockEditor
-                  cvData={cvDataOptimized}
-                  blockStyles={blockStyles}
-                  onCvDataChange={setCvDataOptimized}
-                  onBlockStyleChange={handleBlockStyleChange}
-                  activeBlock={activeBlock}
-                />
-
-                {/* Filtrage IA par section */}
-                <div className="bg-surface-elevated border border-border rounded-xl p-3 space-y-2">
-                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider px-1">Condenser avec l'IA</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { id: 'resume', label: 'Résumé' },
-                      { id: 'experiences', label: 'Expériences' },
-                      { id: 'competences', label: 'Compétences' },
-                      { id: 'qualifications', label: 'Qualifications' },
-                      { id: 'formations', label: 'Formations' },
-                    ].map(s => {
-                      const active = filterSections.includes(s.id)
-                      return (
-                        <button key={s.id}
-                          onClick={() => setFilterSections(prev => active ? prev.filter(x => x !== s.id) : [...prev, s.id])}
-                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? 'bg-amber-500/20 text-amber-600 border-amber-500/40' : 'bg-transparent text-text-muted border-border hover:border-amber-500/30 hover:text-amber-600'}`}
-                        >{s.label}</button>
-                      )
-                    })}
-                  </div>
-                  <button
-                    onClick={async () => {
-                      setFiltering(true)
-                      try {
-                        const res = await cvApi.filterCV(cvDataOptimized, filterSections)
-                        if (res.success && res.data) {
-                          setCvDataOptimized(res.data)
-                        }
-                      } catch (e) {
-                        console.error('Erreur filtrage:', e)
-                      } finally {
-                        setFiltering(false)
-                      }
-                    }}
-                    disabled={filtering}
-                    className="w-full px-4 py-2 bg-amber-500/10 text-amber-600 border border-amber-500/30 rounded-lg font-semibold text-sm hover:bg-amber-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {filtering
-                      ? <><CatLoadingAnimation label="" /><span>Condensation...</span></>
-                      : <><span>🔄</span><span>{filterSections.length ? `Condenser ${filterSections.length} section${filterSections.length > 1 ? 's' : ''}` : 'Tout condenser'}</span></>
-                    }
-                  </button>
-                  <p className="text-xs text-text-muted text-center opacity-60">
-                    {filterSections.length ? 'Seules les sections sélectionnées seront condensées' : 'Sélectionne des sections ou condense tout'}
-                  </p>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between pt-1">
-                  <button onClick={() => setStep(2)} className="px-5 py-2.5 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium text-sm">← Retour</button>
-                  <button onClick={() => setStep(4)} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary-hover text-sm">
-                    Générer PDF →
-                  </button>
-                </div>
-              </div>
-
-              {/* ── Grand CV interactif ── */}
-              <div className="flex-1 min-w-0 flex flex-col items-center sticky top-6">
-                <div className="text-xs font-medium text-text-muted mb-2 text-center">
-                  {activeBlock
-                    ? <span className="text-primary font-semibold">✏ Édition : {BLOCK_LABELS[activeBlock]?.label}</span>
-                    : 'Clique sur une zone pour l\'éditer'
-                  }
-                </div>
-                <CVPreview
-                  cvData={cvDataOptimized}
-                  buildConfig={{ shape: 'classique', style: 'ardoise', blockStyles }}
-                  scale={0.68}
-                  maxPages={2}
-                  interactive
-                  selectedBlock={activeBlock}
-                  onBlockClick={setActiveBlock}
-                />
-                <p className="text-xs text-text-muted text-center mt-2 opacity-50">Se met à jour en temps réel</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════
-            ÉTAPE 4 : GÉNÉRATION PDF
-        ═══════════════════════════════════════ */}
-        {step === 4 && cvDataOptimized && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Générer ton CV</h2>
-              <p className="text-text-muted">Ton CV va être généré en PDF haute qualité, prêt à envoyer.</p>
-            </div>
-
-            {optimResult?.score_ats && (
-              <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6 flex items-center gap-6">
-                <ATSScore score={optimResult.score_ats} />
-                <div>
-                  <h3 className="font-bold text-text-primary mb-1">Template Classique ATS</h3>
-                  <p className="text-sm text-text-muted">Optimisé pour les systèmes de recrutement automatisés.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex gap-4">
-              <div className="text-3xl">📄</div>
-              <div>
-                <h3 className="font-bold text-primary mb-1">Format PDF — Optimisé ATS</h3>
-                <ul className="text-sm text-primary/80 space-y-1">
-                  <li>✓ Format A4 universel, accepté par tous les recruteurs</li>
-                  <li>✓ Compatible avec les systèmes ATS (Applicant Tracking Systems)</li>
-                  <li>✓ Mise en page professionnelle basée sur tes choix</li>
-                  <li>✓ Prêt à envoyer ou uploader sur les jobboards</li>
-                </ul>
-              </div>
-            </div>
-
-            <ErrorMessage message={localError} onClose={() => setLocalError(null)} />
-
-            {generatedConfig && (
-              <div className="bg-surface rounded-xl shadow-lg shadow-black/20 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-text-primary text-lg">Aperçu de ton CV final</h3>
-                  <span className="text-xs text-success bg-success/10 border border-success/20 rounded-full px-3 py-1 font-medium">✓ Généré</span>
-                </div>
-                <div className="flex justify-center overflow-auto">
-                  <CVPreview
-                    cvData={generatedConfig.cvData}
-                    buildConfig={generatedConfig.buildConfig}
-                    scale={0.65}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-between">
-              <button onClick={() => setStep(3)} className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium">← Modifier les blocs</button>
-              <div className="flex gap-3">
-                {generatedConfig && (
-                  <button onClick={() => { setGeneratedConfig(null); setStep(1); setProcessing(false) }}
-                    className="px-6 py-3 border-2 border-border text-text-secondary rounded-lg hover:bg-surface font-medium text-sm">
-                    🔄 Recommencer
-                  </button>
-                )}
-                <button onClick={handleGenerateCV} disabled={generatingCV} className="px-10 py-4 bg-primary text-primary-foreground rounded-lg font-bold text-lg shadow-lg shadow-primary/20 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                  {generatingCV ? <span className="flex items-center gap-2"><span className="inline-block animate-spin">⟳</span> Génération en cours...</span> : generatedConfig ? '⬇ Re-télécharger' : 'Télécharger mon CV (PDF)'}
-                </button>
-              </div>
             </div>
           </div>
         )}

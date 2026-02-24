@@ -67,10 +67,8 @@ router.post('/analyser', async (req, res) => {
       });
     }
 
-    const { buildConfig } = req.body;
-
     // Appel au service pour analyser + générer les documents (avec options)
-    const result = await matcherService.analyzeAndGenerate(offer, candidate, options, buildConfig || {});
+    const result = await matcherService.analyzeAndGenerate(offer, candidate, options);
 
     console.log('✅ [MATCHER] Analyse et génération terminées avec succès');
 
@@ -170,7 +168,7 @@ router.post('/scraper-url', async (req, res) => {
  */
 router.post('/analyser-scraper', async (req, res) => {
   try {
-    const { rawText, url, candidate, options, buildConfig } = req.body;
+    const { rawText, url, candidate, options } = req.body;
 
     console.log('🔗 [MATCHER] Mode scraper - Génération documents...');
     console.log('👤 Candidat:', candidate?.prenom, candidate?.nom);
@@ -199,7 +197,7 @@ router.post('/analyser-scraper', async (req, res) => {
       });
     }
 
-    const result = await matcherService.scrapeAndGenerate(rawText, url, candidate, options, buildConfig || {});
+    const result = await matcherService.scrapeAndGenerate(rawText, url, candidate, options);
 
     console.log('✅ [MATCHER] Documents générés (mode scraper)');
 
@@ -237,7 +235,7 @@ router.post('/analyser-scraper', async (req, res) => {
  */
 router.post('/generer-complet', upload.single('cv'), async (req, res) => {
   try {
-    const { offerUrl, options: optionsRaw, buildConfig: buildConfigRaw } = req.body;
+    const { offerUrl, options: optionsRaw } = req.body;
     const cvFile = req.file;
 
     console.log('🚀 [MATCHER] Mode Rapide - Démarrage...');
@@ -253,11 +251,6 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
     let options = { generatePersonalizedCV: true, generateIdealCV: true, generateCoverLetter: true };
     if (optionsRaw) {
       try { options = JSON.parse(optionsRaw); } catch (_) {}
-    }
-
-    let buildConfig = {};
-    if (buildConfigRaw) {
-      try { buildConfig = JSON.parse(buildConfigRaw); } catch (_) {}
     }
 
     // Étape 1 : extraction du texte du CV PDF
@@ -282,7 +275,7 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
 
     // Étape 4 : génération des documents
     console.log('📝 [MATCHER] Génération des documents...');
-    const result = await matcherService.scrapeAndGenerate(scraped.rawText, offerUrl, candidate, options, buildConfig);
+    const result = await matcherService.scrapeAndGenerate(scraped.rawText, offerUrl, candidate, options);
 
     console.log('✅ [MATCHER] Mode Rapide terminé avec succès');
 
@@ -321,7 +314,7 @@ router.post('/generer-complet', upload.single('cv'), async (req, res) => {
  */
 router.post('/adapter-rapide', upload.single('cv'), async (req, res) => {
   try {
-    const { offer: offerRaw, buildConfig: buildConfigRaw } = req.body;
+    const { offer: offerRaw } = req.body;
     const cvFile = req.file;
 
     console.log('⚡ [MATCHER] Adaptation rapide - Démarrage...');
@@ -343,11 +336,6 @@ router.post('/adapter-rapide', upload.single('cv'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'Titre ou description de l\'offre obligatoire' });
     }
 
-    let buildConfig = { shape: 'minimal_pro', style: 'ardoise', blockStyles: {} };
-    if (buildConfigRaw) {
-      try { buildConfig = { ...buildConfig, ...JSON.parse(buildConfigRaw) }; } catch (_) {}
-    }
-
     // Étape 1 : extraction du texte du CV PDF
     console.log('📄 [MATCHER] Extraction du texte du CV...');
     const pdfData = await pdf(cvFile.buffer);
@@ -367,7 +355,7 @@ router.post('/adapter-rapide', upload.single('cv'), async (req, res) => {
     // Étape 3 : génération du CV adapté (uniquement CV personnalisé, pas de CV idéal ni lettre)
     console.log('📝 [MATCHER] Génération du CV adapté pour:', offer.title, 'chez', offer.company);
     const options = { generatePersonalizedCV: true, generateIdealCV: false, generateCoverLetter: false };
-    const result = await matcherService.analyzeAndGenerate(offer, candidate, options, buildConfig);
+    const result = await matcherService.analyzeAndGenerate(offer, candidate, options);
 
     console.log('✅ [MATCHER] Adaptation rapide terminée');
 
