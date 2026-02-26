@@ -34,6 +34,7 @@ const financeFondamentaleRoutes = require('./routes/financeFondamentale');
 const financeTechniqueRoutes = require('./routes/financeTechnique');
 const financeTradingRoutes = require('./routes/financeTrading');
 const historyRoutes = require('./routes/history');
+const agentFiscaliteRoutes = require('./routes/agentFiscalite');
 
 // Création de l'application Express
 const app = express();
@@ -80,6 +81,19 @@ app.use('/api/finance/fondamentale', aiRateLimiter, financeFondamentaleRoutes);
 app.use('/api/finance/technique', aiRateLimiter, financeTechniqueRoutes);
 app.use('/api/finance/trading', aiRateLimiter, financeTradingRoutes);
 app.use('/api/historique', historyRoutes);
+
+// Agents IA (rate limit plus eleve pour le mode conversationnel)
+const agentRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Trop de requetes. Veuillez reessayer dans quelques minutes.'
+  }
+});
+app.use('/api/agents/fiscalite', agentRateLimiter, agentFiscaliteRoutes);
 
 // Route de test (pour vérifier que le serveur fonctionne)
 app.get('/', (req, res) => {

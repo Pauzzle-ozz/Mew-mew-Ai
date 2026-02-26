@@ -84,12 +84,21 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </Link>
-                  <Link href={user ? '/dashboard?tab=finance' : '/signup'} className="block px-4 py-3 hover:bg-surface rounded-b-lg transition-colors">
+                  <Link href={user ? '/dashboard?tab=finance' : '/signup'} className="block px-4 py-3 hover:bg-surface transition-colors">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">💰</span>
                       <div>
                         <div className="font-semibold text-text-primary">Finance</div>
                         <div className="text-xs text-text-muted">Analyse, technique, trading</div>
+                      </div>
+                    </div>
+                  </Link>
+                  <Link href={user ? '/dashboard?tab=agents-ia' : '/signup'} className="block px-4 py-3 hover:bg-surface rounded-b-lg transition-colors">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🤖</span>
+                      <div>
+                        <div className="font-semibold text-text-primary">Agents IA</div>
+                        <div className="text-xs text-text-muted">Agents autonomes experts</div>
                       </div>
                     </div>
                   </Link>
@@ -161,7 +170,7 @@ export default function LandingPage() {
               <div className="text-sm text-text-muted">Gratuit</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">4</div>
+              <div className="text-2xl font-bold text-primary">5</div>
               <div className="text-sm text-text-muted">Univers</div>
             </div>
             <div>
@@ -185,11 +194,11 @@ export default function LandingPage() {
               Choisissez votre univers
             </h2>
             <p className="text-text-secondary">
-              Quatre domaines, 18 outils IA a votre service
+              Cinq domaines, des outils et agents IA a votre service
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
 
             <Link href={user ? '/dashboard?tab=emploi' : '/signup'} className="group">
               <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
@@ -289,6 +298,32 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-5 flex items-center justify-between">
                   <span className="text-xs text-text-muted font-medium">3 outils</span>
+                  <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
+                    Acces
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <Link href={user ? '/dashboard?tab=agents-ia' : '/signup'} className="group">
+              <div className="bg-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 border border-primary/20 hover:border-primary/40 h-full">
+                <div className="text-4xl mb-3">🤖</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-primary transition-colors">
+                  Agents IA
+                </h3>
+                <p className="text-text-secondary text-sm mb-4">
+                  Agents autonomes experts qui travaillent pour vous en continu.
+                </p>
+                <div className="space-y-1.5 text-sm text-text-secondary">
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Agent Fiscalite</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Conversation naturelle</div>
+                  <div className="flex items-center"><span className="text-primary mr-2">&#10003;</span>Analyse de documents</div>
+                </div>
+                <div className="mt-5 flex items-center justify-between">
+                  <span className="text-xs text-text-muted font-medium">1 agent</span>
                   <div className="text-primary font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center text-sm">
                     Acces
                     <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

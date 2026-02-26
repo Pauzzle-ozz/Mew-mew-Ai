@@ -101,6 +101,44 @@ class AIService {
   }
 
   /**
+   * Chat avec historique de conversation complet
+   * Utilise pour les agents conversationnels multi-tour
+   * @param {Array} messages - Array OpenAI format: [{role, content}, ...]
+   * @param {Object} options - { model, temperature, maxTokens }
+   * @returns {string} Le contenu de la reponse assistant
+   */
+  async chatWithHistory(messages, options = {}) {
+    const {
+      model = 'gpt-4o',
+      temperature = 0.3,
+      maxTokens = 4000
+    } = options;
+
+    const params = {
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens
+    };
+
+    const response = await this.client.chat.completions.create(params);
+    return response.choices[0].message.content;
+  }
+
+  /**
+   * Generer un embedding vectoriel pour la recherche semantique (RAG)
+   * @param {string} text - Le texte a vectoriser
+   * @returns {Array<number>} Vecteur de 1536 dimensions
+   */
+  async generateEmbedding(text) {
+    const response = await this.client.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text
+    });
+    return response.data[0].embedding;
+  }
+
+  /**
    * Generer une image via DALL-E 3
    * @param {string} prompt - Description de l'image a generer
    * @param {Object} options - { size, quality }

@@ -11,7 +11,8 @@ const CATEGORIES = [
   { id: 'emploi', label: "Recherche d'emploi", emoji: '💼' },
   { id: 'marketing', label: 'Marketing & Com', emoji: '📢' },
   { id: 'fiscalite', label: 'Fiscalite', emoji: '🏛️' },
-  { id: 'finance', label: 'Finance', emoji: '💰' }
+  { id: 'finance', label: 'Finance', emoji: '💰' },
+  { id: 'agents-ia', label: 'Agents IA', emoji: '🤖' }
 ]
 
 /* ── Solution card helper ── */
@@ -73,7 +74,7 @@ function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const validTabs = ['emploi', 'marketing', 'fiscalite', 'finance']
+  const validTabs = ['emploi', 'marketing', 'fiscalite', 'finance', 'agents-ia']
   const paramTab = searchParams.get('tab')
   const initialTab = validTabs.includes(paramTab) ? paramTab : 'emploi'
   const [category, setCategory] = useState(initialTab)
@@ -155,7 +156,8 @@ function DashboardContent() {
             {category === 'emploi' ? "Recherche d'emploi" :
              category === 'marketing' ? 'Marketing & Communication' :
              category === 'fiscalite' ? 'Fiscalite & Comptabilite' :
-             'Finance & Investissement'}
+             category === 'finance' ? 'Finance & Investissement' :
+             'Agents IA'}
           </h2>
           <p className="text-text-secondary">
             {category === 'emploi'
@@ -164,7 +166,9 @@ function DashboardContent() {
               ? 'Creez du contenu, planifiez votre strategie et analysez votre marche'
               : category === 'fiscalite'
               ? 'Auditez votre fiscalite, preparez vos declarations et optimisez votre strategie'
-              : 'Analysez les marches, evaluez vos investissements et optimisez votre trading'
+              : category === 'finance'
+              ? 'Analysez les marches, evaluez vos investissements et optimisez votre trading'
+              : 'Des agents IA autonomes et experts, prets a travailler pour vous'
             }
           </p>
         </div>
@@ -364,6 +368,51 @@ function DashboardContent() {
           </>
         )}
 
+        {/* ═══ AGENTS IA ═══ */}
+        {category === 'agents-ia' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <SolutionCard
+                href="/solutions/agents-ia/fiscalite"
+                emoji="🏛️"
+                title="Agent Fiscalite"
+                description="Votre expert-comptable IA : posez vos questions, uploadez vos documents"
+                features={['Conversation naturelle', 'Analyse de documents', 'Calculs et simulations']}
+              />
+              <SolutionCard
+                href="#"
+                emoji="📢"
+                title="Agent Marketing"
+                description="Consultant strategie marketing expert pour conseiller vos equipes"
+                features={['Audit strategique', 'Analyse de marche', 'Recommandations data-driven']}
+                disabled
+              />
+              <SolutionCard
+                href="#"
+                emoji="💰"
+                title="Agent Finance"
+                description="Analyste financier IA multi-marches pour vos investissements"
+                features={['Analyse fondamentale', 'Analyse technique', 'Signaux trading']}
+                disabled
+              />
+            </div>
+
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
+              <div className="flex items-start">
+                <div className="text-3xl mr-4">&#8505;&#65039;</div>
+                <div>
+                  <h4 className="font-semibold text-primary mb-2">Agents IA</h4>
+                  <div className="text-sm text-text-secondary space-y-1">
+                    <p>&#8226; Agents conversationnels experts dans leur domaine</p>
+                    <p>&#8226; Memoire de conversation persistante</p>
+                    <p>&#8226; Upload et analyse de documents (PDF, Excel, CSV)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Other universes */}
         <div className="mt-8 bg-surface rounded-xl p-6 border border-border">
           <h4 className="font-semibold text-text-primary mb-3">Decouvrez nos autres univers</h4>
@@ -374,7 +423,7 @@ function DashboardContent() {
                 <div className="text-left">
                   <div className="font-medium text-primary">{cat.label}</div>
                   <div className="text-xs text-text-muted">
-                    {cat.id === 'emploi' ? '5 outils' : cat.id === 'marketing' ? '7 outils' : cat.id === 'fiscalite' ? '3 outils' : '3 outils'} disponibles
+                    {cat.id === 'emploi' ? '5 outils' : cat.id === 'marketing' ? '4 outils' : cat.id === 'fiscalite' ? '3 outils' : cat.id === 'finance' ? '3 outils' : '1 agent'} disponibles
                   </div>
                 </div>
               </button>
