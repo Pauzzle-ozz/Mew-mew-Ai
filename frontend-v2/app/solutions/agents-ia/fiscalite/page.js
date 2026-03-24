@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/shared/Header'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import ChatMessage from '@/components/agents-ia/ChatMessage'
 import ChatInput from '@/components/agents-ia/ChatInput'
@@ -211,17 +212,19 @@ export default function AgentFiscalitePage() {
       />
 
       {/* Bouton sidebar mobile */}
-      <button
+      <Button
+        variant="primary"
+        size="sm"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed bottom-20 left-4 z-30 p-3 bg-primary text-white rounded-full shadow-lg cursor-pointer"
+        className="md:hidden fixed bottom-20 left-4 z-30 !rounded-full !p-3 shadow-lg"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
-      </button>
+      </Button>
 
       {/* Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden animate-fade-in">
         {/* Sidebar */}
         <div className={`${sidebarOpen ? 'fixed inset-0 z-20 md:relative md:inset-auto' : 'hidden md:block'}`}>
           {/* Overlay mobile */}
@@ -244,12 +247,12 @@ export default function AgentFiscalitePage() {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-3xl mx-auto animate-fade-in">
               {/* Ecran de bienvenue */}
               {messages.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                   <div className="text-6xl mb-4">🏛️</div>
-                  <h2 className="text-2xl font-bold text-text-primary mb-2">Agent Fiscalite</h2>
+                  <h2 className="font-display text-2xl font-bold text-text-primary mb-2">Agent Fiscalite</h2>
                   <p className="text-text-secondary text-center max-w-md mb-8">
                     Expert-comptable et fiscaliste IA. Posez vos questions sur les impots,
                     la TVA, les statuts juridiques, ou uploadez un document a analyser.
@@ -261,7 +264,7 @@ export default function AgentFiscalitePage() {
                       <button
                         key={i}
                         onClick={() => handleSuggestion(s.text)}
-                        className="flex items-start gap-3 p-4 bg-surface border border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-left cursor-pointer group"
+                        className="flex items-start gap-3 p-4 bg-surface-glass backdrop-blur-xl border border-border/60 rounded-2xl hover:border-primary hover:bg-primary-light transition-all text-left cursor-pointer group"
                       >
                         <span className="text-xl">{s.emoji}</span>
                         <span className="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
@@ -282,7 +285,7 @@ export default function AgentFiscalitePage() {
               {loading && (
                 <div className="flex justify-start mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center shrink-0">
                       <span className="text-sm">🏛️</span>
                     </div>
                     <CatLoadingAnimation label="L'agent reflechit..." />
@@ -293,7 +296,7 @@ export default function AgentFiscalitePage() {
               {/* Erreur */}
               {error && (
                 <div className="flex justify-center mb-4">
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-lg text-sm">
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-2 rounded-2xl text-sm">
                     {error}
                   </div>
                 </div>

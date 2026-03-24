@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import TechniqueResults from '@/components/finance/TechniqueResults'
 
@@ -18,7 +19,7 @@ const STEPS = [
   { n: 3, label: 'Resultats' }
 ]
 
-const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
 
 const TYPE_ACTIF_OPTIONS = [
   { value: 'action', label: 'Action' },
@@ -116,7 +117,7 @@ export default function TechniquePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -132,7 +133,7 @@ export default function TechniquePage() {
         ]}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -163,11 +164,11 @@ export default function TechniquePage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Analyse Technique</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Analyse Technique</h1>
               <p className="text-text-secondary">Analysez les indicateurs techniques et les tendances d&apos;un actif</p>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
               {/* Actif input */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">Actif (ticker)</label>
@@ -191,7 +192,7 @@ export default function TechniquePage() {
                       className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                         typeActif === opt.value
                           ? 'bg-primary text-white'
-                          : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border'
+                          : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border/60'
                       }`}
                     >
                       {opt.label}
@@ -211,7 +212,7 @@ export default function TechniquePage() {
                       className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                         periode === opt.value
                           ? 'bg-primary text-white'
-                          : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border'
+                          : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border/60'
                       }`}
                     >
                       {opt.label}
@@ -221,26 +222,27 @@ export default function TechniquePage() {
               </div>
 
               {/* Info box */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="bg-primary-light border border-primary/20 rounded-xl p-4">
                 <p className="text-sm text-text-secondary">
                   L&apos;analyse technique etudie les donnees historiques de prix et de volume pour identifier les tendances, calculer les indicateurs (RSI, MACD, moyennes mobiles, Bollinger) et detecter les niveaux de support et resistance.
                 </p>
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={!actif.trim()}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               Lancer l&apos;analyse technique
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div
@@ -258,7 +260,7 @@ export default function TechniquePage() {
         {step === 3 && result && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Analyse terminee</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Analyse terminee</h2>
               <p className="text-text-secondary text-sm">
                 Analyse technique de {actif.toUpperCase()} sur {PERIODE_OPTIONS.find(p => p.value === periode)?.label || periode}
               </p>
@@ -267,12 +269,12 @@ export default function TechniquePage() {
             <TechniqueResults data={result} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                variant="outline"
               >
                 Nouvelle analyse
-              </button>
+              </Button>
             </div>
           </div>
         )}

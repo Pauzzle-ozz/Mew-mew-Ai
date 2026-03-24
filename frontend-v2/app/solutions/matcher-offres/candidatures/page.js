@@ -7,14 +7,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { getApplications, updateApplication, deleteApplication } from '@/lib/api/applicationsApi';
 import Header from '@/components/shared/Header';
+import Button from '@/components/shared/Button';
 
 // ── Statuts ───────────────────────────────────────────────────────────
 const STATUTS = [
-  { key: 'a_postuler',  label: 'À postuler',  color: 'text-slate-400',   bg: 'bg-slate-800',   border: 'border-slate-600' },
-  { key: 'postule',     label: 'Postulé',      color: 'text-blue-400',    bg: 'bg-blue-900/20', border: 'border-blue-700' },
-  { key: 'entretien',   label: 'Entretien',    color: 'text-yellow-400',  bg: 'bg-yellow-900/20', border: 'border-yellow-700' },
-  { key: 'offre',       label: 'Offre reçue',  color: 'text-green-400',   bg: 'bg-green-900/20', border: 'border-green-700' },
-  { key: 'refuse',      label: 'Refusé',       color: 'text-red-400',     bg: 'bg-red-900/20',  border: 'border-red-700' },
+  { key: 'a_postuler',  label: 'À postuler',  color: 'text-text-muted',      bg: 'bg-surface-elevated',   border: 'border-border/60' },
+  { key: 'postule',     label: 'Postulé',      color: 'text-blue-400',        bg: 'bg-blue-900/20',        border: 'border-blue-700' },
+  { key: 'entretien',   label: 'Entretien',    color: 'text-yellow-400',      bg: 'bg-yellow-900/20',      border: 'border-yellow-700' },
+  { key: 'offre',       label: 'Offre reçue',  color: 'text-green-400',       bg: 'bg-green-900/20',       border: 'border-green-700' },
+  { key: 'refuse',      label: 'Refusé',       color: 'text-red-400',         bg: 'bg-red-900/20',         border: 'border-red-700' },
 ];
 
 const statutInfo = (key) => STATUTS.find(s => s.key === key) || STATUTS[0];
@@ -51,16 +52,16 @@ function ApplicationRow({ app, onStatusChange, onDelete }) {
     : '';
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-700 hover:border-slate-600 transition-colors p-4">
+    <div className="bg-surface rounded-2xl border border-border/60 hover:border-primary/30 transition-colors p-4">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <StatusBadge status={app.status} />
-            {app.contract_type && <span className="text-xs text-slate-500">{app.contract_type}</span>}
-            {dateStr && <span className="text-xs text-slate-500">{dateStr}</span>}
+            {app.contract_type && <span className="text-xs text-text-muted">{app.contract_type}</span>}
+            {dateStr && <span className="text-xs text-text-muted">{dateStr}</span>}
           </div>
-          <h3 className="font-semibold text-white truncate">{app.offer_title}</h3>
-          <p className="text-sm text-slate-400">
+          <h3 className="font-display font-semibold text-text-primary truncate">{app.offer_title}</h3>
+          <p className="text-sm text-text-muted">
             {app.company && <span>{app.company}</span>}
             {app.location && <span> · {app.location}</span>}
           </p>
@@ -72,22 +73,20 @@ function ApplicationRow({ app, onStatusChange, onDelete }) {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Notes sur cette candidature..."
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary resize-none"
+                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none text-sm"
                 rows={2}
               />
               <div className="flex gap-2">
-                <button onClick={handleSaveNotes} disabled={saving}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all disabled:opacity-50">
+                <Button size="sm" onClick={handleSaveNotes} disabled={saving} loading={saving}>
                   {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-                </button>
-                <button onClick={() => { setEditing(false); setNotes(app.notes || ''); }}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400 hover:text-white transition-colors">
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => { setEditing(false); setNotes(app.notes || ''); }}>
                   Annuler
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
-            app.notes && <p className="text-xs text-slate-500 mt-1 italic line-clamp-1">{app.notes}</p>
+            app.notes && <p className="text-xs text-text-muted mt-1 italic line-clamp-1">{app.notes}</p>
           )}
         </div>
 
@@ -95,12 +94,12 @@ function ApplicationRow({ app, onStatusChange, onDelete }) {
         <div className="flex flex-col gap-2 shrink-0">
           {app.offer_url && (
             <a href={app.offer_url} target="_blank" rel="noopener noreferrer"
-              className="text-xs px-2 py-1 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 transition-colors text-center">
+              className="text-xs px-2 py-1 rounded-lg border border-border/60 text-text-muted hover:text-text-primary hover:border-primary/40 transition-colors text-center">
               Voir ↗
             </a>
           )}
           <button onClick={() => setEditing(!editing)}
-            className="text-xs px-2 py-1 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 transition-colors">
+            className="text-xs px-2 py-1 rounded-lg border border-border/60 text-text-muted hover:text-text-primary hover:border-primary/40 transition-colors">
             Notes
           </button>
           <button onClick={() => onDelete(app.id)}
@@ -115,7 +114,7 @@ function ApplicationRow({ app, onStatusChange, onDelete }) {
         {STATUTS.map(s => (
           <button key={s.key} onClick={() => handleStatusChange(s.key)}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-              app.status === s.key ? `${s.bg} ${s.border} ${s.color}` : 'border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300'
+              app.status === s.key ? `${s.bg} ${s.border} ${s.color}` : 'border-border/60 text-text-muted hover:border-primary/40 hover:text-text-primary'
             }`}>
             {s.label}
           </button>
@@ -190,20 +189,20 @@ export default function CandidaturesPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-slate-500">Chargement...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-muted">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-text-primary">
       <Header
         user={user}
         onLogout={handleLogout}
         breadcrumbs={[
-          { label: 'Solutions', href: '/dashboard' },
-          { label: 'Mes candidatures' }
+          { label: 'Emploi', href: '/dashboard?tab=emploi' },
+          { label: 'Candidatures' }
         ]}
         actions={
           <div className="hidden sm:flex items-center gap-2">
@@ -225,19 +224,19 @@ export default function CandidaturesPage() {
         }
       />
 
-      <div className="max-w-3xl mx-auto py-8 px-4">
+      <div className="max-w-3xl mx-auto py-8 px-4 animate-fade-in">
         {/* Title */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">Mes Candidatures</h1>
-          <p className="text-sm text-slate-400 mt-1">{applications.length} candidature{applications.length > 1 ? 's' : ''} au total</p>
+          <h1 className="font-display text-2xl font-bold text-text-primary">Mes Candidatures</h1>
+          <p className="text-sm text-text-muted mt-1">{applications.length} candidature{applications.length > 1 ? 's' : ''} au total</p>
         </div>
 
         {/* Compteurs par statut */}
         <div className="grid grid-cols-5 gap-2 mb-6">
           {STATUTS.map(s => (
             <button key={s.key} onClick={() => setFilter(filter === s.key ? '' : s.key)}
-              className={`flex flex-col items-center p-3 rounded-xl border transition-all ${
-                filter === s.key ? `${s.bg} ${s.border} ${s.color}` : 'bg-slate-900 border-slate-700 hover:border-slate-600 text-slate-400'
+              className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${
+                filter === s.key ? `${s.bg} ${s.border} ${s.color}` : 'bg-surface border-border/60 hover:border-primary/30 text-text-muted'
               }`}>
               <span className="text-lg font-bold">{counts[s.key] || 0}</span>
               <span className="text-xs mt-0.5">{s.label}</span>
@@ -247,27 +246,28 @@ export default function CandidaturesPage() {
 
         {/* Erreur */}
         {error && (
-          <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
+          <div className="bg-red-900/20 border border-red-800 rounded-2xl p-4 mb-6">
             <p className="text-sm text-red-300">{error}</p>
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="text-center py-12 text-slate-500">Chargement...</div>
+          <div className="text-center py-12 text-text-muted">Chargement...</div>
         )}
 
         {/* Vide */}
         {!loading && filtered.length === 0 && (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">📋</div>
-            <p className="text-slate-400 font-medium">
+            <p className="text-text-muted font-medium">
               {filter ? 'Aucune candidature avec ce statut.' : 'Aucune candidature pour l\'instant.'}
             </p>
-            <Link href="/solutions/matcher-offres"
-              className="mt-4 inline-block px-5 py-2.5 rounded-xl bg-primary text-slate-900 font-semibold hover:brightness-110 transition-all text-sm">
-              Créer ma première candidature →
-            </Link>
+            <div className="mt-4">
+              <Button onClick={() => router.push('/solutions/matcher-offres')}>
+                Créer ma première candidature →
+              </Button>
+            </div>
           </div>
         )}
 

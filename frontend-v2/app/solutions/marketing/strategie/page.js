@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import ChannelSelector from '@/components/marketing/ChannelSelector'
 import CalendarView from '@/components/marketing/CalendarView'
@@ -94,7 +95,7 @@ function ChipSelector({ label, options, value, onChange, placeholder }) {
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border border-dashed ${
             showCustom
               ? 'border-primary text-primary bg-primary/5'
-              : 'border-border text-text-muted hover:border-primary/40 hover:text-text-secondary'
+              : 'border-border/60 text-text-muted hover:border-primary/40 hover:text-text-secondary'
           }`}
         >
           Personnalise...
@@ -105,7 +106,7 @@ function ChipSelector({ label, options, value, onChange, placeholder }) {
           value={isCustom ? value : ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+          className="w-full px-4 py-2.5 bg-surface border border-border/60 rounded-2xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
         />
       )}
     </div>
@@ -151,7 +152,7 @@ function MultiChipSelector({ label, options, value, onChange, placeholder }) {
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border border-dashed ${
             showCustom
               ? 'border-primary text-primary bg-primary/5'
-              : 'border-border text-text-muted hover:border-primary/40 hover:text-text-secondary'
+              : 'border-border/60 text-text-muted hover:border-primary/40 hover:text-text-secondary'
           }`}
         >
           Personnalise...
@@ -162,7 +163,7 @@ function MultiChipSelector({ label, options, value, onChange, placeholder }) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-4 py-2.5 bg-surface border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+          className="w-full px-4 py-2.5 bg-surface border border-border/60 rounded-2xl text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
         />
       )}
     </div>
@@ -263,7 +264,7 @@ export default function StrategiePage() {
     )
   }
 
-  const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+  const inputStyles = 'w-full px-4 py-3 bg-surface border border-border/60 rounded-2xl text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
 
   return (
     <div className="min-h-screen bg-background">
@@ -276,7 +277,7 @@ export default function StrategiePage() {
         ]}
       />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -288,14 +289,14 @@ export default function StrategiePage() {
               }`}>
                 {step > s.n ? '\u2713 ' : ''}{s.label}
               </div>
-              {s.n < STEPS.length && <div className="w-6 h-px bg-border" />}
+              {s.n < STEPS.length && <div className="w-6 h-px bg-border/60" />}
             </div>
           ))}
         </div>
 
         {/* Error */}
         {error && (
-          <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
+          <div className="bg-red-900/20 border border-red-800 rounded-2xl p-4 mb-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-red-300">{error}</p>
               <button onClick={() => setError('')} className="text-xs text-red-400 hover:text-red-300 cursor-pointer">Fermer</button>
@@ -305,15 +306,15 @@ export default function StrategiePage() {
 
         {/* Step 1: Configuration */}
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Strategie de Contenu</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Strategie de Contenu</h1>
               <p className="text-text-secondary">Generez un calendrier editorial + planning de production sur 30 jours</p>
             </div>
 
             {/* Panneau Config */}
-            <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
-              <h2 className="text-lg font-semibold text-text-primary">Configuration</h2>
+            <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
+              <h2 className="font-display text-lg font-semibold text-text-primary">Configuration</h2>
 
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">Secteur d&apos;activite *</label>
@@ -359,10 +360,10 @@ export default function StrategiePage() {
                       key={b.id}
                       type="button"
                       onClick={() => setFormData({ ...formData, budget: formData.budget === b.id ? '' : b.id })}
-                      className={`p-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
+                      className={`p-3 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer ${
                         formData.budget === b.id
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border bg-surface hover:border-primary/40'
+                          ? 'border-primary bg-primary-light'
+                          : 'border-border/60 bg-surface hover:border-primary/40'
                       }`}
                     >
                       <div className={`text-xs font-semibold ${formData.budget === b.id ? 'text-primary' : 'text-text-primary'}`}>
@@ -376,23 +377,24 @@ export default function StrategiePage() {
             </div>
 
             {/* Panneau Canaux */}
-            <div className="bg-surface rounded-xl border border-border p-6">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6">
               <ChannelSelector selected={channels} onChange={setChannels} />
             </div>
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={!formData.sector || !formData.targetAudience || !formData.objectives || channels.length === 0}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full rounded-2xl"
             >
               Generer la strategie ({channels.length} canal{channels.length > 1 ? 'aux' : ''})
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center animate-fade-in">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div
@@ -406,9 +408,9 @@ export default function StrategiePage() {
 
         {/* Step 3: Resultats */}
         {step === 3 && result && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Votre strategie de contenu</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Votre strategie de contenu</h2>
               <p className="text-text-secondary text-sm">
                 Calendrier editorial + planning de production pour {channels.length} canal{channels.length > 1 ? 'aux' : ''}
               </p>
@@ -417,12 +419,14 @@ export default function StrategiePage() {
             <CalendarView data={result} startDate={today} budget={formData.budget} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                variant="outline"
+                size="md"
+                className="rounded-2xl"
               >
                 Nouvelle strategie
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import CompetitorForm from '@/components/marketing/CompetitorForm'
 import { CompetitorAnalysis, BenchmarkView } from '@/components/marketing/BenchmarkTable'
@@ -38,7 +39,7 @@ export default function ConcurrencePage() {
   const [benchmark, setBenchmark] = useState(null)
   const [generatingBenchmark, setGeneratingBenchmark] = useState(false)
 
-  const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+  const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
 
   // Helpers
   const _progressAnim = async (steps) => {
@@ -127,7 +128,7 @@ export default function ConcurrencePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -143,7 +144,7 @@ export default function ConcurrencePage() {
         ]}
       />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -174,11 +175,11 @@ export default function ConcurrencePage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Analyseur de Concurrence</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Analyseur de Concurrence</h1>
               <p className="text-text-secondary">Decryptez la strategie de communication de vos concurrents</p>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">Secteur d&apos;activite *</label>
                 <input
@@ -190,23 +191,24 @@ export default function ConcurrencePage() {
               </div>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6">
               <CompetitorForm competitors={competitors} onChange={setCompetitors} />
             </div>
 
-            <button
+            <Button
               onClick={handleAnalyze}
               disabled={!sector.trim() || !competitors.some(c => c.name.trim())}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               Analyser {competitors.filter(c => c.name.trim()).length} concurrent{competitors.filter(c => c.name.trim()).length > 1 ? 's' : ''}
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -219,7 +221,7 @@ export default function ConcurrencePage() {
         {step === 3 && analyses && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Analyse concurrentielle</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Analyse concurrentielle</h2>
               <p className="text-text-secondary text-sm">{analyses.length} concurrent{analyses.length > 1 ? 's' : ''} analyse{analyses.length > 1 ? 's' : ''} dans le secteur : {sector}</p>
             </div>
 
@@ -233,33 +235,33 @@ export default function ConcurrencePage() {
             {/* Benchmark button */}
             {analyses.length >= 2 && !benchmark && (
               <div className="text-center pt-2">
-                <button
+                <Button
                   onClick={handleBenchmark}
                   disabled={generatingBenchmark}
-                  className="px-8 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50 cursor-pointer"
+                  loading={generatingBenchmark}
                 >
                   {generatingBenchmark ? 'Generation en cours...' : 'Generer le benchmark comparatif'}
-                </button>
+                </Button>
               </div>
             )}
 
             {/* Benchmark results */}
             {benchmark && (
               <>
-                <div className="border-t border-border pt-6">
-                  <h3 className="text-xl font-bold text-text-primary mb-4 text-center">Benchmark comparatif</h3>
+                <div className="border-t border-border/60 pt-6">
+                  <h3 className="font-display text-xl font-bold text-text-primary mb-4 text-center">Benchmark comparatif</h3>
                   <BenchmarkView data={benchmark} />
                 </div>
               </>
             )}
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
+                variant="outline"
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
               >
                 Nouvelle analyse
-              </button>
+              </Button>
             </div>
           </div>
         )}

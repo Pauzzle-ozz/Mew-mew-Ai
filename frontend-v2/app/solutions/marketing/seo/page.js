@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import SeoResults from '@/components/marketing/SeoResults'
 
@@ -18,7 +19,7 @@ const STEPS = [
   { n: 3, label: 'Resultats' }
 ]
 
-const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
 
 export default function SeoPage() {
   const { user, loading } = useAuth()
@@ -121,7 +122,7 @@ export default function SeoPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -137,7 +138,7 @@ export default function SeoPage() {
         ]}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -168,11 +169,11 @@ export default function SeoPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Audit SEO</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Audit SEO</h1>
               <p className="text-text-secondary">Analysez le SEO de votre site et obtenez des recommandations IA</p>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
               {/* URL input */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1.5">URL du site</label>
@@ -208,26 +209,27 @@ export default function SeoPage() {
               </div>
 
               {/* Info box */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="bg-primary-light border border-primary/20 rounded-xl p-4">
                 <p className="text-sm text-text-secondary">
                   L&apos;audit va crawler votre site, extraire les donnees SEO de chaque page (balises, meta, headings, images, liens...) puis analyser le tout avec l&apos;IA pour vous donner un score global et des recommandations concretes.
                 </p>
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={!url.trim()}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               Lancer l&apos;audit SEO
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div
@@ -245,7 +247,7 @@ export default function SeoPage() {
         {step === 3 && result && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Audit termine</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Audit termine</h2>
               <p className="text-text-secondary text-sm">
                 {result.crawledPages} page{result.crawledPages > 1 ? 's' : ''} analysee{result.crawledPages > 1 ? 's' : ''} sur {result.siteUrl}
               </p>
@@ -254,12 +256,12 @@ export default function SeoPage() {
             <SeoResults data={result} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
+                variant="outline"
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
               >
                 Nouvel audit
-              </button>
+              </Button>
             </div>
           </div>
         )}

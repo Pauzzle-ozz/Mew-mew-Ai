@@ -4,20 +4,20 @@ import Logo from './Logo';
 export default function Footer() {
   return (
     <footer className="bg-surface border-t border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="md:col-span-4 space-y-4">
             <Logo size="sm" link={false} />
-            <p className="text-sm text-text-muted">
-              L&apos;IA qui propulse votre carriere.
+            <p className="text-sm text-text-muted leading-relaxed max-w-xs">
+              Des outils IA pour chaque etape de votre parcours professionnel. Gratuit, rapide, efficace.
             </p>
           </div>
 
-          {/* Solutions */}
-          <div>
-            <h4 className="text-sm font-semibold text-text-primary mb-4">Solutions</h4>
-            <ul className="space-y-2">
+          {/* Outils */}
+          <div className="md:col-span-2">
+            <h4 className="font-display font-bold text-sm text-text-primary mb-4 uppercase tracking-wider">Outils</h4>
+            <ul className="space-y-2.5">
               <li>
                 <Link href="/solutions/analyse-cv" className="text-sm text-text-muted hover:text-primary transition-colors">
                   Analyseur CV
@@ -30,16 +30,48 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/solutions/portfolio" className="text-sm text-text-muted hover:text-primary transition-colors">
-                  Portfolio Pro
+                  Portfolio
+                </Link>
+              </li>
+              <li>
+                <Link href="/solutions/matcher-offres" className="text-sm text-text-muted hover:text-primary transition-colors">
+                  Matcher
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Plateforme */}
-          <div>
-            <h4 className="text-sm font-semibold text-text-primary mb-4">Plateforme</h4>
-            <ul className="space-y-2">
+          {/* Univers */}
+          <div className="md:col-span-3">
+            <h4 className="font-display font-bold text-sm text-text-primary mb-4 uppercase tracking-wider">Univers</h4>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href="/dashboard?tab=emploi" className="text-sm text-text-muted hover:text-primary transition-colors">
+                  Emploi & Carriere
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?tab=marketing" className="text-sm text-text-muted hover:text-primary transition-colors">
+                  Marketing & Com
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?tab=fiscalite" className="text-sm text-text-muted hover:text-primary transition-colors">
+                  Fiscalite
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?tab=finance" className="text-sm text-text-muted hover:text-primary transition-colors">
+                  Finance
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Compte */}
+          <div className="md:col-span-3">
+            <h4 className="font-display font-bold text-sm text-text-primary mb-4 uppercase tracking-wider">Compte</h4>
+            <ul className="space-y-2.5">
               <li>
                 <Link href="/dashboard" className="text-sm text-text-muted hover:text-primary transition-colors">
                   Dashboard
@@ -57,21 +89,14 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
-          {/* Univers */}
-          <div>
-            <h4 className="text-sm font-semibold text-text-primary mb-4">Univers</h4>
-            <ul className="space-y-2">
-              <li><span className="text-sm text-text-muted">Emploi & Carriere</span></li>
-              <li><span className="text-sm text-text-muted/50">Fiscalite (bientot)</span></li>
-              <li><span className="text-sm text-text-muted/50">Marketing (bientot)</span></li>
-            </ul>
-          </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center">
-          <p className="text-sm text-text-muted">
+        <div className="border-t border-border mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-text-muted">
             &copy; {new Date().getFullYear()} Mew-mew-Ai. Tous droits reserves.
+          </p>
+          <p className="text-xs text-text-muted">
+            Propulse par l&apos;intelligence artificielle
           </p>
         </div>
       </div>

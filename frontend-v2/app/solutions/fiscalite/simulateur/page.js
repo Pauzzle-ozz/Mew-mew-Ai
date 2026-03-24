@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
+import Alert from '@/components/shared/Alert'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import SimulateurResults from '@/components/fiscalite/SimulateurResults'
 
@@ -18,7 +20,7 @@ const STEPS = [
   { n: 3, label: 'Resultats' }
 ]
 
-const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
 
 const STATUTS_JURIDIQUES = [
   { value: '', label: 'Selectionner un statut' },
@@ -161,7 +163,7 @@ export default function SimulateurStrategiePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -177,7 +179,7 @@ export default function SimulateurStrategiePage() {
         ]}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -196,11 +198,10 @@ export default function SimulateurStrategiePage() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-red-300">{error}</p>
-              <button onClick={() => setError('')} className="text-xs text-red-400 hover:text-red-300 cursor-pointer">Fermer</button>
-            </div>
+          <div className="mb-6">
+            <Alert variant="error" onClose={() => setError('')}>
+              {error}
+            </Alert>
           </div>
         )}
 
@@ -208,15 +209,15 @@ export default function SimulateurStrategiePage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Simulateur Strategie</h1>
+              <h1 className="text-2xl font-bold text-text-primary mb-2 font-display">Simulateur Strategie</h1>
               <p className="text-text-secondary">Simulez differentes strategies fiscales et trouvez la plus avantageuse</p>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+            <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
 
               {/* Section: Situation actuelle */}
-              <div className="border-b border-border pb-4 mb-2">
-                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Situation actuelle</h3>
+              <div className="border-b border-border/60 pb-4 mb-2">
+                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide font-display">Situation actuelle</h3>
               </div>
 
               {/* Statut juridique */}
@@ -293,8 +294,8 @@ export default function SimulateurStrategiePage() {
               </div>
 
               {/* Section: Objectifs */}
-              <div className="border-b border-border pb-4 mb-2 pt-4">
-                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Objectifs strategiques</h3>
+              <div className="border-b border-border/60 pb-4 mb-2 pt-4">
+                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide font-display">Objectifs strategiques</h3>
               </div>
 
               {/* Objectifs multi-select */}
@@ -305,10 +306,10 @@ export default function SimulateurStrategiePage() {
                     <button
                       key={obj.value}
                       onClick={() => toggleObjectif(obj.value)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer ${
                         objectifs.includes(obj.value)
                           ? 'bg-primary text-white border-primary'
-                          : 'bg-surface-elevated text-text-secondary border-border hover:border-primary hover:text-primary'
+                          : 'bg-surface-elevated text-text-secondary border-border/60 hover:border-primary hover:text-primary'
                       }`}
                     >
                       {obj.label}
@@ -318,8 +319,8 @@ export default function SimulateurStrategiePage() {
               </div>
 
               {/* Section: Projections */}
-              <div className="border-b border-border pb-4 mb-2 pt-4">
-                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">Projections</h3>
+              <div className="border-b border-border/60 pb-4 mb-2 pt-4">
+                <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide font-display">Projections</h3>
               </div>
 
               {/* CA cible 3 ans */}
@@ -373,26 +374,27 @@ export default function SimulateurStrategiePage() {
               </div>
 
               {/* Info box */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="bg-primary-light border border-primary/20 rounded-xl p-4">
                 <p className="text-sm text-text-secondary">
                   Le simulateur compare votre situation actuelle avec differents scenarios (changement de statut, optimisation de remuneration, etc.) et vous recommande la strategie la plus avantageuse selon vos objectifs.
                 </p>
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={!statutJuridique || !chiffreAffaires}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               Lancer la simulation
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div
@@ -410,7 +412,7 @@ export default function SimulateurStrategiePage() {
         {step === 3 && result && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Simulation terminee</h2>
+              <h2 className="text-2xl font-bold text-text-primary mb-1 font-display">Simulation terminee</h2>
               <p className="text-text-secondary text-sm">
                 Votre strategie fiscale optimale est prete avec des recommandations detaillees
               </p>
@@ -419,12 +421,12 @@ export default function SimulateurStrategiePage() {
             <SimulateurResults data={result} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                variant="outline"
               >
                 Nouvelle simulation
-              </button>
+              </Button>
             </div>
           </div>
         )}

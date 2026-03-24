@@ -20,42 +20,36 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/')
+      router.push('/dashboard')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="max-w-md w-full space-y-8 p-8 bg-surface rounded-xl border border-border">
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <Logo size="md" link={false} />
+    <div className="min-h-screen flex bg-background">
+      {/* Left: Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8">
+        <div className="w-full max-w-md animate-fade-in">
+          <div className="mb-10">
+            <Logo size="md" />
+            <h1 className="font-display text-3xl font-bold text-text-primary mt-8">
+              Bon retour
+            </h1>
+            <p className="text-text-muted mt-2">
+              Connectez-vous pour acceder a vos outils
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-text-primary">
-            Connexion
-          </h2>
-          <p className="mt-2 text-sm text-text-muted">
-            Accedez a vos solutions IA
-          </p>
-        </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          {error && (
-            <Alert variant="error">{error}</Alert>
-          )}
+          <form onSubmit={handleLogin} className="space-y-5">
+            {error && <Alert variant="error">{error}</Alert>}
 
-          <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
                 Email
               </label>
               <input
@@ -64,12 +58,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+                placeholder="vous@exemple.com"
+                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-2">
                 Mot de passe
               </label>
               <input
@@ -78,28 +73,44 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
+                placeholder="Votre mot de passe"
+                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
-          </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            loading={loading}
-            className="w-full"
-          >
-            {loading ? 'Connexion...' : 'Se connecter'}
-          </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              className="w-full"
+            >
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </Button>
 
-          <p className="text-center text-sm text-text-muted">
-            Pas encore de compte ?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:text-primary-hover transition-colors">
-              S&apos;inscrire
-            </Link>
+            <p className="text-center text-sm text-text-muted pt-2">
+              Pas encore de compte ?{' '}
+              <Link href="/signup" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+                Creer un compte
+              </Link>
+            </p>
+          </form>
+        </div>
+      </div>
+
+      {/* Right: Visual panel (desktop) */}
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-primary/5 via-accent-light to-primary-light relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full bg-primary/10 blur-3xl animate-float" />
+          <div className="absolute bottom-1/3 left-1/3 w-48 h-48 rounded-full bg-accent/10 blur-3xl animate-float delay-500" />
+        </div>
+        <div className="relative text-center px-12">
+          <div className="font-display text-7xl font-bold text-primary/20 mb-6">18</div>
+          <h2 className="font-display text-2xl font-bold text-text-primary mb-3">Outils IA</h2>
+          <p className="text-text-secondary max-w-xs mx-auto">
+            Emploi, marketing, fiscalite, finance — tout pour votre parcours professionnel
           </p>
-        </form>
+        </div>
       </div>
     </div>
   )

@@ -3,23 +3,25 @@
 import Link from 'next/link'
 
 const sizes = {
-  sm: 'text-lg',
-  md: 'text-2xl',
-  lg: 'text-4xl',
-  xl: 'text-6xl',
+  sm: 'text-xl',
+  md: 'text-3xl',
+  lg: 'text-5xl md:text-6xl',
+  xl: 'text-7xl md:text-8xl',
 }
 
 export default function Logo({ size = 'md', link = true, className = '' }) {
   const fontSize = sizes[size] || sizes.md
 
   const content = (
-    <span className={`${fontSize} font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent select-none ${className}`}>
-      mew mew
+    <span className={`font-display font-bold tracking-tight select-none ${fontSize} ${className}`}>
+      <span className="text-primary">mew</span>
+      <span className="text-text-primary opacity-30 mx-[0.15em]">/</span>
+      <span className="text-text-primary">mew</span>
     </span>
   )
 
   if (link) {
-    return <Link href="/" className="inline-flex items-center">{content}</Link>
+    return <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">{content}</Link>
   }
   return content
 }

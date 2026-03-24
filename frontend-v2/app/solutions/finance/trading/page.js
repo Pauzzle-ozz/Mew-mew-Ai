@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import TradingDashboard from '@/components/finance/TradingDashboard'
 
@@ -18,7 +19,7 @@ const STEPS = [
   { n: 3, label: 'Resultats' }
 ]
 
-const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+const inputStyles = 'w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all'
 
 const TYPE_ACTIF_OPTIONS = [
   { value: 'action', label: 'Action' },
@@ -210,7 +211,7 @@ export default function TradingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -226,7 +227,7 @@ export default function TradingPage() {
         ]}
       />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -257,7 +258,7 @@ export default function TradingPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Bot Trading</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Bot Trading</h1>
               <p className="text-text-secondary">Obtenez des recommandations de trading basees sur l&apos;IA</p>
             </div>
 
@@ -280,7 +281,7 @@ export default function TradingPage() {
 
             {/* Analyser mode */}
             {selectedMode === 'analyser' && (
-              <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+              <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
                 {/* Actif input */}
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1.5">Actif</label>
@@ -304,7 +305,7 @@ export default function TradingPage() {
                         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                           typeActif === opt.value
                             ? 'bg-primary text-white'
-                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border'
+                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border/60'
                         }`}
                       >
                         {opt.label}
@@ -337,7 +338,7 @@ export default function TradingPage() {
                         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                           toleranceRisque === opt.value
                             ? 'bg-primary text-white'
-                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border'
+                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border/60'
                         }`}
                       >
                         {opt.label}
@@ -357,7 +358,7 @@ export default function TradingPage() {
                         className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                           horizon === opt.value
                             ? 'bg-primary text-white'
-                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border'
+                            : 'bg-surface-elevated text-text-secondary hover:text-text-primary hover:border-primary border border-border/60'
                         }`}
                       >
                         {opt.label}
@@ -367,7 +368,7 @@ export default function TradingPage() {
                 </div>
 
                 {/* Info box */}
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <div className="bg-primary-light border border-primary/20 rounded-xl p-4">
                   <p className="text-sm text-text-secondary">
                     Le bot combine analyse fondamentale et technique pour generer une recommandation d&apos;achat, vente ou attente, avec un niveau de confiance et des points d&apos;entree/sortie.
                   </p>
@@ -377,7 +378,7 @@ export default function TradingPage() {
 
             {/* Portefeuille mode */}
             {selectedMode === 'portefeuille' && (
-              <div className="bg-surface rounded-xl border border-border p-6 space-y-5">
+              <div className="bg-surface rounded-2xl border border-border/60 p-6 space-y-5">
                 {/* Capital total */}
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1.5">Capital total (EUR)</label>
@@ -407,7 +408,7 @@ export default function TradingPage() {
                   <label className="block text-sm font-medium text-text-secondary mb-3">Positions</label>
                   <div className="space-y-3">
                     {positions.map((pos, index) => (
-                      <div key={index} className="bg-surface-elevated rounded-lg border border-border p-4 space-y-3">
+                      <div key={index} className="bg-surface-elevated rounded-xl border border-border/60 p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-text-muted">Position {index + 1}</span>
                           {positions.length > 1 && (
@@ -471,14 +472,14 @@ export default function TradingPage() {
                   </div>
                   <button
                     onClick={addPosition}
-                    className="mt-3 w-full py-2.5 border border-dashed border-border rounded-lg text-sm text-text-secondary hover:text-primary hover:border-primary transition-colors cursor-pointer"
+                    className="mt-3 w-full py-2.5 border border-dashed border-border/60 rounded-xl text-sm text-text-secondary hover:text-primary hover:border-primary transition-colors cursor-pointer"
                   >
                     + Ajouter une position
                   </button>
                 </div>
 
                 {/* Info box */}
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <div className="bg-primary-light border border-primary/20 rounded-xl p-4">
                   <p className="text-sm text-text-secondary">
                     L&apos;analyse de portefeuille evalue la diversification, les correlations entre vos actifs, le risque global et genere des recommandations de reequilibrage.
                   </p>
@@ -486,19 +487,20 @@ export default function TradingPage() {
               </div>
             )}
 
-            <button
+            <Button
               onClick={handleSubmit}
               disabled={selectedMode === 'analyser' ? !actif.trim() : positions.every(p => !p.actif.trim())}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               {selectedMode === 'analyser' ? 'Lancer l\'analyse trading' : 'Analyser mon portefeuille'}
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Step 2: Processing */}
         {step === 2 && processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div
@@ -516,7 +518,7 @@ export default function TradingPage() {
         {step === 3 && result && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Analyse terminee</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Analyse terminee</h2>
               <p className="text-text-secondary text-sm">
                 {selectedMode === 'analyser'
                   ? `Recommandation trading pour ${actif.toUpperCase()}`
@@ -528,12 +530,12 @@ export default function TradingPage() {
             <TradingDashboard data={result} mode={selectedMode === 'portefeuille' ? 'portefeuille' : undefined} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                variant="outline"
               >
                 Nouvelle analyse
-              </button>
+              </Button>
             </div>
           </div>
         )}

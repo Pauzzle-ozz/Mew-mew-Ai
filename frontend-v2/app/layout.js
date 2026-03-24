@@ -1,25 +1,27 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Syne, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ErrorBoundary from "@/components/shared/ErrorBoundary";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
-  title: "Mew - L'IA qui vous propulse",
-  description: "Optimisez votre carrière, votre fiscalité et votre communication grâce à l'intelligence artificielle. Simple, rapide, efficace.",
-  keywords: "IA, intelligence artificielle, CV, recherche emploi, fiscalité, comptabilité, marketing, communication",
+  title: "Mew — L'IA qui vous propulse",
+  description: "Emploi, marketing, fiscalite, finance — des outils IA pour chaque etape de votre parcours professionnel.",
+  keywords: "IA, intelligence artificielle, CV, recherche emploi, fiscalite, marketing, finance",
 };
 
-// Script anti-flash : s'execute avant le premier paint
+// Static theme restoration script — no user input, safe to inline
 const themeScript = `
 (function(){
   try {
@@ -39,9 +41,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
-      >
+      <body className={`${syne.variable} ${outfit.variable} antialiased bg-background text-foreground`}>
         <ErrorBoundary>
           <ThemeProvider>
             {children}

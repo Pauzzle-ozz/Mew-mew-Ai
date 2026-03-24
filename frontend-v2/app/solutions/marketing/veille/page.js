@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 
 import Header from '@/components/shared/Header'
 import Logo from '@/components/shared/Logo'
+import Button from '@/components/shared/Button'
 import CatLoadingAnimation from '@/components/shared/CatLoadingAnimation'
 import SectorInput from '@/components/marketing/SectorInput'
 import { SourcesList, DeepAnalysisResults } from '@/components/marketing/VeilleResults'
@@ -126,7 +127,7 @@ export default function VeillePage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Logo size="md" link={false} />
-        <p className="text-text-muted">Chargement...</p>
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -142,7 +143,7 @@ export default function VeillePage() {
         ]}
       />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-1 mb-8">
@@ -173,12 +174,12 @@ export default function VeillePage() {
         {step === 1 && !processing && (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">Veille Sectorielle IA</h1>
+              <h1 className="font-display text-2xl font-bold text-text-primary mb-2">Veille Sectorielle IA</h1>
               <p className="text-text-secondary">Identifiez les sources media et tendances de votre secteur</p>
             </div>
 
-            <div className="bg-surface rounded-xl border border-border p-6">
-              <h2 className="text-lg font-semibold text-text-primary mb-4">Definissez votre veille</h2>
+            <div className="bg-surface rounded-2xl border border-border/60 p-6">
+              <h2 className="font-display text-lg font-semibold text-text-primary mb-4">Definissez votre veille</h2>
               <SectorInput
                 sector={sectorData.sector}
                 country={sectorData.country}
@@ -187,19 +188,20 @@ export default function VeillePage() {
               />
             </div>
 
-            <button
+            <Button
               onClick={handleIdentifySources}
               disabled={!sectorData.sector || !sectorData.country}
-              className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              size="lg"
+              className="w-full"
             >
               Identifier les sources media
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Processing */}
         {processing && (
-          <div className="space-y-4 bg-surface rounded-xl border border-border p-8 text-center">
+          <div className="space-y-4 bg-surface rounded-2xl border border-border/60 p-8 text-center">
             <CatLoadingAnimation label={processingLabel} />
             <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -214,7 +216,7 @@ export default function VeillePage() {
         {step === 2 && !processing && sourcesResult && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Sources identifiees</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Sources identifiees</h2>
               <p className="text-text-secondary text-sm">Secteur : {sectorData.sector} / {sectorData.country}</p>
             </div>
 
@@ -236,25 +238,25 @@ export default function VeillePage() {
         {step === 3 && !processing && deepResult && (
           <div className="space-y-6">
             <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">Analyse approfondie</h2>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-1">Analyse approfondie</h2>
               <p className="text-text-secondary text-sm">Tendances et idees de contenu pour : {sectorData.sector}</p>
             </div>
 
             <DeepAnalysisResults data={deepResult} />
 
             <div className="flex gap-3 justify-center pt-4">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => { setStep(2); setDeepResult(null) }}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
               >
                 Retour aux sources
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={handleReset}
-                className="px-6 py-2.5 bg-surface border border-border rounded-xl text-text-secondary font-medium hover:border-primary hover:text-primary transition-colors cursor-pointer"
               >
                 Nouvelle veille
-              </button>
+              </Button>
             </div>
           </div>
         )}

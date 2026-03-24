@@ -7,6 +7,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { portfolioApi } from '@/lib/api/portfolioApi'
 import { supabase } from '@/lib/supabase'
 import Header from '@/components/shared/Header'
+import Button from '@/components/shared/Button'
+import Logo from '@/components/shared/Logo'
 
 export default function PortfolioListPage() {
   const { user, loading } = useAuth()
@@ -91,8 +93,9 @@ export default function PortfolioListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-text-muted">Chargement...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Logo size="md" link={false} />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -105,31 +108,31 @@ export default function PortfolioListPage() {
         user={user}
         onLogout={handleLogout}
         breadcrumbs={[
-          { label: 'Emploi', href: '/dashboard' },
+          { label: 'Emploi', href: '/dashboard?tab=emploi' },
           { label: 'Portfolio Pro' }
         ]}
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
         {/* Titre + Bouton créer */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary">Mes Portfolios</h1>
+            <h1 className="font-display text-3xl font-bold text-text-primary">Mes Portfolios</h1>
             <p className="text-text-muted mt-1">Créez et gérez vos sites web personnels</p>
           </div>
-          <button
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-hover shadow-lg shadow-black/20"
+            size="lg"
           >
             + Nouveau Portfolio
-          </button>
+          </Button>
         </div>
 
         {/* Erreur */}
         {error && (
-          <div className="mb-6 p-4 bg-error/10 border border-error/20 text-error rounded-lg">
+          <div className="mb-6 p-4 bg-error/10 border border-error/20 text-error rounded-2xl">
             {error}
             <button onClick={() => setError(null)} className="ml-4 text-error">✕</button>
           </div>
@@ -138,35 +141,35 @@ export default function PortfolioListPage() {
         {/* Liste des portfolios */}
         {loadingPortfolios ? (
           <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-text-muted">Chargement des portfolios...</p>
           </div>
         ) : portfolios.length === 0 ? (
-          <div className="text-center py-16 bg-surface rounded-xl border border-border">
+          <div className="text-center py-16 bg-surface rounded-2xl border border-border/60">
             <div className="text-6xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold text-text-primary mb-2">Aucun portfolio</h3>
+            <h3 className="font-display text-xl font-semibold text-text-primary mb-2">Aucun portfolio</h3>
             <p className="text-text-muted mb-6">Créez votre premier site web personnel !</p>
-            <button
+            <Button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary-hover"
             >
               Créer mon premier portfolio
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {portfolios.map((portfolio) => (
-              <div key={portfolio.id} className="bg-surface rounded-xl border border-border overflow-hidden hover:border-border-light transition-all">
+              <div key={portfolio.id} className="bg-surface rounded-2xl border border-border/60 overflow-hidden hover:border-border-light transition-all">
 
                 {/* Preview placeholder */}
-                <div className="h-40 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                <div className="h-40 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                   <span className="text-6xl">🌐</span>
                 </div>
 
                 {/* Infos */}
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-text-primary truncate">{portfolio.title}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${
+                    <h3 className="font-display text-lg font-bold text-text-primary truncate">{portfolio.title}</h3>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                       portfolio.published
                         ? 'bg-success/10 text-success'
                         : 'bg-surface-elevated text-text-muted'
@@ -191,7 +194,7 @@ export default function PortfolioListPage() {
 
                   {/* URL */}
                   {portfolio.published && (
-                    <div className="mb-3 p-2 bg-background rounded text-sm">
+                    <div className="mb-3 p-2 bg-background rounded-xl text-sm">
                       <span className="text-text-muted">🔗 </span>
                       <a
                         href={`/p/${portfolio.slug}`}
@@ -207,13 +210,13 @@ export default function PortfolioListPage() {
                   <div className="flex gap-2 mt-4">
                     <Link
                       href={`/solutions/portfolio/${portfolio.id}/edit`}
-                      className="flex-1 px-3 py-2 bg-primary text-primary-foreground text-center rounded-lg text-sm font-medium hover:bg-primary-hover"
+                      className="flex-1 px-3 py-2 bg-primary text-primary-foreground text-center rounded-xl text-sm font-medium hover:bg-primary-hover transition-all"
                     >
                       ✏️ Éditer
                     </Link>
                     <button
                       onClick={() => handleTogglePublish(portfolio)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                         portfolio.published
                           ? 'bg-warning/10 text-warning hover:bg-warning/20'
                           : 'bg-success/10 text-success hover:bg-success/20'
@@ -223,7 +226,7 @@ export default function PortfolioListPage() {
                     </button>
                     <button
                       onClick={() => handleDelete(portfolio.id)}
-                      className="px-3 py-2 bg-error/10 text-error rounded-lg text-sm font-medium hover:bg-error/20"
+                      className="px-3 py-2 bg-error/10 text-error rounded-xl text-sm font-medium hover:bg-error/20 transition-all"
                     >
                       🗑️
                     </button>
@@ -237,9 +240,9 @@ export default function PortfolioListPage() {
 
       {/* Modal Création */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-elevated rounded-xl shadow-xl shadow-black/30 max-w-md w-full mx-4 p-6 border border-border">
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Nouveau Portfolio</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-surface rounded-2xl border border-border/60 shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className="font-display text-2xl font-bold text-text-primary mb-4">Nouveau Portfolio</h2>
 
             <form onSubmit={handleCreate}>
               <div className="mb-4">
@@ -251,7 +254,7 @@ export default function PortfolioListPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Ex: Portfolio de Jean Dupont"
-                  className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary text-text-primary placeholder:text-text-muted"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   required
                 />
               </div>
@@ -265,7 +268,7 @@ export default function PortfolioListPage() {
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="Une courte description de votre portfolio..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-surface border border-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary text-text-primary placeholder:text-text-muted"
+                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
@@ -273,17 +276,18 @@ export default function PortfolioListPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-3 border border-border text-text-secondary rounded-lg font-medium hover:bg-surface"
+                  className="flex-1 px-4 py-3 border border-border/60 text-text-secondary rounded-xl font-medium hover:bg-surface-elevated transition-all"
                 >
                   Annuler
                 </button>
-                <button
+                <Button
                   type="submit"
                   disabled={creating || !newTitle.trim()}
-                  className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary-hover disabled:opacity-50"
+                  loading={creating}
+                  className="flex-1 !rounded-xl"
                 >
-                  {creating ? '⏳ Création...' : 'Créer'}
-                </button>
+                  {creating ? 'Création...' : 'Créer'}
+                </Button>
               </div>
             </form>
           </div>
